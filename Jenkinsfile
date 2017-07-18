@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-node('Complier') {
+node('Compiler') {
    stages {
       stage('Example Build') {
          steps {
