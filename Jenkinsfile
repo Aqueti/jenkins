@@ -5,7 +5,7 @@ pipeline {
    stages {
       stage('Checkout') {
          steps {
-            git clone https://github.com/Aqueti/acos.git
+            echo "git clone https://github.com/Aqueti/acos.git"
          }
       }
       stage('Build') {
