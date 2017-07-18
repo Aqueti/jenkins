@@ -1,8 +1,8 @@
 #!groovy
 
-node{
-   echo "Hello from the Aqueti build pipeline! This is a linux machine"
-}
+//node{
+//   echo "Hello from the Aqueti build pipeline! This is a linux machine"
+//}
 
 //build pipeline
 pipeline {
