@@ -48,6 +48,7 @@ pipeline {
       }
     
       success {
+         sh "Sending success e-mail"
          mail(
              to: "sfeller@aqueti.com", 
              subject: "Jenkins build passed.",
@@ -56,6 +57,7 @@ pipeline {
       }
 
       failure {
+         sh "Sending failure e-mail"
          mail(
            to: "steve@example.com", 
            subject: "Jenkins build failed!", 
