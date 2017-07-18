@@ -8,6 +8,11 @@ pipeline {
             echo "Downloading!"
          }
       }
+      stage('Build') {
+         steps {
+            echo "Building..."
+            make -j
+         }
    }
 }
 
