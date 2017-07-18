@@ -10,8 +10,10 @@ pipeline {
          }
       }
       stage('Build') {
-         sh "mkdir -p build/acos"
-         sh "cd build/acos; ccmake ../..; make -j"
+         steps {
+            sh "mkdir -p build/acos"
+            sh "cd build/acos; ccmake ../..; make -j"
+         }
       }
    }
 }
