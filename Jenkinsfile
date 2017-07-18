@@ -6,16 +6,13 @@ pipeline {
       stage('Checkout') {
          steps {
             echo "git clone https://github.com/Aqueti/acos.git"
-            git clone https://github.com/Aqueti/acos.git
+            sh "git clone https://github.com/Aqueti/acos.git"
          }
       }
       stage('Build') {
          steps {
             echo "Building..."
-            mkdir -p build/acos
-            cd build/acos
-            cmake ../acos
-            make -j
+            sh "mkdir -p build/acos; cd build/acos; cmake ../acos; make -j7"
          }
       }
    }
