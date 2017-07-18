@@ -39,5 +39,29 @@ pipeline {
          }
       }
    }
+
+   post {
+      // Always runs. And it runs before any of the other post conditions.
+      always {
+         // Let's wipe out the workspace before we finish!
+         deleteDir()
+      }
+    
+      success {
+         mail(
+             to: "sfeller@aqueti.com", 
+             subject: "Jenkins build passed.",
+             body: "Nothing to see here"
+         )
+      }
+
+      failure {
+         mail(
+           to: "steve@example.com", 
+           subject: "Jenkins build failed!", 
+           body: "Nothing to see here"
+        )
+    }
+  }
 }
 
