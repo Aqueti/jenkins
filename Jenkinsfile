@@ -3,9 +3,9 @@
 pipeline {
    agent any
    stages {
-      stage('Download') {
+      stage('Checkout') {
          steps {
-            echo "Downloading!"
+            git clone https://github.com/Aqueti/acos.git
          }
       }
       stage('Build') {
