@@ -23,9 +23,11 @@ pipeline {
                
                dir('applications-prefix/src/applications-build/') {
                   sh "make package"
+                  sh 'scp *.deb 192.168.0.1:"/storage/Web/software"'
                }
                dir('agt-prefix/src/agt-build/') {
                   sh "make package"
+                  sh 'scp *.deb 192.168.0.1:"/storage/Web/software"'
                }
             }
          }
