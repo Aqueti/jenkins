@@ -1,15 +1,26 @@
 #!groovy
 
-//node {
-//   echo "Hello from the Aqueti build pipeline! This is a linux machine"
-//}
 
-try {
-   node {
-      stage 'Stage1'
-      echo "Build Stage"
-   }
-   catch (exc) {
-      err = caughtError
-   }
+pipeline {
+    agent any
+    stages {
+        stage('Example Build') {
+            steps {
+                echo 'Hello World'
+            }
+        }
+        stage('Example Deploy') {
+            when {
+                expression { BRANCH_NAME ==~ /(production|staging)/ }
+                anyOf {
+                    environment name: 'DEPLOY_TO', value: 'production'
+                    environment name: 'DEPLOY_TO', value: 'staging'
+                }
+            }
+            steps {
+                echo 'Deploying'
+            }
+        }
+    }
 }
+
