@@ -25,7 +25,7 @@ pipeline {
       }
       stage('Deploy') {
          steps {
-            sh "Echo deploying..."
+            sh "echo deploying..."
             sh 'scp build/acos/INSTALL/deb/* 192.168.0.1:"/storage/Web/software"'
          }
       }
