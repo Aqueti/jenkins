@@ -1,14 +1,14 @@
 #!groovy
 
-//node {
-//   echo "Hello from the Aqueti build pipeline! This is a linux machine"
+node {
+   echo "Hello from the Aqueti build pipeline! This is a linux machine"
 //}
 
 //build pipeline
-pipeline {
-   agent any
+//pipeline {
+//   agent any
 
-   stages {
+//   stages {
       stage('BUILD') {
          steps {
             echo 'Building...'
@@ -24,5 +24,5 @@ pipeline {
             echo 'Deploying...'
          }
       }
-   }
+//   }
 }
