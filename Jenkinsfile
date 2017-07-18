@@ -12,7 +12,7 @@ pipeline {
       stage('Build') {
          steps {
             sh "mkdir -p build/acos"
-            sh "cd build/acos; ccmake ../..; make -j"
+            sh "cd build/acos; cmake ../..; make -j"
          }
       }
    }
