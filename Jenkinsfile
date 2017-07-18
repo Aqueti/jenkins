@@ -16,7 +16,7 @@ pipeline {
          steps {
             sh "mkdir -p build/acos"
             dir('build/acos') {
-               sh "cmake ../.. -DMAKE_API:BOOL=ON -DMAKE_AGT:BOOL=ON -DMAKE_APPLICATION:BOOL=ON -DMAKE_TESTS:BOOL=ON -DMAKE_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:BOOL=~/Documentation"
+               sh "cmake ../.. -DBUILD_API:BOOL=ON -DBUILD_AGT:BOOL=ON -DBUILD_APPLICATIONS:BOOL=ON -DBUILD_TESTS:BOOL=ON -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:BOOL=~/Documentation"
                sh "make -j"
             }
          }
