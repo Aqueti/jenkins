@@ -1,8 +1,8 @@
 #!groovy
 
-//node{
-//   echo "Hello from the Aqueti build pipeline! This is a linux machine"
-//}
+node{
+   echo "Hello from the Aqueti build pipeline! This is a linux machine"
+}
 
 //build pipeline
 pipeline {
@@ -10,13 +10,19 @@ pipeline {
 
    stages {
       stage('BUILD') {
-         echo 'Building...'
+         steps {
+            echo 'Building...'
+         }
       }
       stage('UnitTest') {
-         echo 'Unit Testing...'
+         steps {
+            echo 'Unit Testing...'
+         }
       }
       stage('Deploy') {
-         echo 'Deploying...'
+         steps {
+            echo 'Deploying...'
+         }
       }
    }
 }
