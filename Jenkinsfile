@@ -9,12 +9,6 @@ pipeline {
             sh "git clone git@github.com:Aqueti/acos.git"
          }
       }
-      stage('Build') {
-         steps {
-            echo "Building..."
-            sh "mkdir -p build/acos; cd build/acos; cmake ../acos; make -j7"
-         }
-      }
    }
 }
 
