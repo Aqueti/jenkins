@@ -11,13 +11,3 @@ pipeline {
    }
 }
 
-
-/**
-node('Compiler') {
-
-
-   stage('Example Build') {
-      echo 'Hello World'
-   }
-}
-*/
