@@ -1,6 +1,6 @@
 #!groovy
 
 node{
-   echo "Hello from the pipeline! This is a linux machine"
+   echo "Hello from the Aqueti build pipeline! This is a linux machine"
 
 }
