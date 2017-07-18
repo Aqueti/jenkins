@@ -1,4 +1,5 @@
 #!/usr/bin/env groovy
+import java.time.*
 
 pipeline {
    agent any
@@ -19,6 +20,12 @@ pipeline {
                sh "cmake ../.. -DBUILD_API:BOOL=ON -DBUILD_AGT:BOOL=ON -DBUILD_APPLICATIONS:BOOL=ON -DBUILD_TESTS:BOOL=ON -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:BOOL=~/Documentation"
                sh "make -j"
             }
+         }
+      }
+      stage('Deploy') {
+         steps {
+            sh "Echo deploying..."
+            sh "scp INSTALL/deb/* 192.168.0.1:\"/storage/Web/software\""
          }
       }
    }
