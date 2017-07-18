@@ -13,6 +13,7 @@ pipeline {
             echo "Building..."
             make -j
          }
+      }
    }
 }
 
