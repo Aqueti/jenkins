@@ -13,9 +13,8 @@ pipeline {
       }
       stage('Build') {
          steps {
+            sh "mkdir -p build/acos"
             dir('build/acos') {
-               sh "mkdir -p build/acos"
-               sh "cd build/acos
                sh "cmake ../../acos -DMAKE_API:BOOL=ON -DMAKE_AGT:BOOL=ON -DMAKE_APPLICATION:BOOL=ON -DMAKE_TESTS:BOOL=ON -DMAKE_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:BOOL=~/Documentation"
                sh "make -j"
             }
