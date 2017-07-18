@@ -20,6 +20,13 @@ pipeline {
             dir('build/acos') {
                sh "cmake ../.. -DBUILD_API:BOOL=ON -DBUILD_AGT:BOOL=ON -DBUILD_APPLICATIONS:BOOL=ON -DBUILD_TESTS:BOOL=ON -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:BOOL=~/Documentation"
                sh "make -j"
+               
+               dir('applications-prefix/src/applications-build/') {
+                  sh "make package"
+               }
+               dir('agt-prefix/src/agt-build/') {
+                  sh "make package"
+               }
             }
          }
       }
