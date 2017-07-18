@@ -5,8 +5,10 @@ pipeline {
    stages {
       stage('Checkout') {
          steps {
-            echo "git clone git@github.com:Aqueti/acos.git"
-            sh "git clone git@github.com:Aqueti/acos.git"
+            checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'e5589e10-b755-49b0-8f64-b06df6ade600', url: 'https://github.com/Aqueti/acos.git']]])
+
+//            echo "git clone git@github.com:Aqueti/acos.git"
+//            sh "git clone git@github.com:Aqueti/acos.git"
          }
       }
       stage('Build') {
