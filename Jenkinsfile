@@ -1,5 +1,7 @@
 #!/usr/bin/env groovy
-//Declarative Pipeline
+//Declarative Jenkins Pipeline
+//2017-07-19
+
 import java.time.*
 
 pipeline {
