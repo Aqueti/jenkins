@@ -10,8 +10,6 @@ pipeline {
       stage('build') {
          steps {
                   sh "echo building atl"
-               }
-            }
          }
       }
       stage('Deploy') {
