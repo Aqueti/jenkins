@@ -1,0 +1,50 @@
+#!/usr/bin/env groovy
+//Declarative Jenkins Pipeline
+//2017-07-19
+
+import java.time.*
+
+pipeline {
+   agent {label 'compiler'}
+   stages {
+      stage('build') {
+         steps {
+                  sh "echo building atl"
+               }
+            }
+         }
+      }
+      stage('Deploy') {
+         steps {
+            sh "echo deploying atl"
+         }
+      }
+   }
+
+   post {
+      // Always runs. And it runs before any of the other post conditions.
+//      always {
+//         // Let's wipe out the workspace before we finish!
+//         deleteDir()
+//      }
+    
+      success {
+         sh "Sending success e-mail"
+         mail(
+             to: "sfeller@aqueti.com", 
+             subject: "Jenkins build passed.",
+             body: "Nothing to see here"
+         )
+      }
+
+      failure {
+         sh "Sending failure e-mail"
+         mail(
+           to: "sfeller@aqueti.com", 
+           subject: "Jenkins build failed!", 
+           body: "Nothing to see here"
+        )
+    }
+  }
+}
+
