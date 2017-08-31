@@ -27,21 +27,27 @@ pipeline {
 //      }
     
       success {
-         sh "Sending success e-mail"
-         mail(
-             to: "sfeller@aqueti.com", 
-             subject: "Jenkins build passed.",
-             body: "Nothing to see here"
+         sh "echo Sending success e-mail"
+         emailext(
+            recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+            to: "sfeller@aqueti.com, alex@aqueti.com",
+            subject: "Build ${BUILD_NUMBER} for the ${BRANCH_NAME} branch passed            body: "Successfully built acos branch ${BRANCH_NAME} build number ${
          )
       }
 
       failure {
-         sh "Sending failure e-mail"
-         mail(
-           to: "sfeller@aqueti.com", 
-           subject: "Jenkins build failed!", 
-           body: "Nothing to see here"
-        )
+         sh " echo Sending failure e-mail"
+         emailext (
+            recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+            to: "sfeller@aqueti.com",
+            subject: 'FAILURE: build ${BUILD_NUMBER} of  ACOS branch ${BRANCH_NA
+            body: 'Failed to build acos branch ${BRANCH_NAME} build number ${BUI
+//         mail(
+//           to: "sfeller@aqueti.com, ${env.CHANGE_AUTHOR_EMAIL}", 
+//           subject: "FAILED! Jenkins build ${BUILD_NUMBER} for branch ${BRANCH
+//           body: "${BUILD_LOG}"
+         )
+     }
     }
   }
 }
