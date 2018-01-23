@@ -1,4 +1,8 @@
-// checking stream properties
+/**
+ * Checking:
+ * stream properties
+ * 
+ **/
 
 #include "tests.h"
 

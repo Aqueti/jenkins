@@ -1,4 +1,8 @@
-// checking that live stream speed can be changed
+/**
+ * Checking:
+ * live stream speed can be changed
+ * 
+ **/
 
 #include "tests.h"
 

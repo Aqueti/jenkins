@@ -1,4 +1,8 @@
-// checking that set to time functionality is working properly
+/**
+ * Checking:
+ * set to time functionality is working properly
+ * 
+ **/
 
 #include "tests.h"
 

@@ -1,4 +1,8 @@
-// checking connections v2->dc, dc->v2
+/**
+ * Checking:
+ * connections v2->dc, dc->v2
+ * 
+ **/
 
 #include "tests.h"
 

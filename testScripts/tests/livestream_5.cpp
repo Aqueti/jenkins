@@ -1,4 +1,8 @@
-//checking the issue with a broken live stream when CamViewer started and stopped
+/**
+ * Checking:
+ *  the issue with a broken live stream when CamViewer started and stopped
+ * 
+ **/
 
 #include "tests.h"
 

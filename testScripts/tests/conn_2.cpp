@@ -1,4 +1,8 @@
-// checking connections to mcams(connection to render)
+/**
+ * Checking:
+ * connections to mcams(connection to render)
+ * 
+ **/
 
 #include "tests.h"
 

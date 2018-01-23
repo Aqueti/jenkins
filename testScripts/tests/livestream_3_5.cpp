@@ -1,4 +1,8 @@
-// checking PTZ relative positioning
+/**
+ * Checking:
+ * PTZ relative positioning
+ * 
+ **/
 
 #include "tests.h"
 

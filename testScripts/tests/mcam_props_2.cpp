@@ -1,4 +1,8 @@
-//checking auto properties
+/**
+ * Checking:
+ * auto properties
+ * 
+ **/
 
 #include "tests.h"
 

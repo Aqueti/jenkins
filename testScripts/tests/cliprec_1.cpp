@@ -1,3 +1,9 @@
+/**
+ * Checking:
+ * ability to record new clip
+ * 
+ **/
+
 #include "tests.h"
 
 using namespace td;

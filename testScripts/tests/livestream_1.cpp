@@ -1,4 +1,8 @@
-// checking that live stream can be started
+/**
+ * Checking:
+ * live stream can be started
+ * 
+ **/
 
 #include "tests.h"
 

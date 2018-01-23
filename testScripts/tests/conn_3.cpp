@@ -1,4 +1,8 @@
-// checking connections to mcams(direct connection)
+/**
+ * Checking:
+ * connections to mcams(direct connection)
+ * 
+ **/
 
 #include "tests.h";
 

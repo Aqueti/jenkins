@@ -1,3 +1,9 @@
+/**
+ * Checking:
+ * global shutter
+ * 
+ **/
+
 #include "tests.h"
 
 using namespace td;

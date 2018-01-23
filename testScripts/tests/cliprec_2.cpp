@@ -1,4 +1,8 @@
-// checking that all frames are saved
+/**
+ * Checking:
+ * all received frames are saved
+ * 
+ **/
 
 #include "tests.h"
 

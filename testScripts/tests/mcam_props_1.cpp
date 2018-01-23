@@ -1,4 +1,8 @@
-//checking properties values after reconnecting
+/**
+ * Checking:
+ * properties values after reconnecting
+ * 
+ **/
 
 #include "tests.h"
 

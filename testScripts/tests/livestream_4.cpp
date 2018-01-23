@@ -1,4 +1,8 @@
-// checking that live stream can't be started when model.json is missing
+/**
+ * Checking:
+ * live stream can't be started when model.json is missing
+ * 
+ **/
 
 #include "tests.h";
 

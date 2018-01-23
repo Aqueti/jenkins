@@ -1,4 +1,8 @@
-// checking that frame step is working properly
+/**
+ * Checking:
+ * frame step is working properly
+ * 
+ **/
 
 #include "tests.h"
 

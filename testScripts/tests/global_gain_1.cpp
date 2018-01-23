@@ -1,3 +1,9 @@
+/**
+ * Checking:
+ * global gain
+ * 
+ **/
+
 #include "tests.h"
 
 using namespace td;

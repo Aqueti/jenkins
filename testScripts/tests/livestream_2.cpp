@@ -1,4 +1,8 @@
-//checking that several streams can be opened by V2 at the same time
+/**
+ * Checking:
+ * several streams can be opened by V2 at the same time
+ * 
+ **/
 
 #include "tests.h"
 

@@ -1,4 +1,8 @@
-// DataRecoveryTool
+/**
+ * Checking:
+ * DataRecoveryTool
+ * 
+ **/
 
 #include "tests.h"
 

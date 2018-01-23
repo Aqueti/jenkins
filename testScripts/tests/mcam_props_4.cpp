@@ -1,4 +1,8 @@
-//checking set/got properties values
+/**
+ * Checking:
+ * checking set/got properties values
+ * 
+ **/
 
 #include "tests.h"
 

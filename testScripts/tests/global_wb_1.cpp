@@ -1,3 +1,9 @@
+/**
+ * Checking:
+ * global whitebalance
+ * 
+ **/
+
 #include "tests.h"
 
 using namespace td;

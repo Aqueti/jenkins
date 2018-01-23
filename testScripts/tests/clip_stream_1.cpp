@@ -1,4 +1,8 @@
-// checking that clip stream can be started
+/**
+ * Checking:
+ * clip stream can be started
+ * 
+ **/
 
 #include "tests.h"
 

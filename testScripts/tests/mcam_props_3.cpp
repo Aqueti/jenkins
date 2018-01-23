@@ -1,4 +1,8 @@
-// checking that properties are independent, if one is changed it shouldn't effect on others
+/**
+ * Checking:
+ * properties are independent, if one is changed it shouldn't effect on others
+ * 
+ **/
 
 #include "tests.h"
 

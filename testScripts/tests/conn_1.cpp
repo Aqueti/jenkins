@@ -1,4 +1,8 @@
-// checking connections
+/**
+ * Checking:
+ * checking connections
+ * 
+ **/
 
 #include "tests.h"
 
