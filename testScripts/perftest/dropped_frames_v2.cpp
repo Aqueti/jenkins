@@ -18,7 +18,7 @@
 
 using namespace std;
 
-char ip[24] = "127.0.0.1";
+char mcam_ip[24] = "127.0.0.1";
 int port = 9999;
 int r_port = 14000;
 int duration = 67*8*1000; //67
@@ -186,7 +186,7 @@ int main(int argc, char * argv[])
   camCB.data = &cam;
   setNewCameraCallback(camCB);
 
-  connectToCameraServer(ip, port);
+  connectToCameraServer(mcam_ip, port);
 
   if(isCameraConnected(cam) != 110) {
       setCameraConnection(cam, true, 5);

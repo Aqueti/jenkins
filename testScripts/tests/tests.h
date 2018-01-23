@@ -5,35 +5,39 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <iomanip>
 #include <sys/time.h>
 #include <map>
 #include <list>
+#include <vector>
 #include <iterator>
 #include <cmath>
 #include <string>
 #include <cstring>
 #include <sstream>
-#include <vector>
 #include <iostream>
 #include <fstream>
-#include "sqlite3.h"
+//#include "sqlite3.h"
 
 #include "mantis/MantisAPI.h"
 
 using namespace std;
 
 namespace td {
-  char *v2_ip = "127.0.0.1";
-  char *mcam_ip = "192.168.10.5";
-  uint16_t port = 9999;
-  uint16_t r_port = 13000;
-  char *tbl_name = "test_results";
-  char *db_name = "/home/astepenko/scripts/test_res.db";
-  char *file_name = "/home/astepenko/scripts/test_results.txt";
+	char *v2_ip = "127.0.0.1"; 
+	char *mcam_ip = "192.168.10.1";
+	uint16_t port = 9999;
+	uint16_t r_port = 13000;
+	char *file_name = "/home/astepenko/test_results.txt";
+	char *tbl_name = "test_results";
+	char *db_name = "/home/astepenko/test_res.db";
+	string script_name = "na";
+	bool act_res = true;
 
   char *enc = V2_ENCODE_H264;
-  string storage_path = "/etc/aqueti/mantis_85";
-  string cam_folder = "/etc/aqueti/mantis_85 ";
+  string camID = "21";
+  string cam_folder = "/etc/aqueti/mantis_" + camID;
+  string storage_path = "/etc/aqueti/mantis_21";
   string file_path = cam_folder + "/" + "hostfile";
 
   VIDEO_SOURCE videoSource = {
@@ -48,15 +52,16 @@ namespace td {
     30,   //framerate
     50,   //encodingInterval
     2048, //bitrateLimit
-    V2_ENCODE_H264  //encoding
+    V2_ENCODE_H264  //encoding    
   };
 
-  STREAM_PROFILE profile = {
+  STREAM_PROFILE profile = {  
     videoSource,
     videoEncoder
-  };
+  };  
+  
 };
-
+/*
 int requestCallback(void *data, int argc, char **argv, char **azColName){
    fprintf(stderr, "%s: ", (const char*)data);
 
@@ -91,6 +96,42 @@ int execQuery(string sql, char *db_name) {
 
       return rc;
 }
+*/
+
+string readFromFile(const char* file_name) {
+	ostringstream ss;
+    ifstream fin(file_name);
+    if (fin.is_open()) {
+        string str;
+        ifstream fin(file_name);
+
+        while (getline(fin, str)) {
+            ss << str << endl;
+        }
+        fin.close();
+    }
+
+    return ss.str();
+};
+
+void writeToFile(string str, char* file_name, bool w_method = true) {
+    ofstream fout;
+
+    if (w_method) {
+        fout.open(file_name, ios::out | ios::app);
+    }
+    else {
+        fout.open(file_name, ios::out);
+    }
+
+    fout << str;
+    fout.close();
+}
+
+bool fileExists( const string &file_name )
+{
+    return access( file_name.c_str(), 0 ) == 0;
+}
 
 string exec(string cmd) {
     FILE *popen_result;
@@ -99,11 +140,11 @@ string exec(string cmd) {
 
     ostringstream ss;
 
-  if (popen_result) {
-    while (fgets(buff, sizeof(buff), popen_result) != NULL) {
-      ss << buff;
-    }
-  }
+	if (popen_result) {
+		while (fgets(buff, sizeof(buff), popen_result) != NULL) {
+			ss << buff;
+		}
+	}
 
     pclose(popen_result);
 
@@ -139,79 +180,95 @@ struct tegra {
 };
 
 struct acosd {
-  static void start(string ip, string mode = "JPEG", bool p = true) {
-    string cmd = getSSHStr(ip, "pkill -9 acosd; acosd -R acosdLog -C " + mode + " -s 1");
-    if (p) {
-      string t_cmd = getSSHStr(ip, "ps aux | grep acosd | head -1");
-      if (exec(t_cmd + " | awk '{print$15}'") != mode) {
+	static void start(string ip, string mode = "JPEG", bool p = true) {
+		string cmd = getSSHStr(ip, "pkill -9 acosd; acosd -R acosdLog -C " + mode + " -s 1");
+		if (p) {
+      string t_cmd = getSSHStr(ip, "ssh ubuntu@192.168.10.1 'ps aux | grep acosd' | head -1 | awk '{print$15}'");
+      if (exec(t_cmd) != mode) {
         exec(cmd);
       }
     } else {
       exec(cmd);
     }
-    sleep(1);
-  }
-  static void stop(string ip) {
-    string cmd = getSSHStr(ip, "pkill -9 acosd");
-    exec(cmd);
-    sleep(1);
-  }
-  static void restart(string ip, string mode = "JPEG") {
-    acosd::stop(ip);
-    acosd::start(ip, mode);
-  }
+		sleep(1);
+	} 
+	static void stop(string ip) {
+		string cmd = getSSHStr(ip, "pkill -9 acosd");
+		exec(cmd);
+		sleep(1);
+	}
+	static void restart(string ip, string mode = "JPEG") {
+		acosd::stop(ip);
+		acosd::start(ip, mode);
+	}
 };
 
 struct V2 {
-  static void start(string camID, string storage_path) {
-    string cmd = "V2 --numJpegDecompressors 2 --numH26XDecompressors 2 --prefetchSize 40 --force-gpu-compatibility --dir " + storage_path + " --camera " + camID + " 1>/dev/null &";
-    exec(cmd);
-    sleep(2);
-  }
-  static void stop() {
-    string cmd = "pkill -9 V2";
-    exec(cmd);
-    sleep(1);
-  }
-  static void restart(string camID, string storage_path) {
-    V2::stop();
-    V2::start(camID, storage_path);
-  }
+	static void start(string camID = td::camID, string storage_path = td::storage_path) {
+		string cmd = "V2 --cache-size 20000 --maxRecordingLength 3600 --tightPrefetch --force-gpu-compatibility -p 24816 --numJpegDecompressors 16 --numH26XDecompressors 5 --prefetchSize 40 --dir " + storage_path + " --camera " + camID + " 1>/dev/null &";
+		exec(cmd);
+		sleep(2);
+	}
+	static void stop() {
+		string cmd = "pkill -9 V2";
+		exec(cmd);
+		sleep(1);
+	}
+	static void restart(string camID = td::camID, string storage_path = td::storage_path) {
+		V2::stop();
+		V2::start(camID, storage_path);
+	}
 };
 
-string readFromFile(const char* file_name) {
-  ostringstream ss;
-    ifstream fin(file_name);
-    if (fin.is_open()) {
-        string str;
-        ifstream fin(file_name);
+struct Env {
+	static void setUp(string sname, bool isV2started = false) {
+	  td::script_name = sname;
 
-        while (getline(fin, str)) {
-            ss << str << endl;
-        }
-        fin.close();
-    }
+	  if (false) {
+		  vector<string> a_ip = split(readFromFile(td::file_path.c_str()), '\n');
 
-    return ss.str();
+		  for (int i = 0; i < a_ip.size() - 1; i++) {
+			acosd::restart(a_ip[i], td::enc);
+		  }
+
+		  if (isV2started) {
+			V2::restart(split(td::cam_folder, '_')[1], td::storage_path);
+		  } else {
+			V2::stop();
+		  }
+	  }
+	}
+
+	static void tearDown(bool isDB = false) {
+		ostringstream fss;
+		fss << td::script_name << "\t" << (td::act_res ? "pass" : "fail") << endl;
+		writeToFile(fss.str(), td::file_name);
+		cout << "\n" << fss.str();
+
+		if (isDB) {
+			ostringstream sqlss;
+			sqlss << "UPDATE " << td::tbl_name << " SET result='" << (td::act_res ? "pass" : "fail") << "' WHERE script_name='" << td::script_name << "';";
+
+			//execQuery(sqlss.str(), td::db_name);
+		}
+	}
 };
 
-void writeToFile(string str, char* file_name, bool w_method = true) {
-    ofstream fout;
+int* allocmem(int len) {
+   int *buffer = (int*) malloc(len);
+   if (buffer != NULL) {
+       for (int i = 1; i < len; i++) {
+            buffer[i] = 1;
+       }
+   }
+   //free(buffer);
 
-    if (w_method) {
-        fout.open(file_name, ios::out | ios::app);
-    }
-    else {
-        fout.open(file_name, ios::out);
-    }
-
-    fout << str;
-    fout.close();
+   return buffer;
 }
 
 string getUsage(string type, string val) {
   string output;
-  if (type == "cpu") {
+  if (type == "cpu") { 
     output = exec("ps -C " + val + " -o %cpu | tail -1");
   } else if (type == "mem") {
     output = exec("ps -C " + val + " -o %mem | tail -1");
@@ -219,9 +276,16 @@ string getUsage(string type, string val) {
     output = exec("df -m " + val + " | tail -1 | awk '{print $5}'");
   } else {
 
-  }
+  } 
 
   return output;
+}
+
+double get_disk_usage(string drive_name) {
+	string avail = exec("df -m " + drive_name + " | tail -1 | awk '{print$4}'");
+	string used = exec("df -m " + drive_name + " | tail -1 | awk '{print$3}'");
+
+	return ((double)atoi(used.c_str()) / (double)(atoi(avail.c_str()) + atoi(used.c_str()))) * 100;
 }
 
 long int getTime() {
@@ -232,30 +296,33 @@ long int getTime() {
   return ms;
 }
 
-void write_res(bool act_res, char *script_name) {
-  ostringstream sqlss;
-  sqlss << "UPDATE " << td::tbl_name << " SET result='" << (act_res ? "pass" : "fail") << "' WHERE script_name='" << script_name << "';";
-
-  execQuery(sqlss.str(), td::db_name);
-
-  ostringstream filess;
-  filess << script_name << ": " << act_res << endl;
-
-  writeToFile(filess.str(), file_name);
+double getRnd(PAIR_DOUBLE pd) {
+    double value = (pd.second - pd.first) * ( (double)rand() / (double)RAND_MAX ) + pd.first;
+    return roundf(value * 100) / 100;
 }
 
-void setupEnv(bool b = false) {
-  vector<string> a_ip = split(readFromFile(td::file_path.c_str()), '\n');
-
-  for (int i = 0; i < a_ip.size() - 1; i++) {
-    acosd::restart(a_ip[i], td::enc);
-  }
-
-  if (b) {
-    V2::restart(split(td::cam_folder, '_')[1], td::storage_path);
-  } else {
-    V2::stop();
-  }
+int getRnd2(AtlRange_32f pd) {
+    double value = (pd.max - pd.min) * ( (double)rand() / (double)RAND_MAX ) + pd.min;
+    return round(value);
 }
+
+int getRnd2(AtlRange_64f pd) {
+    double value = (pd.max - pd.min) * ( (double)rand() / (double)RAND_MAX ) + pd.min;
+    return round(value);
+}
+
+class BasicTest {
+public:
+	string script_name;
+	bool act_res;
+
+	virtual void run() { };
+
+	BasicTest() {
+
+	}
+
+	virtual ~BasicTest() {}
+};
 
 #endif
