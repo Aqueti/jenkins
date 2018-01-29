@@ -63,12 +63,12 @@ int main(int argc, char * argv[])
 	res["smoothd"].range = getStreamSmoothDenoiseRange(stream);
 	res["edged"].range = getStreamEdgeDenoiseRange(stream);
 
-	res["gain"].exp = getRnd2(res["gain"].range);
-	res["offset"].exp = getRnd2(res["offset"].range);
-	res["gamma"].exp =  getRnd2(res["gamma"].range);
-	res["denoise"].exp = (bool)getRnd2(res["denoise"].range);
-	res["smoothd"].exp = getRnd2(res["smoothd"].range);
-	res["edged"].exp = getRnd2(res["edged"].range);
+	res["gain"].exp = getRnd(res["gain"].range);
+	res["offset"].exp = getRnd(res["offset"].range);
+	res["gamma"].exp =  getRnd(res["gamma"].range);
+	res["denoise"].exp = (bool)getRnd(res["denoise"].range);
+	res["smoothd"].exp = getRnd(res["smoothd"].range);
+	res["edged"].exp = getRnd(res["edged"].range);
 
 	res["gain"].rc = setStreamGain(stream, res["gain"].exp);
 	res["offset"].rc = setStreamOffset(stream, res["offset"].exp);

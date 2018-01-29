@@ -63,9 +63,9 @@ int main(int argc, char * argv[])
 		setMCamAutoDeNoise(mCamList[i], false);
 
 		res[i]["Exposure"].exp = getRnd(getMCamExposureRange(mCamList[i]));
-		res[i]["FocusRelative"].exp = getRnd({0, 1});
-		res[i]["FocusAbsolute"].exp = getRnd({0, 1});
-		res[i]["FocusDefault"].exp = round(getRnd({0, 1}));
+		res[i]["FocusRelative"].exp = getRnd((PAIR_DOUBLE){0, 1});
+		res[i]["FocusAbsolute"].exp = getRnd((PAIR_DOUBLE){0, 1});
+		res[i]["FocusDefault"].exp = getRnd((AtlRange_32f){0, 1});
 		res[i]["Framerate"].exp = getRnd(getMCamFramerateRange(mCamList[i]));
 		res[i]["JpegQuality"].exp = round(getRnd(getMCamJpegQualityRange(mCamList[i])));
 		res[i]["Gain"].exp = getRnd(getMCamGainRange(mCamList[i]));
@@ -76,10 +76,10 @@ int main(int argc, char * argv[])
 		res[i]["DeNoise"].exp = getRnd(getMCamDeNoiseRange(mCamList[i]));
 		res[i]["WB_red"].exp = getRnd(getMCamWhiteBalanceRange(mCamList[i]));
 		res[i]["CParameters"].exp = cp.qp_iframe;
-		res[i]["WBMode"].exp = round(getRnd({0, 9}));
-		res[i]["SensorMode"].exp = round(getRnd({0, 2}));
-		res[i]["IrFilter"].exp = round(getRnd({0, 1}));
-		res[i]["FocalLength"].exp = round(getRnd({1, 100}));
+		res[i]["WBMode"].exp = getRnd((AtlRange_32f){0, 9});
+		res[i]["SensorMode"].exp = getRnd((AtlRange_32f){0, 2});
+		res[i]["IrFilter"].exp = getRnd((AtlRange_32f){0, 1});
+		res[i]["FocalLength"].exp = getRnd((AtlRange_32f){1, 100});
 
 		res[i]["Exposure"].rc = setMCamExposure(mCamList[i], res[i]["Exposure"].exp);
 		res[i]["FocusRelative"].rc = setMCamFocusRelative(mCamList[i], res[i]["FocusRelative"].exp);

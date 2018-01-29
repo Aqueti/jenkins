@@ -156,10 +156,10 @@ int main(int argc, char * argv[])
 		res[i]["DeNoise"].exp = getRnd(getMCamDeNoiseRange(mCamList[i]));
 		res[i]["WB_red"].exp = getRnd(getMCamWhiteBalanceRange(mCamList[i]));
 		res[i]["CParameters"].exp = cp.qp_iframe;
-		res[i]["WBMode"].exp = round(getRnd({0, 9}));
-		res[i]["SensorMode"].exp = round(getRnd({0, 2}));
-		res[i]["IrFilter"].exp = round(getRnd({0, 1}));
-		res[i]["FocalLength"].exp = round(getRnd({1, 100}));
+		res[i]["WBMode"].exp = getRnd((AtlRange_32f){0, 9});
+		res[i]["SensorMode"].exp = getRnd((AtlRange_32f){0, 2});
+		res[i]["IrFilter"].exp = getRnd((AtlRange_32f){0, 1});
+		res[i]["FocalLength"].exp = getRnd((AtlRange_32f){1, 100});
 
 		setMCamAutoExposure(mCamList[i], false);
 		setMCamAutoFramerate(mCamList[i], false);
