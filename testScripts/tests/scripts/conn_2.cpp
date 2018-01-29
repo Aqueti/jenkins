@@ -21,8 +21,7 @@ void newCameraCallback(ACOS_CAMERA cam, void* data)
 }
 
 void cameraConnectionCallback( ACOS_CAMERA cam, void* data, short int o, short int n )
-{
-	cout << "bebebe" << endl;
+{	
 	static short int prev = n;
 	res[ind]["status_cb"] = (o == isConnected ? 100 : 101 && n == prev);
 	prev = o;
