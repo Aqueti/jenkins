@@ -10,10 +10,7 @@ MESSAGE(STATUS "CMAKE_CURRENT_BINARY_DIR \t" ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 
-set(LIBRARY_OUTPUT_PATH /home/astepenko/workspace/test2/build/lib)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
-
-#find_package(mantisapi)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
