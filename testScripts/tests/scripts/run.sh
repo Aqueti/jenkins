@@ -19,7 +19,7 @@ else
 	g++ -pthread -w $1 ../src/tests.cpp -o ../bin/${out_name::-4} /usr/lib/libMantisAPI.so -lsqlite3 -I ../include	
 fi
 
-LIST=`find ../bin -type f -regex './[^.]+'` #| sed "s/^..//"
+LIST=`find ../bin -type f -regex '../[^.]+'` #| sed "s/^..//"
 
 for script in $LIST
 do
