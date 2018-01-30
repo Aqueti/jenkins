@@ -23,6 +23,10 @@
 
 using namespace std;
 
+namespace td {
+  ;
+}
+
 extern char *v2_ip; 
 extern char *mcam_ip;
 extern uint16_t port;
