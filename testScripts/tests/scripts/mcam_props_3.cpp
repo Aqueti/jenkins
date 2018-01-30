@@ -140,10 +140,10 @@ int main(int argc, char * argv[])
 				cout << it->first << "\t"
 					 << (it->first.length() < 8 ? "\t" : "")
 					 << step << "\t"
-					 << ((res[i]["Exposure"].act[last_index] && res[i]["Framerate"].act[last_index] && res[i]["JpegQuality"].act[last_index] && res[i]["Gain\t"].act[last_index] && res[i]["Saturation"].act[last_index] && res[i]["Shutter\t"].act[last_index] && res[i]["Contrast"].act[last_index] && res[i]["Sharpening"].act[last_index] && res[i]["DeNoise\t"].act[last_index]) ? "pass" : "fail")
+					 << ((res[i]["Exposure"].act[last_index] && res[i]["Framerate"].act[last_index] && res[i]["JpegQuality"].act[last_index] && res[i]["Gain"].act[last_index] && res[i]["Saturation"].act[last_index] && res[i]["Shutter"].act[last_index] && res[i]["Contrast"].act[last_index] && res[i]["Sharpening"].act[last_index] && res[i]["DeNoise"].act[last_index]) ? "pass" : "fail")
 					 << endl;
 
-				if(act_res) act_res = (res[i]["Exposure"].act[last_index] && res[i]["Framerate"].act[last_index] && res[i]["JpegQuality"].act[last_index] && res[i]["Gain\t"].act[last_index] && res[i]["Saturation"].act[last_index] && res[i]["Shutter\t"].act[last_index] && res[i]["Contrast"].act[last_index] && res[i]["Sharpening"].act[last_index] && res[i]["DeNoise\t"].act[last_index]);
+				if(act_res) act_res = (res[i]["Exposure"].act[last_index] && res[i]["Framerate"].act[last_index] && res[i]["JpegQuality"].act[last_index] && res[i]["Gain"].act[last_index] && res[i]["Saturation"].act[last_index] && res[i]["Shutter"].act[last_index] && res[i]["Contrast"].act[last_index] && res[i]["Sharpening"].act[last_index] && res[i]["DeNoise"].act[last_index]);
 
 				step += (res[i][it->first].range.second - res[i][it->first].range.first) / num_of_steps;
 			}
