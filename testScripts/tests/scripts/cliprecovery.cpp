@@ -22,15 +22,17 @@ void frameCallback(FRAME frame, void* data)
 
 int main(int argc, char * argv[])
 {
-	Env::setUp("cliprecovery");
+	Env::setUp("cliprecovery");	
 
 	string cmd;
-	cmd = "find " + cam_folder + " -name 'session*' -type d | head -1";
-	string folder_name = exec(cmd); folder_name = folder_name.substr(0, folder_name.length() - 1);
+	cmd = "find " + storage_path + " -name 'session*' -type d | head -1";
+	string folder_name = exec(cmd); folder_name = folder_name.substr(0, folder_name.length() - 1);	
 	cmd = "rm " + folder_name + "/*.*";
 	exec(cmd);
 	cmd = "DataRecoveryTool " + folder_name;
 	exec(cmd); sleep(5);
+
+	cout << "folder_name: " << folder_name << endl;
 
 	if(act_res) act_res = fileExists((folder_name + "/session.json").c_str());
 	if(act_res) act_res = fileExists((folder_name + "/AciBaseContainerMap.map").c_str());

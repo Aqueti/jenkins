@@ -1,7 +1,7 @@
 #include "tests.h" 
 
 char *v2_ip = "127.0.0.1"; 
-char *mcam_ip = "192.168.10.1";
+char *mcam_ip = "192.168.10.11";
 uint16_t port = 9999;
 uint16_t r_port = 13000;
 char *file_name = "/home/astepenko/test_res.txt";
@@ -11,9 +11,9 @@ string script_name = "na";
 bool act_res = true;
 
 char *enc = V2_ENCODE_H264;
-string camID = "21";
+string camID = "24";
 string cam_folder = "/etc/aqueti/mantis_" + camID;
-string storage_path = "/etc/aqueti/mantis_21";
+string storage_path = "/mnt/ssd_e";
 string file_path = cam_folder + "/" + "hostfile";
 
 VIDEO_SOURCE videoSource = {

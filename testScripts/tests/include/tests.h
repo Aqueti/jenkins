@@ -23,9 +23,7 @@
 
 using namespace std;
 
-namespace td {
-  ;
-}
+namespace td {}
 
 extern char *v2_ip; 
 extern char *mcam_ip;
