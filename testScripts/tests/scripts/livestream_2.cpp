@@ -8,12 +8,12 @@
 
 using namespace td;
 
-struct result {
+struct Result {
 	bool se;
 	int nof;
 };
 
-vector<result> res;
+vector<Result> res;
 bool isCounting;
 int ind;
 
@@ -64,18 +64,6 @@ int main(int argc, char * argv[])
     }
 
     fillCameraMCamList(&cam);
-
-	STREAM_PROFILE profile;
-    profile.videoSource.width = 3840;
-    profile.videoSource.height = 2144;
-    profile.videoEncoder.width = 1920;
-    profile.videoEncoder.height = 1080;
-    profile.videoEncoder.quality = 4;
-    profile.videoEncoder.sessionTimeout = 10;
-    profile.videoEncoder.framerate = 30;
-    profile.videoEncoder.encodingInterval = 50;
-    profile.videoEncoder.bitrateLimit = 2048;
-    strcpy(profile.videoEncoder.encoding, V2_ENCODE_H264);
 
     vector<ACOS_STREAM> streams;
 
