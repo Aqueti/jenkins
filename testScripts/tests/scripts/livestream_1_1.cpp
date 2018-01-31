@@ -74,6 +74,7 @@ int main(int argc, char * argv[])
 
 		deleteStream(stream);
 		closeStreamReceiver(r_port);
+        sleep(1);
     }
 
     setCameraConnection(cam, false, 10);
