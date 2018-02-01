@@ -14,16 +14,16 @@ void newCameraCallback(ACOS_CAMERA cam, void* data)
     *_cam = cam;
 }
 
-void mcamFrameCallback(FRAME frame, void* data)
-{
-    std::cout << frame.m_metadata.m_camId << endl;
-}
-
 void newMCamCallback(MICRO_CAMERA mcam, void* data)
 {
     static int i = 0;
 	MICRO_CAMERA* mcamList = (MICRO_CAMERA*) data;
 	mcamList[i++] = mcam;
+}
+
+void mcamFrameCallback(FRAME frame, void* data)
+{
+    
 }
 
 void frameCallback(FRAME frame, void* data)
