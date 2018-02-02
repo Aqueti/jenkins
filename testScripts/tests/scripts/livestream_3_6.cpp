@@ -1,3 +1,9 @@
+/**
+* Checking:
+* box zoom
+*
+**/
+
 #include "tests.h"
 
 using namespace td;
