@@ -1,4 +1,8 @@
-// checking that new model file was applied
+/**
+* Checking:
+* new model file was applied
+*
+**/
 
 #include "tests.h"
 
