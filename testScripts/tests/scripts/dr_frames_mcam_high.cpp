@@ -8,7 +8,7 @@
 
 using namespace td;
 
-uint16_t times = 1;
+uint16_t times = 5;
 bool isCompleted = false;
 bool isPushing = true;
 
@@ -52,7 +52,7 @@ void add_res(int cam_id) {
 
   res[cam_id].push_back({exp_num_of_frames, act_num_of_frames, num_of_mis_frames, num_of_dr_frames});
 
-	if (res[cam_id].size() >= (times - 1)) isCompleted = true;    
+	if (res[cam_id].size() >= times) isCompleted = true;    
 }
 
 void newCameraCallback(ACOS_CAMERA mcam, void* data)

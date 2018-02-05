@@ -52,7 +52,7 @@ void add_res() {
 
   res.push_back({exp_num_of_frames, act_num_of_frames, num_of_mis_frames, num_of_dr_frames});
 
-  if (res.size() >= (times - 1)) isCompleted = true;
+  if (res.size() >= times) isCompleted = true;
 }
 
 void newCameraCallback(ACOS_CAMERA mcam, void* data)
@@ -95,7 +95,7 @@ int main(int argc, char * argv[])
 
   ACOS_STREAM stream = createLiveStream( cam, profile );
   initStreamReceiver( fcb, stream, r_port, 2.0 );
-  setStreamGoLive( stream ); sleep(1);
+  setStreamGoLive( stream );
 
   while(!isCompleted) sleep(1);
 
