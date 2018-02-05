@@ -8,7 +8,7 @@
 
 using namespace td;
 
-uint16_t times = 1;
+uint16_t times = 5;
 bool isCompleted = false;
 bool isPushing = true;
 
