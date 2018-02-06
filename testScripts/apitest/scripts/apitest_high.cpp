@@ -1,8 +1,4 @@
-#include "mantis/MantisAPI.h"
-#include "gtest/gtest.h"
 #include "apitest.h"
-
-
 
 void newCameraCallback(ACOS_CAMERA cam, void* data)
 {

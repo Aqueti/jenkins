@@ -5,14 +5,17 @@
 #include <string>
 #include <sstream>
 #include <cstring>
-#include <sys/time.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/stat.h>
 #include <cmath>
 #include <map>
 #include <list>
 #include <vector>
 #include <iterator>
+
+#include "mantis/MantisAPI.h"
+#include "gtest/gtest.h"
 
 using namespace std;
 

@@ -1,8 +1,4 @@
-#include "mantis/MantisAPI.h"
-#include "gtest/gtest.h"
 #include "apitest.h"
-
-
 
 void newMCamCallback(MICRO_CAMERA mcam, void* data)
 {
