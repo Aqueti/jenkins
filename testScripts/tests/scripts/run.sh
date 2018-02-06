@@ -9,8 +9,7 @@ find ../bin -type f | perl -lne 'print if -B' | xargs rm 2>/dev/null
 if [ -z "$1" ]; then
 	LIST=`find . -type f -regex '.*?\.cpp' | sed "s/^..//"`
 
-	for script in $LIST
-	do
+	for script in $LIST; do
 	  out_name=${script::-4}
 	  g++ -pthread -w $script ../src/tests.cpp -o ../bin/$out_name /usr/lib/libMantisAPI.so -lsqlite3 -I ../include
 	done
@@ -21,7 +20,6 @@ fi
 
 LIST=`find ../bin -type f -regex '../[^.]+'` #| sed "s/^..//"
 
-for script in $LIST
-do
+for script in $LIST; do
   $script
 done
