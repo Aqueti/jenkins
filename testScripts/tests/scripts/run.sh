@@ -11,11 +11,11 @@ if [ -z "$1" ]; then
 
 	for script in $LIST; do
 	  out_name=${script::-4}
-	  g++ -pthread -w $script ../src/tests.cpp -o ../bin/$out_name /usr/lib/libMantisAPI.so -lsqlite3 -I ../include
+	  g++ -pthread -w $script ../src/tests.cpp -o ../bin/$out_name /usr/lib/libMantisAPI.so -I ../include #-lsqlite3
 	done
 else
 	out_name=$1	
-	g++ -pthread -w $1 ../src/tests.cpp -o ../bin/${out_name::-4} /usr/lib/libMantisAPI.so -lsqlite3 -I ../include	
+	g++ -pthread -w $1 ../src/tests.cpp -o ../bin/${out_name::-4} /usr/lib/libMantisAPI.so -I ../include	
 fi
 
 LIST=`find ../bin -type f -regex '../[^.]+'` #| sed "s/^..//"
