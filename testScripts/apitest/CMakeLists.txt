@@ -61,4 +61,6 @@ foreach(f_name ${SOURCE_FILES})
 	add_executable(${out_name} ${f_name})
 
 	target_link_libraries(${out_name} libgtest libgmock libMantisAPI.so)
+	
+	# add_test(${out_name} ${out_name})
 endforeach(f_name)
