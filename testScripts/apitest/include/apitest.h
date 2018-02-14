@@ -132,7 +132,7 @@ class MantisAPITest_N : public ::testing::Test
 		n_port = 9999;
 		port = 8888;
 		r_port = 12000;
-		mc_ip = "192.168.0.1";
+		mc_ip = "192.168.168.192";
 		mc_port = 8888;
 		model_file = "";
 		clip_model_file = "";
