@@ -39,7 +39,7 @@ public:
     TestParams() {
         ip = "127.0.0.1";
         port = 9999;
-        mc_ip = "192.168.10.1";
+        mc_ip = string(getenv("ENV_TYPE")) == "TX1_old" ? "192.168.10.6" : (string(getenv("ENV_TYPE")) == "TX1_new" ? "192.168.10.1" : "192.168.10.11");
         mc_port = 9999;
         r_port = 11000;
         mcamID = 2;
