@@ -1,0 +1,35 @@
+def tegras = ["tx1","tx2"]
+def jetpacks = ["new","old"]
+def modes = ["jpeg","h264","h265"]
+def tasks = [:]
+
+stage("Before") {
+    node {
+        echo "before"
+    }
+}
+
+for(int i = 0; i < tegras.size(); i++) {
+    def tegra = tegras[i]
+    for(int j = 0; j < (tegra == "tx1" ? jetpacks.size() : 1); j++) {
+        def jetpack = jetpacks[j]
+        for(int k = 0; k < modes.size(); k++) {
+            def mode = modes[k]
+            tasks["${tegra}/${jetpack}/${mode}"] = {
+                node("cam_server_1") {                
+                    println "Node=${env.NODE_NAME}"                
+                }
+            }
+        }
+    }
+}
+
+stage ("Matrix") {
+    parallel tasks
+}
+
+stage("After") {
+    node {
+        echo "after"
+    }
+}
