@@ -1,0 +1,39 @@
+#!/usr/bin/env groovy
+
+pipeline {
+   agent {label 'cam_server_1'}
+   stages {
+      stage('Run tests\nTX1(old)') {
+         steps {
+            echo ""
+         }
+         post {
+          always {      
+             junit '**/results.xml'
+          }
+         }
+      }
+
+      stage('Run tests\nTX1(new)') {
+         steps {
+            echo ""
+         }
+         post {
+          always {      
+             junit '**/results.xml'
+          }
+         }
+      }
+  
+      stage('Run tests\nTX2') {
+         steps {
+            echo ""
+         }
+         post {
+          always {      
+             junit '**/results.xml'
+          }
+         }
+      }
+   }
+}
