@@ -204,7 +204,7 @@ TEST_F(MantisAPITest_N, getCameraNumberOfMCams_N) {
     EXPECT_EQ(act_res, 0);
 }
 
-TEST_F(MantisAPITest, getCameraMCamList_P_DISABLED) {
+TEST_F(MantisAPITest, DISABLED_getCameraMCamList_P) {
 	connectToCameraServer(ip, port);
 
 	ACOS_CAMERA cam;
@@ -864,19 +864,19 @@ TEST_F(MantisAPITest_N, deleteClip_N) {
  * High-level operations and processing threads
  ********************************************************************/
 
-TEST_F(MantisAPITest, updateCameraModel_P_DISABLED) {
+TEST_F(MantisAPITest, DISABLED_updateCameraModel_P) {
     bool act_res = updateCameraModel(cam, (cam_folder + "/model.json").c_str());
 
     EXPECT_TRUE(act_res);
 }
 
-TEST_F(MantisAPITest_N, updateCameraModel_N_DISABLED) {
+TEST_F(MantisAPITest_N, DISABLED_updateCameraModel_N) {
     bool act_res = updateCameraModel(cam, "model.json");
 
     EXPECT_FALSE(act_res);
 }
 
-TEST_F(MantisAPITest_cstream, updateClipModels_P_DISABLED) {
+TEST_F(MantisAPITest_cstream, DISABLED_updateClipModels_P) {
 	setCameraRecording(cam, true, 10);
 	sleep(1);
 	setCameraRecording(cam, false, 10);
@@ -886,7 +886,7 @@ TEST_F(MantisAPITest_cstream, updateClipModels_P_DISABLED) {
     EXPECT_TRUE(act_res);
 }
 
-TEST_F(MantisAPITest_N, updateClipModels_N_DISABLED) {
+TEST_F(MantisAPITest_N, DISABLED_updateClipModels_N) {
     bool act_res = updateClipModels(clip, "session.json");
 
     EXPECT_FALSE(act_res);
@@ -1041,11 +1041,8 @@ TEST_F(MantisAPITest, setSystemCallbacks) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest( &argc, argv );
-	//::testing::GTEST_FLAG(filter) = "*_P";
-	//RUN_ALL_TESTS();
-	//::testing::GTEST_FLAG(filter) = "*_B";
-	//RUN_ALL_TESTS();
-	//::testing::GTEST_FLAG(filter) = "*_N";
+	
+	::testing::GTEST_FLAG(filter) = "*_N";
 	RUN_ALL_TESTS();
 
 	return 0;
