@@ -104,11 +104,6 @@ TestParams::TestParams() {
     mc_port = 9999;
     r_port = 14014;
     numCams = 1;
-    //if (string(getenv("ENV_TYPE")) == "TX1-old")
-    mc_ip = "192.168.168.1"; //depends
-    mcamID = 11; //depends
-    camID = 19; // depends
-    numMCams = 2; //depends
     duration = 5;
     num_of_mcams = 2;
 
