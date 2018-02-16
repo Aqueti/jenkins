@@ -1,10 +1,10 @@
 #ifndef MANTISAPITEST_H
 #define MANTISAPITEST_H
 
-#include <fstream>
+#include <cstring>
 #include <string>
 #include <sstream>
-#include <cstring>
+#include <fstream>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -13,9 +13,10 @@
 #include <list>
 #include <vector>
 #include <iterator>
+#include <exception>
 
-#include "mantis/MantisAPI.h"
 #include "gtest/gtest.h"
+#include "mantis/MantisAPI.h"
 
 using namespace std;
 
@@ -31,42 +32,13 @@ void latestTimeCallback(ACOS_CAMERA cam, void* data, uint64_t o, uint64_t n);
 void frameCallback(FRAME frame, void* data);
 void deletedClipCallback(ACOS_CLIP clip, void* data);
 void mcamPropertyCallback(MICRO_CAMERA mcam, void* data, bool o, bool n);
+
+string exec(string cmd);
 uint64_t getCurrentTimestamp();
 bool fileExists( const std::string &Filename );
 
 class TestParams {
 public:
-    TestParams() {
-        ip = "127.0.0.1";
-        port = 9999;
-        mc_ip = "192.168.10.6";
-	//mc_ip = string(getenv("ENV_TYPE")) == "TX1_old" ? "192.168.10.6" : (string(getenv("ENV_TYPE")) == "TX1_new" ? "192.168.10.1" : "192.168.10.11");
-        mc_port = 9999;
-        r_port = 11000;
-        mcamID = 2;
-        numCams = 1;
-        camID = 11;
-        numMCams = 2;
-        model_file = "model.json";
-        clip_model_file = "clip_model.json";
-
-        fname = "clipList.txt";
-        profile.videoSource.width = 3840;
-        profile.videoSource.height = 2144;
-        profile.videoEncoder.width = 1920;
-        profile.videoEncoder.height = 1080;
-        profile.videoEncoder.quality = 4;
-        profile.videoEncoder.sessionTimeout = 10;
-        profile.videoEncoder.framerate = 30;
-        profile.videoEncoder.encodingInterval = 50;
-        profile.videoEncoder.bitrateLimit = 2048;
-        strcpy(profile.videoEncoder.encoding, "H264");
-    }
-
-    ~TestParams() {
-
-    }
-
     char *ip;
     char *mc_ip;
     uint16_t port;
@@ -76,22 +48,51 @@ public:
     uint32_t numCams;
     uint32_t camID;
     uint32_t numMCams;
+    uint32_t duration;
+    uint16_t num_of_mcams;
     ACOS_CAMERA cam;
     MICRO_CAMERA mcam;
+    MICRO_CAMERA *mcamList;
+    VIDEO_SOURCE videoSource;
+    VIDEO_ENCODER videoEncoder;
     STREAM_PROFILE profile;
     ACOS_STREAM astream;
-    char *fname;
-    char *model_file;
-    char *clip_model_file;
+    ACOS_CLIP clip;
+    ACOS_CLIP del_clip;
+    ACOS_CLIP* clipList;
+	FRAME frame;
+	ACOS_PTZ_VELOCITY ptz_vel;
+	ACOS_PTZ_ABSOLUTE ptz_abs;
+	AtlWhiteBalance wb;
+	AtlCompressionParameters cp;
+    string storage_path;
+    string cam_folder;
+    string env_type;
+
+    TestParams();
+
+    ~TestParams();
 };
 
-class MantisAPITest : public ::testing::Test
+class MantisAPITest : public ::testing::Test, public TestParams
 {
-protected:
+  protected:
     virtual void SetUp();
     virtual void TearDown();
+};
 
-    TestParams *tp;
+class MantisAPITest_B : public ::testing::Test, public TestParams
+{
+  protected:
+	virtual void SetUp();
+    virtual void TearDown();
+};
+
+class MantisAPITest_N : public ::testing::Test, public TestParams
+{
+  protected:
+	virtual void SetUp();
+    virtual void TearDown();
 };
 
 class MantisAPITest_camconn : public MantisAPITest
@@ -115,55 +116,25 @@ class MantisAPITest_cstream : public MantisAPITest_camconn
     virtual void TearDown();
 };
 
-class MantisAPITest_mcamconn : public ::testing::Test
+class MantisAPITest_mlstream : public MantisAPITest_camconn
 {
   protected:
     virtual void SetUp();
     virtual void TearDown();
-
-    TestParams *tp;
 };
 
-class MantisAPITest_N : public ::testing::Test
+class MantisAPITest_mcamconn : public ::testing::Test, public TestParams
 {
   protected:
-	MantisAPITest_N() {
-		n_ip = "127.0.0.1";
-		ip = "127.0.0.127";
-		n_port = 9999;
-		port = 8888;
-		r_port = 12000;
-		mc_ip = "192.168.168.192";
-		mc_port = 8888;
-		model_file = "";
-		clip_model_file = "";
-	}
+    virtual void SetUp();
+    virtual void TearDown();
+};
 
-	virtual void SetUp() {}
-
-    virtual void TearDown() {}
-
-    char *n_ip;
-    char *ip;
-    char *mc_ip;
-    uint16_t n_port;
-    uint16_t port;
-    uint16_t r_port;
-    uint16_t mc_port;
-
-    ACOS_CAMERA cam;
-    MICRO_CAMERA mcam;
-    ACOS_STREAM astream;
-    STREAM_PROFILE profile;
-    ACOS_CLIP clip;
-    FRAME frame;
-    FRAME_CALLBACK fCB;
-    ACOS_PTZ_VELOCITY vel;
-    ACOS_PTZ_ABSOLUTE abs;
-    AtlWhiteBalance wb;
-    AtlCompressionParameters cp;
-    char *model_file;
-    char *clip_model_file;
+class MantisAPITest_mcamlstream : public MantisAPITest_mcamconn
+{
+  protected:
+    virtual void SetUp();
+    virtual void TearDown();
 };
 
 #endif

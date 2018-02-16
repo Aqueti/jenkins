@@ -13,8 +13,8 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-#set(SOURCE_LIB ${PROJECT_SOURCE_DIR}/src/apitest.cpp)
-#add_library(tests STATIC ${SOURCE_LIB})
+set(SOURCE_LIB ${PROJECT_SOURCE_DIR}/src/apitest.cpp)
+add_library(apitest STATIC ${SOURCE_LIB})
 
 find_package (Threads REQUIRED)
 
@@ -60,7 +60,7 @@ foreach(f_name ${SOURCE_FILES})
 
 	add_executable(${out_name} ${f_name})
 
-	target_link_libraries(${out_name} libgtest libgmock libMantisAPI.so)
+	target_link_libraries(${out_name} apitest libgtest libgmock libMantisAPI.so)
 	
 	# add_test(${out_name} ${out_name})
 endforeach(f_name)
