@@ -1041,11 +1041,11 @@ TEST_F(MantisAPITest, setSystemCallbacks) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest( &argc, argv );
-	::testing::GTEST_FLAG(filter) = "*_P";
-	RUN_ALL_TESTS();
-	::testing::GTEST_FLAG(filter) = "*_B";
-	RUN_ALL_TESTS();
-	::testing::GTEST_FLAG(filter) = "*_N";
+	//::testing::GTEST_FLAG(filter) = "*_P";
+	//RUN_ALL_TESTS();
+	//::testing::GTEST_FLAG(filter) = "*_B";
+	//RUN_ALL_TESTS();
+	//::testing::GTEST_FLAG(filter) = "*_N";
 	RUN_ALL_TESTS();
 
 	return 0;
