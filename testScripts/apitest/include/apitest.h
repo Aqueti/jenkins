@@ -33,6 +33,7 @@ void frameCallback(FRAME frame, void* data);
 void deletedClipCallback(ACOS_CLIP clip, void* data);
 void mcamPropertyCallback(MICRO_CAMERA mcam, void* data, bool o, bool n);
 
+int cnt_err(bool p);
 string exec(string cmd);
 uint64_t getCurrentTimestamp();
 bool fileExists( const std::string &Filename );
@@ -68,6 +69,8 @@ public:
     string storage_path;
     string cam_folder;
     string env_type;
+    string tegra_user;
+    char mode[10];
 
     TestParams();
 
@@ -135,6 +138,20 @@ class MantisAPITest_mcamlstream : public MantisAPITest_mcamconn
   protected:
     virtual void SetUp();
     virtual void TearDown();
+};
+
+class acosd {
+public:
+  static void start(string tegra_user, char* mc_ip, char* mode);
+  static void stop(string tegra_user, char* mc_ip);
+  static void restart(string tegra_user, char* mc_ip, char* mode);
+};
+
+class V2 {
+public:
+  static void start(uint16_t camID, string storage_path);
+  static void stop();
+  static void restart(uint16_t camID, string storage_path);
 };
 
 #endif

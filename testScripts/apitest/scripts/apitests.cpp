@@ -204,7 +204,7 @@ TEST_F(MantisAPITest_N, getCameraNumberOfMCams_N) {
     EXPECT_EQ(act_res, 0);
 }
 
-TEST_F(MantisAPITest, DISABLED_getCameraMCamList_P) {
+TEST_F(MantisAPITest, DISABLED_getCameraMCamList_PP) {
 	connectToCameraServer(ip, port);
 
 	ACOS_CAMERA cam;
@@ -1042,7 +1042,7 @@ TEST_F(MantisAPITest, setSystemCallbacks) {
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest( &argc, argv );
 	
-	::testing::GTEST_FLAG(filter) = "*_N";
+	::testing::GTEST_FLAG(filter) = "*";
 	RUN_ALL_TESTS();
 
 	return 0;

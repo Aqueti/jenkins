@@ -98,17 +98,19 @@ bool fileExists( const std::string &Filename )
     return access( Filename.c_str(), 0 ) == 0;
 }
 
+int cnt_err(bool p = false)
+{
+    static int i = 0;
+    if (!p) return i;
+    else return i++;
+}
+
 TestParams::TestParams() {
     ip = "127.0.0.1";
     port = 9999;
     mc_port = 9999;
     r_port = 14014;
     numCams = 1;
-    //if (string(getenv("ENV_TYPE")) == "TX1-old")
-    mc_ip = "192.168.168.1"; //depends
-    mcamID = 11; //depends
-    camID = 19; // depends
-    numMCams = 2; //depends
     duration = 5;
     num_of_mcams = 2;
 
@@ -117,27 +119,31 @@ TestParams::TestParams() {
     if(env_type == "TX1-old") {
     	camID = 101;
     	mcamID = 61;
-        mc_ip = "192.168.168.6";
+        mc_ip = "192.168.10.6";
         numMCams = 10;
+        tegra_user = "ubuntu";
     } else if (env_type == "TX1-new") {
         camID = 102;
         mcamID = 11;
-        mc_ip = "192.168.168.1";
+        mc_ip = "192.168.10.1";
         numMCams = 10;
+        tegra_user = "nvidia";
     } else if (env_type == "TX2") {
         camID = 103;
         mcamID = 111;
-        mc_ip = "192.168.168.11";
+        mc_ip = "192.168.10.11";
         numMCams = 2;
+        tegra_user = "nvidia";
     } else {
         camID = 19;
         mcamID = 91;
-        mc_ip = "192.168.168.9";
+        mc_ip = "192.168.10.9";
         numMCams = 2;
+        tegra_user = "ubuntu";
     }
 
     cam_folder = "/etc/aqueti/mantis_" + camID;
-    storage_path = "/mnt/ssd_e";
+    storage_path =  string(getenv("HOME")); //"/mnt/ssd_e";
 
     videoSource = {
       1920, //width
@@ -154,6 +160,7 @@ TestParams::TestParams() {
        	   //encoding
     };
     strcpy(videoEncoder.encoding, V2_ENCODE_H264);
+    strcpy(mode, V2_ENCODE_H264);
 
     profile = {
     	videoSource,
@@ -185,9 +192,18 @@ TestParams::~TestParams() {
 }
 
 void MantisAPITest::SetUp() {
-	if (isConnectedToCameraServer() != AQ_SERVER_CONNECTED) {
-		connectToCameraServer("127.0.0.1", 9999);
-		if (isConnectedToCameraServer() != AQ_SERVER_CONNECTED) FAIL(); //add logic to restart V2
+	if (isConnectedToCameraServer() != AQ_SERVER_CONNECTED) {  
+        if (cnt_err() > 1) FAIL();
+
+		connectToCameraServer(ip, port);      
+        if (isConnectedToCameraServer() != AQ_SERVER_CONNECTED) {
+            cnt_err(true);
+
+            acosd::restart(tegra_user, mc_ip, mode);
+            V2::restart(camID, storage_path);
+
+            FAIL();
+        }
 	}
 
 	NEW_CAMERA_CALLBACK camCB;
@@ -225,7 +241,7 @@ void MantisAPITest_camconn::SetUp() {
     MantisAPITest::SetUp();
 
     if(isCameraConnected(cam) != AQ_CAMERA_CONNECTED) {
-        setCameraConnection(cam, true, 10);
+        setCameraConnection(cam, true, 10);      
     }
 
     fillCameraMCamList(&cam);
@@ -247,7 +263,7 @@ void MantisAPITest_lstream::SetUp() {
 	fcb.data = &frame;
 
 	setCameraReceivingData(cam, true, 5);
-    astream = createLiveStream( cam, profile ); //requires model file
+    astream = createLiveStream( cam, profile ); //requires model file   
     initStreamReceiver( fcb, astream, r_port, 5.0 );
     setStreamGoLive( astream );
 
@@ -357,3 +373,49 @@ void MantisAPITest_mcamlstream::TearDown() {
 	MantisAPITest_mcamconn::TearDown();
 }
 
+void acosd::start(string tegra_user, char* mc_ip, char* mode) {
+  ostringstream cmd;
+  cmd << "ssh " << tegra_user << "@" << mc_ip << " 'acosd -R acosdLog -C " << mode << " -s 1'";
+  cout << "~~~: " << cmd.str() << endl;
+  exec(cmd.str());  
+  sleep(1);
+} 
+void acosd::stop(string tegra_user, char* mc_ip) {
+  ostringstream cmd;
+  cmd << "ssh " << tegra_user << "@" << mc_ip << " 'pkill -9 acosd'";
+  cout << "~~~: " << cmd.str() << endl;
+  exec(cmd.str());
+  sleep(1);
+}
+void acosd::restart(string tegra_user, char* mc_ip, char* mode) {
+  acosd::stop(tegra_user, mc_ip);
+  acosd::start(tegra_user, mc_ip, mode);
+}
+
+void V2::start(uint16_t camID, string storage_path) {
+  ostringstream cmd;
+  cmd << "V2 " 
+      << "--cache-size 20000 " 
+      << "--maxRecordingLength 3600 "
+      << "--tightPrefetch "
+      << "--force-gpu-compatibility "
+      << "-p 24816 "
+      << "--numJpegDecompressors 16 "
+      << "--numH26XDecompressors 5 "
+      << "--prefetchSize 40 "
+      << "--dir " << storage_path << " " 
+      << "--camera " << camID << " " 
+      << "1>/dev/null &";
+  exec(cmd.str());
+  cout << "~~~: " << cmd.str() << endl;
+  sleep(3);
+}
+void V2::stop() {
+  string cmd = "pkill -9 V2";
+  exec(cmd);
+  sleep(1);
+}
+void V2::restart(uint16_t camID, string storage_path) {
+  V2::stop();
+  V2::start(camID, storage_path);
+}
