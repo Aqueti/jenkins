@@ -8,7 +8,7 @@ pipeline {
    }
    
    stages {
-      stage('Build') {         
+      stage('Build') {
         parallel {
           stage('Acos') {
           agent {label 'compiler'}
