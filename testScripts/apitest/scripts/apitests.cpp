@@ -204,7 +204,7 @@ TEST_F(MantisAPITest_N, getCameraNumberOfMCams_N) {
     EXPECT_EQ(act_res, 0);
 }
 
-TEST_F(MantisAPITest, DISABLED_getCameraMCamList_PP) {
+TEST_F(MantisAPITest, DISABLED_getCameraMCamList_P) {
 	connectToCameraServer(ip, port);
 
 	ACOS_CAMERA cam;
@@ -1012,7 +1012,7 @@ TEST_F(MantisAPITest_camconn, saveCameraState) {
     EXPECT_TRUE(act_res);
 }
 
-TEST_F(MantisAPITest_camconn, loadCameraState) {
+TEST_F(MantisAPITest_camconn, DISABLED_loadCameraState) {
 	char *dir = "./";
 
 	bool act_res = loadCameraState(dir);
@@ -1020,18 +1020,18 @@ TEST_F(MantisAPITest_camconn, loadCameraState) {
     EXPECT_TRUE(act_res);
 }
 
-TEST_F(MantisAPITest, printCameraProperties) {
+TEST_F(MantisAPITest, DISABLED_printCameraProperties) {
     EXPECT_NO_THROW(printCameraProperties());
 }
 
-TEST_F(MantisAPITest, getCameraProperties) {
+TEST_F(MantisAPITest, DISABLED_getCameraProperties) {
     char* buffer;
     int size = 1;
 
     EXPECT_NO_THROW(getCameraProperties(buffer, size));
 }
 
-TEST_F(MantisAPITest, setSystemCallbacks) {
+TEST_F(MantisAPITest, DISABLED_setSystemCallbacks) {
     SYSTEM_CALLBACKS sCB;
 
     EXPECT_NO_THROW(setSystemCallbacks(sCB));
@@ -1042,7 +1042,7 @@ TEST_F(MantisAPITest, setSystemCallbacks) {
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest( &argc, argv );
 	
-	::testing::GTEST_FLAG(filter) = "*";
+	::testing::GTEST_FLAG(filter) = "*_P";
 	RUN_ALL_TESTS();
 
 	return 0;

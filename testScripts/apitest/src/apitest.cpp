@@ -120,13 +120,13 @@ TestParams::TestParams() {
     	camID = 101;
     	mcamID = 61;
         mc_ip = "192.168.10.6";
-        numMCams = 10;
+        numMCams = 2;
         tegra_user = "ubuntu";
     } else if (env_type == "TX1-new") {
         camID = 102;
         mcamID = 11;
         mc_ip = "192.168.10.1";
-        numMCams = 10;
+        numMCams = 2;
         tegra_user = "nvidia";
     } else if (env_type == "TX2") {
         camID = 103;
@@ -192,20 +192,20 @@ TestParams::~TestParams() {
 }
 
 void MantisAPITest::SetUp() {
-	if (isConnectedToCameraServer() != AQ_SERVER_CONNECTED) {  
-        if (cnt_err() > 1) FAIL();
+    while(isConnectedToCameraServer() != AQ_SERVER_CONNECTED) {
+        if (cnt_err() >= 3) FAIL();
 
-		connectToCameraServer(ip, port);      
+        connectToCameraServer(ip, port);
+
         if (isConnectedToCameraServer() != AQ_SERVER_CONNECTED) {
             cnt_err(true);
 
+            V2::stop();
             acosd::restart(tegra_user, mc_ip, mode);
-            V2::restart(camID, storage_path);
-
-            FAIL();
+            V2::start(camID, storage_path);
         }
-	}
-
+    }    	
+	
 	NEW_CAMERA_CALLBACK camCB;
 	camCB.f = newCameraCallback;
 	camCB.data = &cam;
@@ -214,7 +214,11 @@ void MantisAPITest::SetUp() {
 
 void MantisAPITest::TearDown()
 {
-	disconnectFromCameraServer();
+    try {
+        if(isConnectedToCameraServer() == AQ_SERVER_CONNECTED) {
+            disconnectFromCameraServer();
+        }        
+    } catch (exception e) {}
 }
 
 void MantisAPITest_B::SetUp() {
@@ -248,9 +252,13 @@ void MantisAPITest_camconn::SetUp() {
 }
 
 void MantisAPITest_camconn::TearDown() {
-    if(isCameraConnected(cam) == AQ_CAMERA_CONNECTED) {
-       setCameraConnection(cam, false, 10);
-    }
+    try {
+        if(isConnectedToCameraServer() == AQ_SERVER_CONNECTED && 
+           isCameraConnected(cam) == AQ_CAMERA_CONNECTED) {
+                setCameraConnection(cam, false, 10);
+        }
+    } catch (exception e) {}
+    
 
     MantisAPITest::TearDown();
 }
@@ -271,11 +279,16 @@ void MantisAPITest_lstream::SetUp() {
 }
 
 void MantisAPITest_lstream::TearDown() {
-    deleteStream(astream);
-    closeStreamReceiver(r_port);
-    setCameraReceivingData(cam, false, 5);
+    try {
+         if(isConnectedToCameraServer() == AQ_SERVER_CONNECTED && 
+            isCameraConnected(cam) == AQ_CAMERA_CONNECTED) {
+                deleteStream(astream);
+                closeStreamReceiver(r_port);
+                setCameraReceivingData(cam, false, 5);
+        }
+    } catch (exception e) {} 
 
-    MantisAPITest_camconn::TearDown();
+    MantisAPITest_camconn::TearDown();   
 }
 
 void MantisAPITest_mlstream::SetUp() {
@@ -291,9 +304,14 @@ void MantisAPITest_mlstream::SetUp() {
 }
 
 void MantisAPITest_mlstream::TearDown() {
-    deleteStream(astream);
-    closeStreamReceiver(r_port);
-    setCameraReceivingData(cam, false, 5);
+    try {
+        if(isConnectedToCameraServer() == AQ_SERVER_CONNECTED && 
+           isCameraConnected(cam) == AQ_CAMERA_CONNECTED) {
+                deleteStream(astream);
+                closeStreamReceiver(r_port);
+                setCameraReceivingData(cam, false, 5);
+        }
+    } catch (exception e) {}
 
     MantisAPITest_camconn::TearDown();
 }
@@ -332,9 +350,14 @@ void MantisAPITest_cstream::SetUp() {
 }
 
 void MantisAPITest_cstream::TearDown() {
-    deleteStream(astream);
-    closeStreamReceiver(r_port);
-    setCameraReceivingData(cam, false, 5);
+    try {
+        if(isConnectedToCameraServer() == AQ_SERVER_CONNECTED && 
+           isCameraConnected(cam) == AQ_CAMERA_CONNECTED) {
+                deleteStream(astream);
+                closeStreamReceiver(r_port);
+                setCameraReceivingData(cam, false, 5);
+        }
+    } catch (exception e) {}
 
     MantisAPITest_camconn::TearDown();
 }
@@ -375,15 +398,14 @@ void MantisAPITest_mcamlstream::TearDown() {
 
 void acosd::start(string tegra_user, char* mc_ip, char* mode) {
   ostringstream cmd;
-  cmd << "ssh " << tegra_user << "@" << mc_ip << " 'acosd -R acosdLog -C " << mode << " -s 1'";
-  cout << "~~~: " << cmd.str() << endl;
+  cmd << "ssh " << tegra_user << "@" << mc_ip << " 'acosd -R acosdLog -C " << mode << " -s 1'"; 
+  cout << "~~~ " << cmd.str() << endl;
   exec(cmd.str());  
-  sleep(1);
+  sleep(3);
 } 
 void acosd::stop(string tegra_user, char* mc_ip) {
   ostringstream cmd;
   cmd << "ssh " << tegra_user << "@" << mc_ip << " 'pkill -9 acosd'";
-  cout << "~~~: " << cmd.str() << endl;
   exec(cmd.str());
   sleep(1);
 }
@@ -407,8 +429,8 @@ void V2::start(uint16_t camID, string storage_path) {
       << "--camera " << camID << " " 
       << "1>/dev/null &";
   exec(cmd.str());
-  cout << "~~~: " << cmd.str() << endl;
-  sleep(3);
+  cout << "~~~ " << cmd.str() << endl;
+  sleep(5);
 }
 void V2::stop() {
   string cmd = "pkill -9 V2";
