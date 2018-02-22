@@ -212,11 +212,6 @@ TEST_F(MantisNewAPITest, eapiInsertThumbnail_N) {
     EXPECT_FALSE(act_res);
 }
 
-
-
-
-
-
 TEST_F(MantisNewAPITest, eapiSetStartTime_P) {
     bool act_res = (aqt_STATUS_OKAY == eapi.SetStartTime(zeroTime));
 

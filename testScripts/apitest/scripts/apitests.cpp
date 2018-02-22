@@ -1041,8 +1041,8 @@ TEST_F(MantisAPITest, DISABLED_setSystemCallbacks) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest( &argc, argv );
-	
-	::testing::GTEST_FLAG(filter) = "*_N";
+
+	::testing::GTEST_FLAG(filter) = "*_P";
 	RUN_ALL_TESTS();
 
 	return 0;

@@ -65,6 +65,22 @@ void mcamPropertyCallback(MICRO_CAMERA mcam, void* data, bool o, bool n)
     *_mcam = mcam;
 }
 
+string readFromFile(const char* file_name) {
+  ostringstream ss;
+  ifstream fin(file_name);
+  if (fin.is_open()) {
+    string str;
+    ifstream fin(file_name);
+
+    while (getline(fin, str)) {
+        ss << str << endl;
+    }
+    fin.close();
+  }
+
+  return ss.str();
+};
+
 string exec(string cmd) {
   FILE *popen_result;
   char buff[512];
@@ -113,22 +129,17 @@ TestParams::TestParams() {
     numCams = 1;
     duration = 5;
     num_of_mcams = 2;
+    file_name = "/home/jenkins/tegra.txt";
 
-    env_type = getenv("ENV_TYPE") != NULL ? string(getenv("ENV_TYPE")) : "";
+    tegra_type = fileExists(file_name) ? readFromFile(file_name.c_str()) : "TX1";
 
-    if(env_type == "TX1-old") {
-    	camID = 101;
-    	mcamID = 61;
-        mc_ip = "192.168.10.6";
-        numMCams = 2;
-        tegra_user = "ubuntu";
-    } else if (env_type == "TX1-new") {
+    if(tegra_type == "TX1") {
         camID = 102;
         mcamID = 11;
         mc_ip = "192.168.10.1";
         numMCams = 2;
         tegra_user = "nvidia";
-    } else if (env_type == "TX2") {
+    } else if (tegra_type == "TX2") {
         camID = 103;
         mcamID = 111;
         mc_ip = "192.168.10.11";

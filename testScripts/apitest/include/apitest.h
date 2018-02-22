@@ -68,8 +68,10 @@ public:
 	AtlCompressionParameters cp;
     string storage_path;
     string cam_folder;
-    string env_type;
+    string tegra_type;
     string tegra_user;
+    string file_name;
+
     char mode[10];
 
     TestParams();
