@@ -2,85 +2,151 @@
 
 pipeline {    
    agent none 
-   
-   environment {
-    BRANCH_NAME = "master"
-   }
-   
+      
    stages {
-      stage('Build') {
+      stage('Parallel build') {           
+        failFast true
         parallel {
-          stage('Acos') {
-          agent {label 'compiler'}
-          steps {
-            checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git']]])
-               
-            sh "mkdir -p build/acos"
-            dir('build/acos') {
-              sh "cmake ../.. -DBUILD_API:BOOL=ON -DBUILD_AGT:BOOL=ON -DBUILD_APPLICATIONS:BOOL=ON -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=ON -DBUILD_OPENCV:BOOL=ON -DBUILD_EXAMPLES:BOOL=ON -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
-              sh "make -j"
-               
-              dir('applications-prefix/src/applications-build/') {
-                sh "make package"                 
-              }
-              
-              dir('agt-prefix/src/agt-build/') {
-                 sh "make package"                 
-              }
-            }
+        stage('Render: build') {
+          agent { label "compiler_1" }
+          steps {            
+            //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
             
-            dir('build/acos') {         
-              sh 'scp INSTALL/deb/*$BRANCH_NAME.deb jenkins@10.0.0.166:./deb'
-              sh 'scp applications-prefix/src/applications-build/*$BRANCH_NAME.deb jenkins@10.0.0.166:./deb'
-              sh 'scp agt-prefix/src/agt-build/*$BRANCH_NAME.deb jenkins@10.0.0.166:./deb'
+            sh "mkdir -p jenkins/build/acos"
+            dir('jenkins/build/acos') {
+              sh "cmake ../../.. -DBUILD_API:BOOL=ON -DBUILD_AGT:BOOL=ON -DBUILD_APPLICATIONS:BOOL=ON -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=ON -DBUILD_OPENCV:BOOL=ON -DBUILD_EXAMPLES:BOOL=ON -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
+              sh "make -j"
+
+              dir('INSTALL/deb') {
+                stash includes: '*.deb', excludes: '*@*', name: 'acos'              
+              }  
+              dir('applications-prefix/src/applications-build/') { 
+                sh 'make package'
+                stash includes: '*.deb', excludes: '*@*', name: 'apps'          
+              }
+              dir('agt-prefix/src/agt-build/') {
+                sh 'make package'
+                stash includes: '*.deb', excludes: '*@*', name: 'agt'            
+              }
+
+              stash includes: "release_notes.txt", name: 'release_notes'
+
+              dir('jenkins/pipeline/bash/run_src') {
+                 stash includes: '*', name: 'run_scr'
+              }
+
+              dir('jenkins/pipeline/bash/web_src') {
+                 stash includes: '*', name: 'web_scr'
+              }
             }
           }
-          post { 
-            always {  
+          
+          post {  
+            always {                        
               deleteDir()
             }
           }
-          }
-          stage('Aci') {
-            agent { label 'tegra_compiler_3' }        
-            steps {       
-              checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git']]])
+        }
+        
+        stage('Render: test') {
+          agent { label "compiler_1" }
 
-              sh "mkdir -p build/acos"
-              dir('build/acos') {
-                 sh "cmake ../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
-                 sh "make -j5"
-              }
+          steps {           
+            //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
+          
+            sh "mkdir -p jenkins/build/acos"
+            dir('jenkins/build/acos') {
+               //Build acos and tests
+               sh "cmake ../../.. -DBUILD_API:BOOL=ON -DBUILD_AGT:BOOL=ON -DBUILD_APPLICATIONS:BOOL=ON -DBUILD_TESTS:BOOL=ON -DBUILD_DEB_PACKAGE:BOOL=OFF -DUSE_DOXYGEN:BOOL=ON -DBUILD_AUTOFOCUS:BOOL=ON -DBUILD_OPENCV:BOOL=ON -DBUILD_EXAMPLES:BOOL=ON -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
+               sh "make -j"
 
-              dir('build/acos') {     
-                sh 'scp aci-prefix/src/aci-build/*$BRANCH_NAME.deb jenkins@10.0.0.166:./deb'          
-              }
+               sh "./INSTALL/bin/testATL"
+
+               dir('INSTALL') {
+                sh "echo Looking for documentation at `pwd`"
+                sh "tar -cvf Documentation.tar Documentation"
+                stash includes:'Documentation.tar', name: 'documentation'
+               }
             }
-            post { 
-              always {  
-                deleteDir()
-              }
+          }
+          
+          post {  
+            always {                        
+               deleteDir()
             }
           }
         }
-      }
+        
+        stage('Tegra: build') {
+          agent { label "tegra_compiler_2" }
+        
+          steps {            
+            //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
+              
+            sh 'mkdir -p jenkins/build/acos'
+            dir('jenkins/build/acos') {               
+               sh "cmake ../../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=OFF -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
+               sh "make -j5"
 
-      stage('Intallation') {
-         agent { label 'cam_server_1' }
-         steps {                 
-            echo "Intallation"
-            
-            sh '/home/jenkins/install.sh'
-         }
+               sh "echo Run aci when ready"
+            }
+              
+            dir('jenkins/build/acos') {
+              sh "cmake ../../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
+              sh "make -j5"
+                
+              dir('aci-prefix/src/aci-build') {
+               stash includes: '*.deb', excludes:'*@*', name: 'aci'               
+              }
+            }   
+          }
+          
+          post {  
+            always {                        
+               deleteDir()
+            }
+          }
+        }
+        }
       }
+     
+      stage('Deploy') {
+         agent { label 'master' }
+         steps {                 
+            echo "Deploy"
+            
+            sh "mkdir -p deploy/${env.BRANCH_NAME}/${env.BUILD_NUMBER}"
+            dir("deploy/${env.BRANCH_NAME}/${env.BUILD_NUMBER}") {
+               unstash 'acos'
+               unstash 'agt'
+               unstash 'apps'
+               unstash 'aci'
+               unstash 'release_notes'
+               unstash 'web_scr'
+               
+               archiveArtifacts artifacts: '**/*.deb', fingerprint: true
+               
+               sh "/var/lib/jenkins/genReleasePage.sh ${env.BRANCH_NAME} ${env.BUILD_NUMBER}"
+               
+               unstash 'documentation'
+               sh "tar -xvf Documentation.tar"
+
+               sh "/var/lib/jenkins/genMainPage.sh ${env.BRANCH_NAME} ${env.BUILD_NUMBER}"
+            }
+            
+            sh "rm -rf deploy"
+         }
+      } 
 
       stage('Build Tests') {
          agent { label 'cam_server_1' }
          steps {                 
             echo "Build Tests"
+            
+            sh '/home/jenkins/install.sh'
 
-            checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git']]])
-         
+            git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+            
             dir("testScripts/apitest/") {
                sh "cmake ."
                sh "make -j"
@@ -88,66 +154,56 @@ pipeline {
          }
       }
 
-      stage('Run tests\nTX1-old') {
-        agent { label 'cam_server_1' }
-        steps {     
-          sh '/home/jenkins/run.sh TX1-old'           
-        }
-        post { 
-          always {      
-            junit '**/results.xml'
-          }
-        }
-      }
-    
-      stage('Run tests\nTX1-new') {
+      stage('Run tests\nTX1') {
         agent { label 'cam_server_1' }
         steps {
-          sh '/home/jenkins/run.sh TX1-new'           
-        }
-        post { 
-          always {      
-            junit '**/results.xml'
+          unstash 'run_scr'
+
+          withEnv(['ENV_PATH="TX1"']) {
+            sh 'run.sh TX1 ${JOB_NAME} ${BRANCH_NAME}' 
           }
+          
+          junit '**/results.xml'
         }
       }
     
       stage('Run tests\nTX2') {
         agent { label 'cam_server_1' }
-        steps {
-          sh '/home/jenkins/run.sh TX2'           
+        steps {          
+          withEnv(['ENV_PATH="TX2"']) {
+            sh 'run.sh TX2 ${JOB_NAME} ${BRANCH_NAME}' 
+          } 
+          
+          junit '**/results.xml'
         }
-        post { 
-          always {      
-            junit '**/results.xml'
-          }
+        post {  
+            always {                        
+              deleteDir()
+            }
         }
       }
    }
 
   post { 
     always {      
-      echo "post"
-
-  /*   
-      success {       
-         emailext(
-            recipientProviders: [[$class: 'DevelopersRecipientProvider']],
-            to: "astepenko@aqueti.com", 
-            subject: "Build $BUILD_NUMBER for the $BRANCH_NAME branch passed.",
-            body: "Successfully built acos branch $BRANCH_NAME build number $BUILD_NUMBER. Packages should be available at http://10.0.0.10/repositories/$BRANCH_NAME/$BUILD_NUMBER/index.html"
-         )
-      }
-
-      failure {
-         sh " echo Sending failure e-mail"
-         emailext (
-            recipientProviders: [[$class: 'CulpritsRecipientProvider']],
-            to: "astepenko@aqueti.com",
-            subject: 'FAILURE: build $BUILD_NUMBER of  ACOS branch $BRANCH_NAME',
-            body: 'Failed to build acos branch $BRANCH_NAME build number $BUILD_NUMBER.')
-      }  
-  */
+      deleteDir()
     }
+ 
+    success {       
+       emailext(
+          recipientProviders: [[$class: 'RequesterRecipientProvider']],
+          to: "astepenko@aqueti.com", 
+          subject: "Build $BUILD_NUMBER for the $BRANCH_NAME branch passed.",
+          body: "Successfully built acos branch $BRANCH_NAME build number $BUILD_NUMBER. Packages should be available at http://10.0.0.10/repositories/$BRANCH_NAME/$BUILD_NUMBER/index.html"
+       )
+    }
+    failure {
+       emailext (
+          recipientProviders: [[$class: 'RequesterRecipientProvider']],
+          to: "astepenko@aqueti.com",
+          subject: 'FAILURE: build $BUILD_NUMBER of  ACOS branch $BRANCH_NAME',
+          body: 'Failed to build acos branch $BRANCH_NAME build number $BUILD_NUMBER.')
+    }   
   }
 }
+
