@@ -4,7 +4,7 @@ cmake_policy(SET CMP0048 NEW)
 
 project(apitest VERSION "0.1.0")
 
-enable_testing()
+#enable_testing()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -std=c++11")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
