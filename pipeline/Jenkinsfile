@@ -1,8 +1,12 @@
 #!/usr/bin/env groovy
 
 pipeline {    
-   agent none 
-      
+   agent none
+   
+   options {
+		timeout(time: 1, unit: 'HOURS')
+	} 
+   
    stages {
       stage('Parallel build') {           
         failFast true
@@ -11,6 +15,8 @@ pipeline {
           agent { label "compiler_1" }
           steps {            
             //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
+            
+            stash includes: "release_notes.txt", name: 'release_notes'
             
             sh "mkdir -p jenkins/build/acos"
             dir('jenkins/build/acos') {
@@ -28,21 +34,11 @@ pipeline {
                 sh 'make package'
                 stash includes: '*.deb', excludes: '*@*', name: 'agt'            
               }
-
-              stash includes: "release_notes.txt", name: 'release_notes'
-
-              dir('jenkins/pipeline/bash/run_src') {
-                 stash includes: '*', name: 'run_scr'
-              }
-
-              dir('jenkins/pipeline/bash/web_src') {
-                 stash includes: '*', name: 'web_scr'
-              }
             }
           }
           
           post {  
-            always {                        
+            always {
               deleteDir()
             }
           }
@@ -102,7 +98,7 @@ pipeline {
           }
           
           post {  
-            always {                        
+            always {    
                deleteDir()
             }
           }
@@ -122,16 +118,17 @@ pipeline {
                unstash 'apps'
                unstash 'aci'
                unstash 'release_notes'
-               unstash 'web_scr'
-               
+              
                archiveArtifacts artifacts: '**/*.deb', fingerprint: true
                
-               sh "/var/lib/jenkins/genReleasePage.sh ${env.BRANCH_NAME} ${env.BUILD_NUMBER}"
+               git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+               
+               sh "pipeline/bash/web_scr/genReleasePage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
                
                unstash 'documentation'
                sh "tar -xvf Documentation.tar"
 
-               sh "/var/lib/jenkins/genMainPage.sh ${env.BRANCH_NAME} ${env.BUILD_NUMBER}"
+               sh "pipeline/bash/web_scr/genMainPage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
             }
             
             sh "rm -rf deploy"
@@ -142,8 +139,6 @@ pipeline {
          agent { label 'cam_server_1' }
          steps {                 
             echo "Build Tests"
-            
-            sh '/home/jenkins/install.sh'
 
             git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
             
@@ -151,6 +146,8 @@ pipeline {
                sh "cmake ."
                sh "make -j"
             }
+            
+            sh 'pipeline/bash/run_scr/install.sh'
          }
       }
 
@@ -160,7 +157,7 @@ pipeline {
           unstash 'run_scr'
 
           withEnv(['ENV_PATH="TX1"']) {
-            sh 'run.sh TX1 ${JOB_NAME} ${BRANCH_NAME}' 
+            sh 'pipeline/bash/run_scr/run.sh TX1 ${JOB_NAME} ${BRANCH_NAME}' 
           }
           
           junit '**/results.xml'
@@ -171,7 +168,7 @@ pipeline {
         agent { label 'cam_server_1' }
         steps {          
           withEnv(['ENV_PATH="TX2"']) {
-            sh 'run.sh TX2 ${JOB_NAME} ${BRANCH_NAME}' 
+            sh 'pipeline/bash/run_scr/run.sh TX2 ${JOB_NAME} ${BRANCH_NAME}' 
           } 
           
           junit '**/results.xml'
@@ -206,4 +203,3 @@ pipeline {
     }   
   }
 }
-
