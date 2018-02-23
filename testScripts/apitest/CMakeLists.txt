@@ -62,5 +62,5 @@ foreach(f_name ${SOURCE_FILES})
 
 	target_link_libraries(${out_name} apitest libgtest libgmock libMantisAPI.so)
 	
-	# add_test(${out_name} ${out_name})
+	#add_test(${out_name} ${out_name})
 endforeach(f_name)
