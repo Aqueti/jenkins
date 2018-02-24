@@ -1,6 +1,8 @@
 #!/bin/bash
 
-last=`find $HOME/deb/$1/branches/$2/builds -type d -regex "./[0-9]+" | sed "s/^..//" | sort -n | tail -1`
+plname=`echo $1 | cut -d'/' -f 1`
+bname=`echo $1 | cut -d'/' -f 2`
+last=`find $HOME/deb/$plname/branches/$2/builds -type d -regex "./[0-9]+" | sed "s/^..//" | sort -n | tail -1`
 dir="$HOME/deb/$1/branches/$2/builds/$last"
 
 sudo dpkg -i $dir/mantisapi*.deb
