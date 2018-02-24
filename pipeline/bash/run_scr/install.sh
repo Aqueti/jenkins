@@ -1,6 +1,7 @@
 #!/bin/bash
 
-dir="$HOME/deb/apitest/lastSuccessful/archive"
+last=`find . -type d -regex "./[0-9]+" | sed "s/^..//" | sort -n | tail -1`
+dir="$HOME/deb/$1/branches/$2/builds/$last"
 
 sudo dpkg -i $dir/mantisapi*.deb
 sudo dpkg -i $dir/mantis_app*.deb
