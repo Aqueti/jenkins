@@ -13,8 +13,8 @@ if ! [ -d $dir2 ]; then
 fi
 
 rm $dir/* 2>/dev/null
-cp ../../../../*.deb $dir
-cp ../../../testScripts/apitest/bin/* $dir2
+cp *.deb $dir
+cp jkns/testScripts/apitest/bin/* $dir2
 
 sudo dpkg -i $dir/mantisapi*.deb
 sudo dpkg -i $dir/mantis_app*.deb
