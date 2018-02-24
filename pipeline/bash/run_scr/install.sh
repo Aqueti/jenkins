@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir="$HOME/deb/apitest/lastSuccessful/archive/"
+dir="$HOME/deb/apitest/lastSuccessful/archive"
 
 sudo dpkg -i $dir/mantisapi*.deb
 sudo dpkg -i $dir/mantis_app*.deb
