@@ -1,5 +1,6 @@
 #!/bin/bash
 
+HOME="/home/jenkins"
 dir="$HOME/deb_files"
 dir2="$HOME/bin_files"
 
