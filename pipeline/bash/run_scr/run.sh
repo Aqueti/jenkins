@@ -1,5 +1,7 @@
 #!/bin/bash
 
+HOME="/home/jenkins"
+
 if [ $1 == "TX1" ]; then
   echo "TX1" > $HOME/tegra/tegra.txt 
 
