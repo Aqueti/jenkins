@@ -22,7 +22,7 @@ pkill -9 V2
 V2 --cache-size 20000 --maxRecordingLength 3600 --tightPrefetch -p 24816 --numJpegDecompressors 16 --numH26XDecompressors 5 --prefetchSize 40 --force-gpu-compatibility --dir $HOME --camera $cam  1>/dev/null &
 sleep 3
 
-bin_dir=`find workspace/$2_$3*/jkns/testScripts/apitest -type d -name "bin"`
+bin_dir="$HOME/bin_files"
 
 LIST=`find $bin_dir -type f | perl -lne 'print if -B'`
 
