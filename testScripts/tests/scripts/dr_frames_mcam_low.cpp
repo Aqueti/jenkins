@@ -50,7 +50,7 @@ void add_res(int cam_id) {
 
   isPushing = true;
 
-  res.push_back({exp_num_of_frames, act_num_of_frames, num_of_mis_frames, num_of_dr_frames});
+  res[cam_id].push_back({exp_num_of_frames, act_num_of_frames, num_of_mis_frames, num_of_dr_frames});
 
   if (res[cam_id].size() >= times) isCompleted = true;    
 }
