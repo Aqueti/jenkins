@@ -1,11 +1,11 @@
 #!/bin/bash
 
-DOC_HOME="/storage/Web/software2/Documentation/acos"
-WEBHOME="/storage/Web/repositories2"
+DOC_HOME="/storage/Web/software/Documentation/acos"
+WEBHOME="/storage/Web/repositories"
 DATE=`date`
 MASTER_FILE="$WEBHOME/index.html"
 DEV_FILE="$WEBHOME/branches.html"
-S3_DEST="s3://aqueti.operations/repositories2"
+S3_DEST="s3://aqueti.operations/repositories"
 BRANCH=$1
 
 if [ $BRANCH == "master" ]; then
@@ -89,7 +89,7 @@ done
 echo "A full list of builds is available at <a href=\"branches.html\">branches.html</a>" >> $MASTER_FILE
 
 echo "<h1>Documentation</h1>" >> $MASTER_FILE
-echo "The latest for documentation for the master branch is available at <a href=\"/software2/Documentation/acos/annotated.html\">/software2/Documentation/acos/annotated.html</a>" >> $MASTER_FILE
+echo "The latest for documentation for the master branch is available at <a href=\"/software/Documentation/acos/annotated.html\">/software/Documentation/acos/annotated.html</a>" >> $MASTER_FILE
 
 echo "</body>" >> $DEV_FILE
 echo "</html>" >> $DEV_FILE
