@@ -29,7 +29,7 @@ void mcamFrameCallback(FRAME frame, void* data)
 class TestParams {
   public:
     TestParams() {
-        ip = "192.168.10.6";
+        ip = "192.168.10.";
         port = 9999;
         r_port = 11001;     
         duration = 10;
@@ -48,7 +48,7 @@ class TestParams {
         bitrateMapH265["Low"] = ATL_BITRATE_H265_LOW;
     }
 
-    char *ip;
+    string ip;
     uint16_t port;
     uint16_t r_port;
     uint16_t duration;
@@ -64,10 +64,16 @@ class TestParams {
     map<string, int> bitrateMapH265;
 };
 
-class EthPerformanceTest : public TestParams, public ::testing::Test {
+class NetworkUsage : public TestParams, public ::testing::TestWithParam<int> {
   protected:
     virtual void SetUp() {
-        mCamConnect(ip, port);
+        ostringstream ss;
+        ss << ip << GetParam();
+        ip = ss.str();
+
+        cout << "ip: " << ip << endl;
+
+        mCamConnect(ip.c_str(), port);
 
         num_of_mcams = getNumberOfMCams();
 
@@ -93,7 +99,7 @@ class EthPerformanceTest : public TestParams, public ::testing::Test {
             closeMCamFrameReceiver(r_port + i);
         }
 
-        mCamDisconnect(ip, port);
+        mCamDisconnect(ip.c_str(), port);
     }
 
     double getAvgSize() {
@@ -124,10 +130,14 @@ class EthPerformanceTest : public TestParams, public ::testing::Test {
         {
             cout << it->first << "\t" << it->second << endl;
         }
+        cout << endl;
     }
 };
 
-TEST_F(EthPerformanceTest, test) {
+INSTANTIATE_TEST_CASE_P(Test, NetworkUsage,
+                        ::testing::Range(6, 10));
+
+TEST_P(NetworkUsage, test) {
     for (int i = 0; i < bitrateModes.size(); i++) { 
         for (int j = 0; j < num_of_mcams; j++) {
             cp = getMCamCompressionParameters( mcamList[i] );
