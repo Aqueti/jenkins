@@ -44,7 +44,7 @@ struct PAIR {
 class mTestParams {
   public:
     mTestParams() {
-        ip = "192.168.10.5";
+        ip = "192.168.10.6";
         port = 9999;
         r_port = 11001;
         delta = 5e3;
