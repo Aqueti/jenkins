@@ -143,9 +143,9 @@ TEST_P(NetworkUsage, test) {
             cp = getMCamCompressionParameters( mcamList[i] );
           
             if(cp.type == ATL_COMPRESSION_TYPE_H264) {
-                cp.target_bitrate = bitrateMapH264[bitrateModes[i]];
+                cp.target_bitrate = bitrateMapH264[bitrateModes[j]];
             } else if(cp.type == ATL_COMPRESSION_TYPE_H265 ) {
-                cp.target_bitrate = bitrateMapH265[bitrateModes[i]];
+                cp.target_bitrate = bitrateMapH265[bitrateModes[j]];
             }
 
             setMCamCompressionParameters( mcamList[i], cp);
