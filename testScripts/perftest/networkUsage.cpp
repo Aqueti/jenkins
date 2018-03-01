@@ -15,8 +15,7 @@
 using namespace std;
 
 void newMCamCallback(MICRO_CAMERA mcam, void* data)
-{
-    static int i = 0;
+{   
     vector<MICRO_CAMERA>* _mcamList = (vector<MICRO_CAMERA>*) data;
     _mcamList->push_back(mcam);  
 }
