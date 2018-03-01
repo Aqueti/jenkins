@@ -51,9 +51,10 @@ public:
     uint32_t numMCams;
     uint32_t duration;
     uint16_t num_of_mcams;
-    ACOS_CAMERA cam;
+    ACOS_CAMERA cam;    
     MICRO_CAMERA mcam;
-    MICRO_CAMERA *mcamList;
+    vector<ACOS_CAMERA> camList;
+    vector<MICRO_CAMERA> mcamList;
     VIDEO_SOURCE videoSource;
     VIDEO_ENCODER videoEncoder;
     STREAM_PROFILE profile;
@@ -61,11 +62,11 @@ public:
     ACOS_CLIP clip;
     ACOS_CLIP del_clip;
     ACOS_CLIP* clipList;
-	FRAME frame;
-	ACOS_PTZ_VELOCITY ptz_vel;
-	ACOS_PTZ_ABSOLUTE ptz_abs;
-	AtlWhiteBalance wb;
-	AtlCompressionParameters cp;
+  	FRAME frame;
+  	ACOS_PTZ_VELOCITY ptz_vel;
+  	ACOS_PTZ_ABSOLUTE ptz_abs;
+  	AtlWhiteBalance wb;
+  	AtlCompressionParameters cp;
     string storage_path;
     string cam_folder;
     string tegra_type;
@@ -78,6 +79,8 @@ public:
 
     ~TestParams();
 };
+
+static TestParams *tp = new TestParams();;
 
 class MantisAPITest : public ::testing::Test, public TestParams
 {
@@ -133,6 +136,9 @@ class MantisAPITest_mcamconn : public ::testing::Test, public TestParams
   protected:
     virtual void SetUp();
     virtual void TearDown();
+
+    static void SetUpTestCase();
+    static void TearDownTestCase();
 };
 
 class MantisAPITest_mcamlstream : public MantisAPITest_mcamconn

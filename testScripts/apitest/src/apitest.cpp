@@ -2,15 +2,14 @@
 
 void newCameraCallback(ACOS_CAMERA cam, void* data)
 {
-    ACOS_CAMERA* _cam = (ACOS_CAMERA*) data;
-    *_cam = cam;
+    vector<ACOS_CAMERA>* _camList = (vector<ACOS_CAMERA>*) data;
+    _camList->push_back(cam); 
 }
 
 void newMCamCallback(MICRO_CAMERA mcam, void* data)
 {
-	static int i = 0;
-	MICRO_CAMERA* _mcam = (MICRO_CAMERA*) data;
-    _mcam[i++] = mcam;
+    vector<MICRO_CAMERA>* _mcamList = (vector<MICRO_CAMERA>*) data;
+    _mcamList->push_back(mcam);
 }
 
 void newClipCallback(ACOS_CLIP clip, void* data)
@@ -21,6 +20,9 @@ void newClipCallback(ACOS_CLIP clip, void* data)
 
 void mcamFrameCallback(FRAME frame, void* data)
 {
+    //list<FRAME> *_frames = (list<FRAME>*)data;
+    //_frames->push_back(frame);
+
     FRAME* _frame = (FRAME*) data;
     *_frame = frame;
 }
@@ -153,6 +155,8 @@ TestParams::TestParams() {
         tegra_user = "ubuntu";
     }
 
+    mc_ip = "192.168.10.10";
+
     cam_folder = "/etc/aqueti/mantis_" + camID;
     storage_path =  string(getenv("HOME")); //"/mnt/ssd_e";
 
@@ -193,9 +197,9 @@ TestParams::TestParams() {
     astream = {};
     clip = {};
     del_clip = {};
-	frame = {};
-	wb = {};
-	cp = {};
+  	frame = {};
+  	wb = {};
+  	cp = {};
 }
 
 TestParams::~TestParams() {
@@ -219,8 +223,10 @@ void MantisAPITest::SetUp() {
 	
 	NEW_CAMERA_CALLBACK camCB;
 	camCB.f = newCameraCallback;
-	camCB.data = &cam;
+	camCB.data = &camList;
 	setNewCameraCallback(camCB);
+
+  cam = camList[0];
 }
 
 void MantisAPITest::TearDown()
@@ -275,18 +281,18 @@ void MantisAPITest_camconn::TearDown() {
 }
 
 void MantisAPITest_lstream::SetUp() {
-    MantisAPITest_camconn::SetUp();
+  MantisAPITest_camconn::SetUp();
 
 	FRAME_CALLBACK fcb;
 	fcb.f = frameCallback;
 	fcb.data = &frame;
 
 	setCameraReceivingData(cam, true, 5);
-    astream = createLiveStream( cam, profile ); //requires model file   
-    initStreamReceiver( fcb, astream, r_port, 5.0 );
-    setStreamGoLive( astream );
+  astream = createLiveStream( cam, profile ); //requires model file   
+  initStreamReceiver( fcb, astream, r_port, 5.0 );
+  setStreamGoLive( astream );
 
-    sleep(2);
+  sleep(2);
 }
 
 void MantisAPITest_lstream::TearDown() {
@@ -345,12 +351,12 @@ void MantisAPITest_cstream::SetUp() {
 	fcb.f = frameCallback;
 	fcb.data = &frame;
 
-    ACOS_CLIP_CALLBACK clipCB;
-    clipCB.f = newClipCallback;
-    clipCB.data = &clip;
-    setNewClipCallback(clipCB);
+  ACOS_CLIP_CALLBACK clipCB;
+  clipCB.f = newClipCallback;
+  clipCB.data = &clip;
+  setNewClipCallback(clipCB);
 
-    ACOS_CLIP_CALLBACK deletedClipCB;
+  ACOS_CLIP_CALLBACK deletedClipCB;
 	deletedClipCB.f = deletedClipCallback;
 	deletedClipCB.data = &del_clip;
 	setClipDeletedCallback(deletedClipCB);
@@ -374,30 +380,43 @@ void MantisAPITest_cstream::TearDown() {
 }
 
 void MantisAPITest_mcamconn::SetUp() {
-	if (getNumberOfMCams() == 0) {
-		mCamConnect(mc_ip, mc_port);
-	}
+  static int i = 0;
+  if (getNumberOfMCams() == 0 && i++ == 0) {
+    mCamConnect(mc_ip, mc_port);
+  }
 
-    NEW_MICRO_CAMERA_CALLBACK mcamCB;
-    mcamCB.f = newMCamCallback;
-    mcamCB.data = &mcamList;
-    setNewMCamCallback(mcamCB);
+  NEW_MICRO_CAMERA_CALLBACK mcamCB;
+  mcamCB.f = newMCamCallback;
+  mcamCB.data = &mcamList;
+  setNewMCamCallback(mcamCB);
 
-    mcam = mcamList[0];
+  mcam = mcamList[0];
 }
 
 void MantisAPITest_mcamconn::TearDown() {
-	mCamDisconnect(mc_ip, mc_port);
+  mCamDisconnect(tp->mc_ip, tp->mc_port); 
+}
+
+void MantisAPITest_mcamconn::SetUpTestCase() {
+
+}
+
+void MantisAPITest_mcamconn::TearDownTestCase() {
+
 }
 
 void MantisAPITest_mcamlstream::SetUp() {
+  MantisAPITest_mcamconn::SetUp();
+
 	MICRO_CAMERA_FRAME_CALLBACK frameCB;
 	frameCB.f = mcamFrameCallback;
 	frameCB.data = &frame;
 	setMCamFrameCallback(frameCB);
 
-	initMCamFrameReceiver(r_port, 1.0);
+	initMCamFrameReceiver(r_port, 3.0);
 	startMCamStream(mcam, r_port);
+
+  sleep(1);
 }
 
 void MantisAPITest_mcamlstream::TearDown() {
