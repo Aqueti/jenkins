@@ -32,7 +32,7 @@ public:
 
     struct timeval zeroTime;
     vector<aqt_ImageType> types;
-    int num_of_cams;
+    map<string, int> num_of;
 
     ExtrinsicCalibration ec;
     IntrinsicCalibration ic;
