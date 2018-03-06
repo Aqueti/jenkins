@@ -31,12 +31,13 @@ public:
     externalAnalysis::Thumbnail thumb;
 
     struct timeval zeroTime;
-    vector<aqt_ImageType> types;
+    vector<aqt_ImageType> itypes;
+    vector<aqt_DataType> dtypes;
     map<string, int> num_of;
 
     ExtrinsicCalibration ec;
     IntrinsicCalibration ic;
-        
+
     TestParams();
 
     ~TestParams();
@@ -54,6 +55,23 @@ class MantisNewAPITest_N : public ::testing::Test, public TestParams
   protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
+};
+
+class MantisNewAPITest_stream : public MantisNewAPITest
+{
+  protected:
+    virtual void SetUp();
+    virtual void TearDown();
+  public:
+    SingleCOPCameraDescription cam;
+    render::RenderStream *stream;
+};
+
+class MantisNewAPITest_viewstate : public MantisNewAPITest
+{
+  protected:
+    virtual void SetUp();
+    virtual void TearDown();
 };
 
 #endif
