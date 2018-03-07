@@ -36,7 +36,7 @@ TestParams::TestParams() {
 
     rect.Time(zeroTime);
     rect.Name("test");
-    rect.XNorm(0.4); //0.5
+    rect.XNorm(0.5);
     rect.YNorm(0.5);
     rect.WidthNorm(0.5);
     rect.HeightNorm(0.5);
@@ -157,6 +157,20 @@ TEST_F(MantisNewAPITest, eapiGetNextRectangle_P) {
     EXPECT_EQ( rect.HeightNorm(), t_rect.HeightNorm() );  
 }
 
+TEST_F(MantisNewAPITest, _eapiGetNextRectangle_P) {
+    externalAnalysis::Rectangle t_rect = eapi.GetNextRectangle();
+
+    EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
+    rect.XNorm(t_rect.XNorm() + 1);
+    rect.YNorm(t_rect.YNorm() + 1);
+    rect.WidthNorm(t_rect.WidthNorm() + 1);
+    rect.HeightNorm(t_rect.HeightNorm() + 1);
+    EXPECT_EQ( rect.XNorm(), t_rect.XNorm() + 1);
+    EXPECT_EQ( rect.YNorm(), t_rect.YNorm() + 1 );
+    EXPECT_EQ( rect.WidthNorm(), t_rect.WidthNorm() + 1 );
+    EXPECT_EQ( rect.HeightNorm(), t_rect.HeightNorm() + 1 );  
+}
+
 TEST_F(MantisNewAPITest_N, eapiGetNextRectangle_N) {
     externalAnalysis::Rectangle t_rect = eapi.GetNextRectangle();
 
@@ -176,13 +190,25 @@ TEST_F(MantisNewAPITest, eapiGetNextTag_P) {
     EXPECT_EQ( tag.Value(), t_tag.Value() );
 }
 
+TEST_F(MantisNewAPITest, _eapiGetNextTag_P) {
+    externalAnalysis::Tag t_tag = eapi.GetNextTag();
+
+    EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
+    tag.XNorm(t_tag.XNorm() + 1);
+    tag.YNorm(t_tag.YNorm() + 1);
+    tag.Value(t_tag.Value() + "_test");
+    EXPECT_EQ( tag.XNorm(), t_tag.XNorm() + 1 );
+    EXPECT_EQ( tag.YNorm(), t_tag.YNorm() + 1 );
+    EXPECT_STRCASEEQ( tag.Value().c_str(), (t_tag.Value() + "_test").c_str() );
+}
+
 TEST_F(MantisNewAPITest_N, eapiGetNextTag_N) {
     externalAnalysis::Tag t_tag = eapi.GetNextTag();
 
     EXPECT_NE( aqt_STATUS_OKAY, eapi.GetStatus() );
     EXPECT_EQ( tag.XNorm(), t_tag.XNorm() );
     EXPECT_EQ( tag.YNorm(), t_tag.YNorm() );
-    EXPECT_EQ( tag.Value(), t_tag.Value() );
+    EXPECT_STRCASEEQ( tag.Value().c_str(), t_tag.Value().c_str() );
 }
 
 TEST_F(MantisNewAPITest, eapiGetNextFloatArray_P) {
@@ -248,16 +274,32 @@ TEST_F(MantisNewAPITest_N, eapiGetNextThumbnail_N) {
 }
 
 TEST_F(MantisNewAPITest, eapiInsertRectangle_P) {
-    eapi.InsertTag(tag);
+    ::externalAnalysis::Rectangle r;
+
+    eapi.InsertRectangle(r);
 
     EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
 }
 
 TEST_F(MantisNewAPITest_N, eapiInsertRectangle_N) {
-    EXPECT_NE( aqt_STATUS_OKAY, eapi.InsertTag(tag) );
+    ::externalAnalysis::Rectangle r;
+
+    eapi.InsertRectangle(r);
+
+    EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
+}
+
+TEST_F(MantisNewAPITest, eapiInsertTag_P) {
+    ::externalAnalysis::Tag t;
+
+    eapi.InsertTag(t);
+
+    EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
 }
 
 TEST_F(MantisNewAPITest, eapiInsertFloatArray_P) {
+    ::externalAnalysis::FloatArray fa;
+
     eapi.InsertFloatArray(fa);
 
     EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
@@ -265,6 +307,14 @@ TEST_F(MantisNewAPITest, eapiInsertFloatArray_P) {
 
 TEST_F(MantisNewAPITest_N, eapiInsertFloatArray_N) {
     EXPECT_NE( aqt_STATUS_OKAY, eapi.InsertFloatArray(fa) );
+}
+
+TEST_F(MantisNewAPITest, eapiInsertU8Array_P) {
+    ::externalAnalysis::U8Array ua;
+
+    eapi.InsertU8Array(ua);
+
+    EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
 }
 
 TEST_F(MantisNewAPITest, eapiInsertCameraModel_P) {
@@ -333,10 +383,15 @@ TEST_F(MantisNewAPITest, GetNextImage_P) {
     eapi.SetMaxSize(10000, 10000);
 
     Image t_img = eapi.GetNextImage();
+    aqt_Image aqt_t_img = t_img.RawImage();
 
     EXPECT_TRUE( aqt_STATUS_OKAY == eapi.GetStatus() );
+    EXPECT_EQ( t_img.Time().tv_sec, t_img.Time().tv_sec );
     EXPECT_EQ( t_img.Width(), t_img.Width() );
     EXPECT_EQ( t_img.Height(), t_img.Height() );
+    EXPECT_EQ( (int)t_img.Type(), (int)t_img.Type() );
+    EXPECT_STRCASEEQ( t_img.Data(), t_img.Data() );
+    EXPECT_EQ( t_img.Size(), t_img.Size() );
 
     t_img.ReleaseData();
 }
@@ -351,17 +406,23 @@ TEST_F(MantisNewAPITest_N, GetNextImage_N) {
     t_img.ReleaseData();
 }
 
+TEST_F(MantisNewAPITest, SetNameFilter_P) {
+    eapi.SetNameFilter("");
+
+    EXPECT_TRUE( aqt_STATUS_OKAY == eapi.GetStatus() );
+}
+
 TEST_F(MantisNewAPITest, GetAvailableCameras_P) {
     vector<aqt::SingleCOPCameraDescription> cams = api.GetAvailableCameras();
 
-    EXPECT_EQ( aqt_STATUS_OKAY, eapi.GetStatus() );
+    EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
     EXPECT_EQ( cams.size(), num_of["cams"] );
 }
 
-TEST_F(MantisNewAPITest_N, GetAvailableCameras_N) {
+TEST_F(MantisNewAPITest_N, GetAvailableCameras_NL) {
     vector<aqt::SingleCOPCameraDescription> cams = api.GetAvailableCameras();
 
-    EXPECT_NE( aqt_STATUS_OKAY, eapi.GetStatus() );
+    EXPECT_NE( aqt_STATUS_OKAY, api.GetStatus() );
     EXPECT_EQ( cams.size(), num_of["cams"] );
 }
 
@@ -510,6 +571,13 @@ TEST_F(MantisNewAPITest, CreateIssueReport_P) {
     aqt_Status status = api.CreateIssueReport(fileNameToWrite, summary, description);    
     
     EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
+}
+
+TEST_F(MantisNewAPITest, CreateIssueReport_N) {
+    string fileNameToWrite, summary, description;
+    aqt_Status status = api.CreateIssueReport(fileNameToWrite, summary, description);    
+    
+    EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
 }
 
 TEST_F(MantisNewAPITest, test1_P) {
@@ -874,6 +942,17 @@ TEST_F(MantisNewAPITest, DeleteStoredDataRange2_P) {
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
 }
 
+TEST_F(MantisNewAPITest, DeleteStoredDataRange2_N) {
+  ::storage::Storage storage(api, "test_storage");
+
+  string entityName = "";
+  aqt_Interval ival;
+
+  storage.DeleteStoredDataRange(entityName, ival, dtypes);
+  
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
+}
+
 TEST_F(MantisNewAPITest, CopyStoredDataRange_P) {
   ::storage::Storage storage(api, "test_storage");
 
@@ -883,6 +962,17 @@ TEST_F(MantisNewAPITest, CopyStoredDataRange_P) {
   storage.CopyStoredDataRange(storage, entityName, ival, dtypes);
   
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
+}
+
+TEST_F(MantisNewAPITest, CopyStoredDataRange_N) {
+  ::storage::Storage storage(api, "test_storage");
+
+  string entityName = "";
+  aqt_Interval ival;
+
+  storage.CopyStoredDataRange(storage, entityName, ival, dtypes);
+  
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
 }
 
 TEST_F(MantisNewAPITest, ExportStoredDataRange_P) {
@@ -897,6 +987,18 @@ TEST_F(MantisNewAPITest, ExportStoredDataRange_P) {
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
 }
 
+TEST_F(MantisNewAPITest, ExportStoredDataRange_N) {
+  ::storage::Storage storage(api, "test_storage");
+
+  string outputURL = "";
+  string entityName = "";
+  aqt_Interval ival;
+
+  storage.ExportStoredDataRange(outputURL, aqt_EXTERNAL_FORMAT_ZIP, entityName, ival, dtypes);
+  
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
+}
+
 TEST_F(MantisNewAPITest, ImportStoredDataRange_P) {
   ::storage::Storage storage(api, "test_storage");
 
@@ -909,6 +1011,18 @@ TEST_F(MantisNewAPITest, ImportStoredDataRange_P) {
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
 }
 
+TEST_F(MantisNewAPITest, ImportStoredDataRange_N) {
+  ::storage::Storage storage(api, "test_storage");
+
+  string inputURL = "";
+  string entityName = "";
+  aqt_Interval ival;
+
+  storage.ImportStoredDataRange(inputURL, aqt_EXTERNAL_FORMAT_ZIP, entityName, ival, dtypes);
+  
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
+}
+
 // ------------
 
 TEST_F(MantisNewAPITest, GetSoftwareVersion_P) {
@@ -917,6 +1031,15 @@ TEST_F(MantisNewAPITest, GetSoftwareVersion_P) {
   string version = update.GetSoftwareVersion();
 
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
+  EXPECT_STRCASEEQ(version.c_str(), "00.00.00");
+}
+
+TEST_F(MantisNewAPITest, GetSoftwareVersion_N) {
+  ::update::Update update(api, "test_update");
+
+  string version = update.GetSoftwareVersion();
+
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
   EXPECT_STRCASEEQ(version.c_str(), "00.00.00");
 }
 
@@ -931,6 +1054,17 @@ TEST_F(MantisNewAPITest, Install_P) {
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
 }
 
+TEST_F(MantisNewAPITest, Install_N) {
+  ::update::Update update(api, "test_update");
+
+  string data = "";
+  string checksum = "";
+  
+  update.Install(data, checksum);
+
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
+}
+
 TEST_F(MantisNewAPITest, InstallFromURL_P) {
   ::update::Update update(api, "test_update");
 
@@ -939,6 +1073,27 @@ TEST_F(MantisNewAPITest, InstallFromURL_P) {
   
   update.Install(dataURL, checksumURL);
 
+  EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
+}
+
+TEST_F(MantisNewAPITest, InstallFromURL_N) {
+  ::update::Update update(api, "test_update");
+
+  string dataURL = "";
+  string checksumURL = "";
+  
+  update.Install(dataURL, checksumURL);
+
+  EXPECT_EQ( aqt_STATUS_BAD_PARAMETER, api.GetStatus() );
+}
+
+// ------------
+
+TEST_F(MantisNewAPITest, imgTime_P) {
+  Image img = eapi.GetNextImage();
+
+  timeval tv = img.Time();
+  cout << "tv " << tv.tv_sec << endl;
   EXPECT_EQ( aqt_STATUS_OKAY, api.GetStatus() );
 }
 
