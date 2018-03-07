@@ -2191,9 +2191,12 @@ TEST_F(MantisAPITest_N, getMCamWhiteBalanceRange_N) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest( &argc, argv );
-
+	//::testing::GTEST_FLAG(filter) = "*_P";
+	//RUN_ALL_TESTS();
+	//exec("cp results.xml results_p.xml");
 	::testing::GTEST_FLAG(filter) = "*_N";
 	RUN_ALL_TESTS();
+	//exec("cp results.xml results_n.xml");
 
 	return 0;
 }
