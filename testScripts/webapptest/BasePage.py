@@ -8,18 +8,30 @@ import hashlib
 
 
 class BasePage:
-    baseURL = ""
-    pageURL = ""
-    pageTitle = ""
+    @property
+    def cur_page_url(self):
+        return self.driver.current_url
 
-    TIMEOUT = 5
+    @property
+    def cur_page_title(self):
+        return self.driver.title
+
+    @property
+    def cur_page_source(self):
+        return self.driver.page_source
+
+    @property
+    def cur_page_source_hash(self):
+        return hashlib.md5(self.driver.page_source.encode('utf-8')).hexdigest()
 
     def __init__(self, driver):
-        self.baseURL = "http://10.0.0.207:5000"
-
         self.driver = driver
 
-    screenshot_path = '/home/astepenko/Pictures/tests/test.png'
+        self.TIMEOUT = 5
+
+        self.page_title = "Aqueti Admin"
+        self.base_url = "http://10.0.0.207:5000";
+        self.page_url = self.base_url
 
     def find_by(self, **kwargs):
         elems = None
@@ -34,51 +46,51 @@ class BasePage:
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.NAME, val)))
-                            elems = self.driver.find_element_by_name(val)
+                            elems = self.driver.find_elements_by_name(val)
                         else:
-                            elems = elems.find_element_by_name(val)
+                            elems = elems.find_elements_by_name(val)
                     elif key == "link_text":
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.LINK_TEXT, val)))
-                            elems = self.driver.find_element_by_link_text(val)
+                            elems = self.driver.find_elements_by_link_text(val)
                         else:
-                            elems = elems.find_element_by_link_text(val)
+                            elems = elems.find_elements_by_link_text(val)
                     elif key == "partial_link_text":
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.PARTIAL_LINK_TEXT, val)))
-                            elems = self.driver.find_element_by_partial_link_text(val)
+                            elems = self.driver.find_elements_by_partial_link_text(val)
                         else:
-                            elems = elems.find_element_by_partial_link_text(val)
+                            elems = elems.find_elements_by_partial_link_text(val)
                     elif key == "tag_name":
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.TAG_NAME, val)))
-                            elems = self.driver.find_element_by_tag_name(val)
+                            elems = self.driver.find_elements_by_tag_name(val)
                         else:
-                            elems = elems.find_element_by_tag_name(val)
+                            elems = elems.find_elements_by_tag_name(val)
                     elif key == "class_name":
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.CLASS_NAME, val)))
-                            elems = self.driver.find_element_by_class_name(val)
+                            elems = self.driver.find_elements_by_class_name(val)
                         else:
-                            elems = elems.find_element_by_class_name(val)
+                            elems = elems.find_elements_by_class_name(val)
                     elif key == "css":
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.CSS_SELECTOR, val)))
-                            elems = self.driver.find_element_by_css_selector(val)
+                            elems = self.driver.find_elements_by_css_selector(val)
                         else:
-                            elems = elems.find_element_by_css_selector(val)
+                            elems = elems.find_elements_by_css_selector(val)
                     elif key == "xpath":
                         if elems is None:
                             WebDriverWait(self.driver, self.TIMEOUT).until(
                                 EC.visibility_of_any_elements_located((By.XPATH, val)))
-                            elems = self.driver.find_element_by_xpath(val)
+                            elems = self.driver.find_elements_by_xpath(val)
                         else:
-                            elems = elems.find_element_by_xpath(val)
+                            elems = elems.find_elements_by_xpath(val)
                     else:
                         pass
         except Exception as e:
@@ -86,16 +98,16 @@ class BasePage:
 
         return elems
 
-    def human_type(self, elem, text):
+    def __human_type(self, elem, text):
         for char in text:
             time.sleep(random.uniform(0.05, 0.2))
             elem.send_keys(char)
 
-    def perf_action(self, elem, value=""):
+    def __perf_action(self, elem, value=""):
         if elem is None:
             return
 
-        value = value.lower();
+        value = value.lower()
         tag_name = str(elem.get_attribute('tagName')).lower()
 
         if tag_name == "select":
@@ -114,7 +126,7 @@ class BasePage:
             elif type in ("text", "password"):
                 elem.clear()
                #elem.send_keys(value, Keys.ARROW_DOWN)
-                self.human_type(elem, value)
+                self.__human_type(elem, value)
             elif type in ("radio", "checkbox"):
                 elem.click()
             else:
@@ -123,14 +135,21 @@ class BasePage:
             elem.click()
 
     def _(self, elem, value=""):
-        self.perf_action(elem, value)
+        prev_url = self.page_url
+        self.__perf_action(elem, value)
+
+        if prev_url != self.page_url:
+            return True
 
     def switch_to(self, obj="", obj_name=""):
         if obj == "window":
-            self.driver.switch_to.window(obj_name)
+            if obj_name in range(0, 9):
+                self.driver.switch_to.window(self.driver.window_handles[obj_name])
+            else:
+                self.driver.switch_to.window(obj_name)
         elif obj == "alert":
             self.driver.switch_to.alert()
-        elif obj == "act_elem":
+        elif obj == "active_elem":
             self.driver.switch_to.active_element()
         elif obj == "frame":
             self.driver.switch_to.frame(obj_name)
@@ -139,20 +158,44 @@ class BasePage:
         else:
             self.driver.switch_to.default_content()
 
-    def navigate_to(self, url=""):
-        if url == "back":
-            self.driver.back()
-        elif url == "forward":
-            self.driver.forward()
-        else:
-            if url == "":
-                self.driver.get(self.pageURL)
+    def exec_js(self, js, elem):
+        self.driver.execute_script(js, elem)
+
+    def __get_description(self, elem, value, label=""):
+        if elem is None:
+            return
+
+        out = self.cur_page_url + ": "
+        value = value.lower()
+        tag_name = str(elem.get_attribute('tagName')).lower()
+
+        if tag_name == "select":
+            out += "Select '" + value + "' in '" + label + "' " + " dropdown"
+        elif tag_name == "textarea":
+            out += "Enter '" + value + "' into '" + label + "' " + " field"
+        elif tag_name == "iframe":
+            pass
+        elif tag_name == "input":
+            type = elem.get_attribute('type').lower()
+
+            if type in ("button", "submit"):
+                out += "Click '" + label + "' button"
+            elif type in ("text", "password"):
+                out += "Enter '" + value + "' into '" + label + "' " + " field"
+            elif type in "radio":
+                out += "Click '" + label + "' radio button"
+            elif type in "checkbox":
+                if elem.is_selected():
+                    out += "Uncheck '" + label + "' check box"
+                else:
+                    out += "Check '" + label + "' check box"
             else:
-                self.driver.get(url)
-
-
-    def make_screenshot(self, path=""):
-        if path == "":
-            self.driver.save_screenshot(self.screenshot_path)
+                out += "Click '" + label + "' element"
         else:
-            self.driver.save_screenshot(path)
+            out += "Click '" + label + "' element"
+
+        return out
+
+    def __add_to_log(self, text):
+        with open(self.log_path, "w") as log:
+            log.write(text)
