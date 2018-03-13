@@ -55,10 +55,10 @@ class Test(BaseTest):
 
         self.assertIsNone(comps)
 
-        self.assertEqual(aap_sr.prop_serial.get_attribute('innerText'), "")
-        self.assertEqual(aap_sr.prop_software.get_attribute('innerText'), "undefined")
-        self.assertEqual(aap_sr.prop_kernel.get_attribute('innerText'), "undefined")
-        self.assertEqual(aap_sr.prop_host.get_attribute('innerText'), "undefined")
+        self.assertEqual(aap_sr.prop_serial.get_attribute("innerText"), "")
+        self.assertEqual(aap_sr.prop_software.get_attribute("innerText"), "undefined")
+        self.assertEqual(aap_sr.prop_kernel.get_attribute("innerText"), "undefined")
+        self.assertEqual(aap_sr.prop_host.get_attribute("innerText"), "undefined")
 
 
 if __name__ == "__main__":
