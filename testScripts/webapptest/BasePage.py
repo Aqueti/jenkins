@@ -30,7 +30,7 @@ class BasePage:
         self.TIMEOUT = 5
 
         self.page_title = "Aqueti Admin"
-        self.base_url = "http://10.0.0.207:5000";
+        self.base_url = "http://10.0.0.207:5000"
         self.page_url = self.base_url
 
     def find_by(self, **kwargs):
@@ -93,6 +93,9 @@ class BasePage:
                             elems = elems.find_elements_by_xpath(val)
                     else:
                         pass
+
+                    if len(elems) == 1:
+                        return elems[0]
         except Exception as e:
             pass
 
@@ -107,21 +110,30 @@ class BasePage:
         if elem is None:
             return
 
+        self.exec_js("arguments[0].scrollIntoView(true);", elem)
+
         value = value.lower()
         tag_name = str(elem.get_attribute('tagName')).lower()
 
         if tag_name == "select":
-            for option in elem:
+            for option in elem.find_elements_by_tag_name('option'):
+                print(option.get_attribute("value"))
                 if option.get_attribute("value").lower() == value:
                     option.click()
+                    break
         elif tag_name == "textarea":
             elem.clear()
             elem.send_keys(value)
+        elif tag_name == "div":
+            if elem.get_attribute("role") in "slider":
+                pass
         elif tag_name == "iframe":
             pass
         elif tag_name == "input":
             type = elem.get_attribute('type').lower()
             if type in ("button", "submit"):
+                if "bootstrap-touchspin-" in elem.className:
+                    self.exec_js("return $(arguments[0]).trigger('mousedown').trigger('touchcancel');", elem)
                 elem.click()
             elif type in ("text", "password"):
                 elem.clear()
@@ -199,3 +211,10 @@ class BasePage:
     def __add_to_log(self, text):
         with open(self.log_path, "w") as log:
             log.write(text)
+
+    def get_label(self, elem):
+        labels = elem.parent.find_elements_by_tag_name("label")
+        if labels is not None:
+            return labels[0].get_attribute("innerText")
+        else:
+            return ""
