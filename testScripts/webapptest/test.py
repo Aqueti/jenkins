@@ -1,6 +1,7 @@
 import unittest
 from BaseTest import BaseTest
 from AquetiAdminPage import *
+import time
 
 
 class Test(BaseTest):
@@ -64,6 +65,7 @@ class Test(BaseTest):
         self.assertEqual(aap_sr.prop_kernel.text, "undefined")
         self.assertEqual(aap_sr.prop_host.text, "undefined")
 
+    @unittest.SkipTest
     def test_11(self):
         aap_i = AquetiAdminPageIssue(self.driver)
         self.navigate_to(aap_i.page_url)
@@ -71,6 +73,29 @@ class Test(BaseTest):
         aap_sc = aap_i.submit_issue("title", "summary", "description")
 
         self.assertEqual(aap_sc.page_url, aap_sc.cur_page_url)
+
+    def test_12(self):
+        aap_cc = AquetiAdminPageConfigurationCamera(self.driver)
+        self.navigate_to(aap_cc.page_url)
+
+        aap_cc._(aap_cc.auto_gain)
+        aap_cc._(aap_cc.auto_whitebalance)
+        aap_cc._(aap_cc.auto_shutter)
+
+        aap_cc._(aap_cc.gain_plus)
+        aap_cc._(aap_cc.whitebalance_plus)
+        aap_cc._(aap_cc.shutter_plus)
+
+        aap_cc._(aap_cc.gain_minus)
+        aap_cc._(aap_cc.whitebalance_minus)
+        aap_cc._(aap_cc.shutter_minus)
+
+        aap_cc.move_sharpening_slider(20)
+        aap_cc.move_denoising_slider(40)
+
+        aap_cc._(aap_cc.night_mode_chkb)
+        aap_cc._(aap_cc.transport_mode_dd, "10 bit")
+        aap_cc._(aap_cc.framerate_dd, "30 fps")
 
 
 if __name__ == "__main__":
