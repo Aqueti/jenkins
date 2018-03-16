@@ -2,9 +2,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+import hashlib
 import random
 import time
-import hashlib
 
 
 class BasePage:
@@ -24,14 +25,18 @@ class BasePage:
     def cur_page_source_hash(self):
         return hashlib.md5(self.driver.page_source.encode('utf-8')).hexdigest()
 
-    def __init__(self, driver):
-        self.driver = driver
+    def __init__(self, test):
+        self.driver = test.driver
 
         self.TIMEOUT = 5
 
-        self.page_title = "Aqueti Admin"
-        self.base_url = "http://10.0.0.207:5000"
-        self.page_url = self.base_url
+        self.prev_page_url = ""
+        self.page_title = ""
+        self.base_url = ""
+        self.page_url = ""
+
+        self.log_path = test.log_path
+        self.screenshot_path = test.screenshot_path
 
     def find_by(self, **kwargs):
         elems = None
@@ -117,7 +122,6 @@ class BasePage:
 
         if tag_name == "select":
             for option in elem.find_elements_by_tag_name('option'):
-                print(option.get_attribute("value"))
                 if option.get_attribute("value").lower() == value:
                     option.click()
                     break
@@ -126,7 +130,11 @@ class BasePage:
             elem.send_keys(value)
         elif tag_name == "div":
             if elem.get_attribute("role") in "slider":
-                pass
+                move = ActionChains(self.driver)
+                arr = value.split(",")
+                move.click_and_hold(elem).move_by_offset(int(arr[0]) * int(arr[1]), 0).release().perform()
+            else:
+                elem.click()
         elif tag_name == "iframe":
             pass
         elif tag_name == "input":
@@ -149,6 +157,8 @@ class BasePage:
     def _(self, elem, value=""):
         prev_url = self.page_url
         self.__perf_action(elem, value)
+
+        self.__add_to_log(self.__get_description(elem, value))
 
         if prev_url != self.page_url:
             return True
@@ -173,38 +183,52 @@ class BasePage:
     def exec_js(self, js, elem):
         self.driver.execute_script(js, elem)
 
-    def __get_description(self, elem, value, label=""):
+    def __get_description(self, elem, value=""):
         if elem is None:
             return
 
-        out = self.cur_page_url + ": "
+        out = ""
+
+        if self.prev_page_url != self.cur_page_url:
+            self.prev_page_url = self.cur_page_url
+            out += self.cur_page_url + "\n"
+
         value = value.lower()
         tag_name = str(elem.get_attribute('tagName')).lower()
 
+        if tag_name == "a":
+            out += "Click " + elem.get_attribute('innerText') + " link"
         if tag_name == "select":
-            out += "Select '" + value + "' in '" + label + "' " + " dropdown"
+            out += "Select '" + value + "' in '" + self.get_label(elem) + "' " + " dropdown"
         elif tag_name == "textarea":
-            out += "Enter '" + value + "' into '" + label + "' " + " field"
+            out += "Enter '" + value + "' into '" + self.get_label(elem) + "' " + " field"
+        elif tag_name == "button":
+            out += "Click '" + elem.get_attribute('innerText') + "' button"
+        elif tag_name == "div":
+            if elem.get_attribute("role") in "slider":
+                out += "Move slider '" + self.get_label(elem) + "' by " + value.split(",")[0].strip()
+            else:
+                out += "Click unknown element, tagName=" + elem.tag_name
         elif tag_name == "iframe":
             pass
         elif tag_name == "input":
             type = elem.get_attribute('type').lower()
 
             if type in ("button", "submit"):
-                out += "Click '" + label + "' button"
+                out += "Click '" + elem.get_attribute('value') + "' button"
             elif type in ("text", "password"):
-                out += "Enter '" + value + "' into '" + label + "' " + " field"
+                out += "Enter '" + value + "' into '" + self.get_label(elem) + "' " + " field"
             elif type in "radio":
-                out += "Click '" + label + "' radio button"
+                out += "Click '" + self.get_label(elem) + "' radio button"
             elif type in "checkbox":
                 if elem.is_selected():
-                    out += "Uncheck '" + label + "' check box"
+                    out += "Uncheck '" + self.get_label(elem) + "' check box"
                 else:
-                    out += "Check '" + label + "' check box"
+                    out += "Check '" + self.get_label(elem) + "' check box"
             else:
-                out += "Click '" + label + "' element"
+                out += "Click unknown element, type=" + type
         else:
-            out += "Click '" + label + "' element"
+            out += "Click unknown element, tagName=" + elem.tag_name
 
         return out
 
@@ -213,8 +237,30 @@ class BasePage:
             log.write(text)
 
     def get_label(self, elem):
-        labels = elem.parent.find_elements_by_tag_name("label")
+        max_depth = 2
+
+        if elem.get_attribute('type') == 'text':
+            max_depth = 5
+
+        t_elem = elem
+        labels = self.find_by(css="label[for=" + elem.get_attribute('id') + "]")
+
+        while labels is None and max_depth > 0:
+            t_elem = t_elem.find_element_by_xpath("..")
+
+            labels = t_elem.find_elements_by_xpath("./label")
+            if len(labels) == 0:
+                labels = None
+
+            max_depth -= 1
+
         if labels is not None:
-            return labels[0].get_attribute("innerText")
+            return labels[0].get_attribute("innerText").strip()
         else:
             return ""
+
+    def make_screenshot(self, path=""):
+        if path == "":
+            self.driver.save_screenshot(self.screenshot_path)
+        else:
+            self.driver.save_screenshot(path)
