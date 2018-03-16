@@ -30,6 +30,10 @@ class AquetiAdminPage(BasePage):
     def __init__(self, driver):
         BasePage.__init__(self, driver)
 
+        self.page_title = "Aqueti Admin"
+        self.base_url = "http://10.0.0.207:5002"
+        self.page_url = self.base_url
+
     def click_links(self):
         self._(self.sidebar_status)
         self._(self.sidebar_configuration)
@@ -277,11 +281,43 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
     @property
     def radio_sensor(self): return self.find_by(id="sensor")
 
-# Image
-
     @property
     def image_tab(self): return self.find_by(css="a[role='tab']:contains(Image)")
 
+    @property
+    def compression_tab(self): return self.find_by(css="a[role='tab']:contains(Compression)")
+
+    @property
+    def focus_tab(self): return self.find_by(css="a[role='tab']:contains(Focus)")
+
+    @property
+    def sensor_tab(self): return self.find_by(css="a[role='tab']:contains(Sensor)")
+
+    @property
+    def zoom_in_btn(self): return self.find_by(id="button_zoom_in")
+
+    @property
+    def zoom_out_btn(self): return self.find_by(id="button_zoom_out")
+
+    @property
+    def arrow_left_btn(self): return self.find_by(id="button_arrow_left")
+
+    @property
+    def arrow_right_btn(self): return self.find_by(id="button_arrow_right")
+
+    @property
+    def arrow_up_btn(self): return self.find_by(id="button_arrow_up")
+
+    @property
+    def arrow_down_btn(self): return self.find_by(id="button_arrow_up")
+
+    def __init__(self, driver):
+        AquetiAdminPage.__init__(self, driver)
+
+        self.page_url += "/scop_configuration"
+
+
+class AquetiAdminPageConfigurationCameraImage(AquetiAdminPageConfigurationCamera):
     @property
     def auto_gain(self): return self.find_by(id="auto_gain")
 
@@ -351,11 +387,20 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
     @property
     def framerate_dd(self): return self.find_by(id="framerate")
 
-# Compression
+    def move_sharpening_slider(self, pos):
+        move = ActionChains(self.driver)
+        dx = self.sharpening_slider_ribbon.size["width"] / 100
 
-    @property
-    def compression_tab(self): return self.find_by(css="a[role='tab']:contains(Compression)")
+        move.move_to_element(self.sharpening_slider).click_and_hold(self.sharpening_slider).move_by_offset(pos * dx, 0).release().perform()
 
+    def move_denoising_slider(self, pos):
+        move = ActionChains(self.driver)
+        dx = self.denoising_slider_ribbon.size["width"] / 100
+
+        move.move_to_element(self.denoising_slider).click_and_hold(self.denoising_slider).move_by_offset(pos * dx, 0).release().perform()
+
+
+class AquetiAdminPageConfigurationCameraCompression(AquetiAdminPageConfigurationCamera):
     @property
     def quality_high(self): return self.find_by(css="#panel2 a:contains(High)")
 
@@ -380,22 +425,16 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
     @property
     def encoding_dd(self): return self.find_by(id="encoding")
 
-# Focus
 
-    @property
-    def focus_tab(self): return self.find_by(css="#panel3 a[role='tab']:contains(Focus)")
-
+class AquetiAdminPageConfigurationCameraFocus(AquetiAdminPageConfigurationCamera):
     @property
     def focus_chkb(self): return self.find_by(id="checkboxCustom2")
 
     @property
     def focus_now_btn(self): return self.find_by(css="#panel3 button:contains(Focus Now)")
 
-# Sensor
 
-    @property
-    def sensor_tab(self): return self.find_by(css="a[role='tab']:contains(Sensor)")
-
+class AquetiAdminPageConfigurationCameraSensor(AquetiAdminPageConfigurationCamera):
     @property
     def focus_minus(self): return self.find_by(css="#panel4 button.btn.btn-default.bootstrap-touchspin-down:contains(-)")
 
@@ -407,23 +446,6 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
 
     @property
     def auto_focus_btn(self): return self.find_by(id="sensorAutoFocus")
-
-    def __init__(self, driver):
-        AquetiAdminPage.__init__(self, driver)
-
-        self.page_url += "/scop_configuration"
-
-    def move_sharpening_slider(self, pos):
-        move = ActionChains(self.driver)
-        dx = self.sharpening_slider_ribbon.size["width"] / 100
-
-        move.move_to_element(self.sharpening_slider).click_and_hold(self.sharpening_slider).move_by_offset(pos * dx, 0).release().perform()
-
-    def move_denoising_slider(self, pos):
-        move = ActionChains(self.driver)
-        dx = self.denoising_slider_ribbon.size["width"] / 100
-
-        move.move_to_element(self.denoising_slider).click_and_hold(self.denoising_slider).move_by_offset(pos * dx, 0).release().perform()
 
 
 class AquetiAdminPageConfigurationStorage(AquetiAdminPageConfiguration, AquetiAdminPageStorage):
@@ -441,6 +463,8 @@ class AquetiAdminPageConfigurationRender(AquetiAdminPageConfiguration, AquetiAdm
 
 
 class AquetiAdminPageMaintenanceCamera(AquetiAdminPageMaintenance, AquetiAdminPageCamera):
+
+
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
