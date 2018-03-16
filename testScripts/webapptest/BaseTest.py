@@ -1,15 +1,24 @@
 from selenium.webdriver import ChromeOptions
 from selenium import webdriver
 import unittest
-import time
 
 
 class BaseTest(unittest.TestCase):
     driver = None
     browser = "chrome"
 
-    log_path = '/home/astepenko/Pictures/tests/base_test.txt'
-    screenshot_path = '/home/astepenko/Pictures/tests/test.png'
+    _cnt = 0
+
+    @property
+    def screenshot_path(self):
+        self._cnt = self._cnt + 1
+        return '/home/astepenko/Pictures/tests/' + self.script_name + "_" + str(self._cnt) + ".png"
+
+    def __call__(self, *args, **kwargs):
+        self.script_name = self.__class__.__name__ + "_" + self.__dict__['_testMethodName']
+        self.log_path = '/home/astepenko/Pictures/tests/' + self.script_name + ".txt"
+
+        super(BaseTest, self).__call__(*args, **kwargs)
 
     def setUp(self):
         if self.browser == "chrome":
@@ -25,7 +34,6 @@ class BaseTest(unittest.TestCase):
         self.driver.maximize_window()
 
     def tearDown(self):
-        time.sleep(1)
         self.driver.close()
 
     def navigate_to(self, url=""):
@@ -38,9 +46,3 @@ class BaseTest(unittest.TestCase):
                 self.driver.get(self.page_url)
             else:
                 self.driver.get(url)
-
-    def make_screenshot(self, path=""):
-        if path == "":
-            self.driver.save_screenshot(self.screenshot_path)
-        else:
-            self.driver.save_screenshot(path)
