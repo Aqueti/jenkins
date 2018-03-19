@@ -31,6 +31,7 @@ class BasePage:
         self.TIMEOUT = 5
 
         self.prev_page_url = ""
+        self.step_name = ""
         self.page_title = ""
         self.base_url = ""
         self.page_url = ""
@@ -102,7 +103,7 @@ class BasePage:
                     if len(elems) == 1:
                         return elems[0]
         except Exception as e:
-            pass
+            self.__add_to_log("Element not found: " + str(kwargs) + "\n")
 
         return elems
 
@@ -142,7 +143,8 @@ class BasePage:
             if type in ("button", "submit"):
                 if "bootstrap-touchspin-" in elem.className:
                     self.exec_js("return $(arguments[0]).trigger('mousedown').trigger('touchcancel');", elem)
-                elem.click()
+                else:
+                    elem.click()
             elif type in ("text", "password"):
                 elem.clear()
                #elem.send_keys(value, Keys.ARROW_DOWN)
@@ -154,14 +156,11 @@ class BasePage:
         else:
             elem.click()
 
-    def _(self, elem, value=""):
-        prev_url = self.page_url
-        self.__perf_action(elem, value)
+    def _(self, elem, value="", step_name=""):
+        if elem is not None:
+            self.__add_to_log(self.__get_description(elem, value, step_name))
 
-        self.__add_to_log(self.__get_description(elem, value))
-
-        if prev_url != self.page_url:
-            return True
+            self.__perf_action(elem, value)
 
     def switch_to(self, obj="", obj_name=""):
         if obj == "window":
@@ -183,27 +182,30 @@ class BasePage:
     def exec_js(self, js, elem):
         self.driver.execute_script(js, elem)
 
-    def __get_description(self, elem, value=""):
+    def __get_description(self, elem, value="", step_name=""):
         if elem is None:
             return
 
-        out = ""
+        out = "\t"
 
         if self.prev_page_url != self.cur_page_url:
             self.prev_page_url = self.cur_page_url
-            out += self.cur_page_url + "\n"
+            out = self.cur_page_url + "\n" + out
+        if step_name != self.step_name:
+            self.step_name = step_name
+            out = self.step_name + "\n" + out
 
         value = value.lower()
         tag_name = str(elem.get_attribute('tagName')).lower()
 
         if tag_name == "a":
-            out += "Click " + elem.get_attribute('innerText') + " link"
-        if tag_name == "select":
-            out += "Select '" + value + "' in '" + self.get_label(elem) + "' " + " dropdown"
+            out += "Click '" + elem.get_attribute('innerText').strip() + "' link"
+        elif tag_name == "select":
+            out += "Select '" + value + "' in '" + self.get_label(elem) + "' dropdown"
         elif tag_name == "textarea":
-            out += "Enter '" + value + "' into '" + self.get_label(elem) + "' " + " field"
+            out += "Enter '" + value + "' into '" + self.get_label(elem) + "' field"
         elif tag_name == "button":
-            out += "Click '" + elem.get_attribute('innerText') + "' button"
+            out += "Click '" + elem.get_attribute('innerText').strip() + "' button"
         elif tag_name == "div":
             if elem.get_attribute("role") in "slider":
                 out += "Move slider '" + self.get_label(elem) + "' by " + value.split(",")[0].strip()
@@ -215,9 +217,9 @@ class BasePage:
             type = elem.get_attribute('type').lower()
 
             if type in ("button", "submit"):
-                out += "Click '" + elem.get_attribute('value') + "' button"
+                out += "Click '" + elem.get_attribute('value').strip() + "' button"
             elif type in ("text", "password"):
-                out += "Enter '" + value + "' into '" + self.get_label(elem) + "' " + " field"
+                out += "Enter '" + value + "' into '" + self.get_label(elem) + "' field"
             elif type in "radio":
                 out += "Click '" + self.get_label(elem) + "' radio button"
             elif type in "checkbox":
@@ -226,14 +228,14 @@ class BasePage:
                 else:
                     out += "Check '" + self.get_label(elem) + "' check box"
             else:
-                out += "Click unknown element, type=" + type
+                out += "Click unknown element, tagName=input, type=" + type
         else:
             out += "Click unknown element, tagName=" + elem.tag_name
 
-        return out
+        return out + "\n"
 
     def __add_to_log(self, text):
-        with open(self.log_path, "w") as log:
+        with open(self.log_path, "a") as log:
             log.write(text)
 
     def get_label(self, elem):
@@ -243,14 +245,12 @@ class BasePage:
             max_depth = 5
 
         t_elem = elem
-        labels = self.find_by(css="label[for=" + elem.get_attribute('id') + "]")
+        labels = self.driver.find_elements_by_css_selector("label[for=" + elem.get_attribute('id') + "]")
 
-        while labels is None and max_depth > 0:
+        while len(labels) == 0 and max_depth > 0:
             t_elem = t_elem.find_element_by_xpath("..")
 
             labels = t_elem.find_elements_by_xpath("./label")
-            if len(labels) == 0:
-                labels = None
 
             max_depth -= 1
 
