@@ -28,7 +28,7 @@ class BasePage:
     def __init__(self, test):
         self.driver = test.driver
 
-        self.TIMEOUT = 5
+        self.TIMEOUT = 2
 
         self.prev_page_url = ""
         self.step_name = ""
