@@ -1,7 +1,10 @@
 from selenium.webdriver import ChromeOptions
 from selenium import webdriver
+from selenium.common import exceptions
+from pymongo import MongoClient
 import unittest
 import datetime
+import os
 
 
 class BaseTest(unittest.TestCase):
@@ -10,10 +13,21 @@ class BaseTest(unittest.TestCase):
 
     @property
     def screenshot_path(self):
-        return '/home/astepenko/Pictures/tests/' + self.script_name + "_" + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S') + ".png"
+        return '{0}/{1}_{2}.png'.format(self.base_dir, self.script_name, datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
 
     #def __call__(self, *args, **kwargs):
     #    super(BaseTest, self).__call__(*args, **kwargs)
+
+    @property
+    def failureException(self):
+        class BaseTestFailureException(AssertionError):
+            def __init__(self, *args, **kwargs):
+                return super(BaseTestFailureException, self).__init__(*args, **kwargs)
+
+        self.result = "FAILED"
+        self.driver.save_screenshot(self.screenshot_path)
+        BaseTestFailureException.__name__ = AssertionError.__name__
+        return BaseTestFailureException
 
     def setUp(self):
         if self.browser == "chrome":
@@ -31,7 +45,14 @@ class BaseTest(unittest.TestCase):
 
         self.start_time = datetime.datetime.now()
 
-        self.log_path = '/home/astepenko/Pictures/tests/' + self.script_name + "_" + self.start_time.strftime('%Y-%m-%d_%H:%M:%S') + ".txt"
+        self.result = "PASSED"
+
+        self.base_dir = '/home/astepenko/Pictures/tests/'
+
+        if not os.path.exists(self.base_dir):
+            os.makedirs(self.base_dir)
+
+        self.log_path = self.base_dir + self.script_name + "_" + self.start_time.strftime('%Y-%m-%d_%H:%M:%S') + ".txt"
 
         self.add_to_log("Suite:\t" + self.__class__.__name__ + "\n" +
                         "Test:\t" + self.__dict__['_testMethodName'] + "\n" +
@@ -40,14 +61,16 @@ class BaseTest(unittest.TestCase):
     def tearDown(self):
         self.end_time = datetime.datetime.now()
 
-        self.result = "PASSED"
-
         self.add_to_log("\n-----------------------------\n" +
                         "Result: " + self.result + "\n"
                         "Exec time: " +
                         str(datetime.timedelta(seconds=int((self.end_time - self.start_time).total_seconds()))))
 
+        print("teardown")
         self.driver.close()
+
+    def run(self, result=None):
+        unittest.TestCase.run(self, result)
 
     def navigate_to(self, url=""):
         if url == "back":
