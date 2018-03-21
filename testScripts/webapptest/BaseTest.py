@@ -1,7 +1,6 @@
 from selenium.webdriver import ChromeOptions
 from selenium import webdriver
 from selenium.common import exceptions
-from pymongo import MongoClient
 import unittest
 import datetime
 import os
@@ -15,8 +14,8 @@ class BaseTest(unittest.TestCase):
     def screenshot_path(self):
         return '{0}/{1}_{2}.png'.format(self.base_dir, self.script_name, datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
 
-    #def __call__(self, *args, **kwargs):
-    #    super(BaseTest, self).__call__(*args, **kwargs)
+    def __call__(self, *args, **kwargs):
+        super(BaseTest, self).__call__(*args, **kwargs)
 
     @property
     def failureException(self):
@@ -25,15 +24,19 @@ class BaseTest(unittest.TestCase):
                 return super(BaseTestFailureException, self).__init__(*args, **kwargs)
 
         self.result = "FAILED"
-        self.driver.save_screenshot(self.screenshot_path)
+        try:
+            self.driver.save_screenshot(self.screenshot_path)
+        except Exception as e:
+            pass
         BaseTestFailureException.__name__ = AssertionError.__name__
         return BaseTestFailureException
 
     def setUp(self):
         if self.browser == "chrome":
-            opts = ChromeOptions()
-            opts.add_experimental_option("detach", True)
-            self.driver = webdriver.Chrome(chrome_options=opts)
+            #opts = ChromeOptions()
+            #opts.add_experimental_option("detach", True)
+            #self.driver = webdriver.Chrome(chrome_options=opts)
+            self.driver = webdriver.Chrome()
         elif self.browser == "ff":
             self.driver = webdriver.Firefox()
         else:
