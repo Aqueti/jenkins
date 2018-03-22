@@ -4,13 +4,13 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 class AquetiAdminPage(BasePage):
     @property
-    def sidebar_status(self): return self.find_by(css="nav#sidebar a:contains(Status)")
+    def sidebar_status(self): return self.find_by(partial_link_text="Status")  # css="nav#sidebar a:contains(Status)"
 
     @property
-    def sidebar_configuration(self): return self.find_by(css="nav#sidebar a:contains(Configuration)")
+    def sidebar_configuration(self): return self.find_by(partial_link_text="Configuration")
 
     @property
-    def sidebar_maintenance(self): return self.find_by(css="nav#sidebar a:contains(Maintenance)")
+    def sidebar_maintenance(self): return self.find_by(partial_link_text="Maintenance")
 
     @property
     def system_current_time(self): return self.find_by(id="system-current-time")
@@ -31,8 +31,14 @@ class AquetiAdminPage(BasePage):
         BasePage.__init__(self, driver)
 
         self.page_title = "Aqueti Admin"
-        self.base_url = "http://10.0.0.207:5002"
+        self.base_url = "http://10.0.0.185:5000"
         self.page_url = self.base_url
+
+    def __call__(self, text):
+        super(BasePage, self).__call__()
+
+    def __enter__(self):
+        print("enter!!")
 
     def click_links(self):
         self._(self.sidebar_status)
@@ -42,13 +48,13 @@ class AquetiAdminPage(BasePage):
 
 class AquetiAdminPageStatus(AquetiAdminPage):
     @property
-    def topbar_camera(self): return self.find_by(css="#topbar a:contains(Camera)")
+    def topbar_camera(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Camera')]")
 
     @property
-    def topbar_storage(self): return self.find_by(css="#topbar a:contains(Storage)")
+    def topbar_storage(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Storage')]")
 
     @property
-    def topbar_render(self): return self.find_by(css="#topbar a:contains(Render)")
+    def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
@@ -56,16 +62,16 @@ class AquetiAdminPageStatus(AquetiAdminPage):
 
 class AquetiAdminPageConfiguration(AquetiAdminPage):
     @property
-    def topbar_system(self): return self.find_by(css="#topbar a:contains(System)")
+    def topbar_system(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'System')]")
 
     @property
-    def topbar_camera(self): return self.find_by(css="#topbar a:contains(Camera)")
+    def topbar_camera(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Camera')]")
 
     @property
-    def topbar_storage(self): return self.find_by(css="#topbar a:contains(Storage)")
+    def topbar_storage(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Storage')]")
 
     @property
-    def topbar_render(self): return self.find_by(css="#topbar a:contains(Render)")
+    def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
@@ -73,13 +79,13 @@ class AquetiAdminPageConfiguration(AquetiAdminPage):
 
 class AquetiAdminPageMaintenance(AquetiAdminPage):
     @property
-    def topbar_camera(self): return self.find_by(css="#topbar a:contains(Camera)")
+    def topbar_camera(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Camera')]")
 
     @property
-    def topbar_storage(self): return self.find_by(css="#topbar a:contains(Storage)")
+    def topbar_storage(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Storage')]")
 
     @property
-    def topbar_render(self): return self.find_by(css="#topbar a:contains(Render)")
+    def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
     @property
     def update_software_btn(self): return self.find_by(css="button:contains(Update Software)")
@@ -129,6 +135,9 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     def prop_host(self): return self.find_by(id="host")
 
     @property
+    def host(self): return self.find_by(css="#host a")
+
+    @property
     def components(self): return self.find_by(css="nav#combar li")
 
     @property
@@ -139,6 +148,28 @@ class AquetiAdminPageCamera(AquetiAdminPage):
 
     @property
     def prop_cam_label(self): return self.find_by(id="label")
+
+    @property
+    def nickname(self): return self.find_by(css="div.card>h1")
+
+    @property
+    def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
+
+# Edit Component
+
+    @property
+    def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
+
+    @property
+    def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
+
+    @property
+    def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
+
+    def update_nickname(self, name):
+        self._(self.update_nickname_pic)
+        self._(self.ec_nickname_field, name)
+        self._(self.ec_update_btn)
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
@@ -163,6 +194,20 @@ class AquetiAdminPageStorage(AquetiAdminPage):
     @property
     def components(self): return self.find_by(css="nav#combar li")
 
+    @property
+    def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
+
+# Edit Component
+
+    @property
+    def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
+
+    @property
+    def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
+
+    @property
+    def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
+
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
@@ -182,6 +227,20 @@ class AquetiAdminPageRender(AquetiAdminPage):
 
     @property
     def components(self): return self.find_by(css="nav#combar li")
+
+    @property
+    def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
+
+# Edit Component
+
+    @property
+    def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
+
+    @property
+    def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
+
+    @property
+    def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
@@ -282,16 +341,16 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
     def radio_sensor(self): return self.find_by(id="sensor")
 
     @property
-    def image_tab(self): return self.find_by(css="a[role='tab']:contains(Image)")
+    def image_tab(self): return self.find_by(partial_link_text="Image")
 
     @property
-    def compression_tab(self): return self.find_by(css="a[role='tab']:contains(Compression)")
+    def compression_tab(self): return self.find_by(partial_link_text="Compression")
 
     @property
-    def focus_tab(self): return self.find_by(css="a[role='tab']:contains(Focus)")
+    def focus_tab(self): return self.find_by(partial_link_text="Focus")
 
     @property
-    def sensor_tab(self): return self.find_by(css="a[role='tab']:contains(Sensor)")
+    def sensor_tab(self): return self.find_by(partial_link_text="Sensor")
 
     @property
     def zoom_in_btn(self): return self.find_by(id="button_zoom_in")
@@ -311,45 +370,46 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
     @property
     def arrow_down_btn(self): return self.find_by(id="button_arrow_up")
 
-    def __init__(self, driver):
-        AquetiAdminPage.__init__(self, driver)
-
-        self.page_url += "/scop_configuration"
-
-
-class AquetiAdminPageConfigurationCameraImage(AquetiAdminPageConfigurationCamera):
-    @property
-    def auto_gain(self): return self.find_by(id="auto_gain")
+# Image
 
     @property
-    def gain_minus(self): return self.find_by(xpath="//*[@id='panel1']//input[@id='auto_gain']/../..//button[contains(.,'-')]")
+    def auto_gain_chkb(self): return self.find_by(id="auto_gain")
 
     @property
-    def gain_plus(self): return self.find_by(xpath="//*[@id='panel1']//input[@id='auto_gain']/../..//button[contains(.,'+')]")
+    def gain_minus_btn(self): return self.find_by(
+        xpath="//*[@id='panel1']//input[@id='auto_gain']/../..//button[contains(.,'-')]")
+
+    @property
+    def gain_plus_btn(self): return self.find_by(
+        xpath="//*[@id='panel1']//input[@id='auto_gain']/../..//button[contains(.,'+')]")
 
     @property
     def gain_field(self): return self.find_by(id="gain")
 
     @property
-    def auto_whitebalance(self): return self.find_by(id="auto_whitebalance")
+    def auto_whitebalance_chkb(self): return self.find_by(id="auto_whitebalance")
 
     @property
-    def whitebalance_minus(self): return self.find_by(xpath="//*[@id='panel1']//input[@id='auto_whitebalance']/../..//button[contains(.,'-')]")
+    def whitebalance_minus_btn(self): return self.find_by(
+        xpath="//*[@id='panel1']//input[@id='auto_whitebalance']/../..//button[contains(.,'-')]")
 
     @property
-    def whitebalance_plus(self): return self.find_by(xpath="//*[@id='panel1']//input[@id='auto_whitebalance']/../..//button[contains(.,'+')]")
+    def whitebalance_plus_btn(self): return self.find_by(
+        xpath="//*[@id='panel1']//input[@id='auto_whitebalance']/../..//button[contains(.,'+')]")
 
     @property
     def whitebalance_field(self): return self.find_by(id="whitebalance")
 
     @property
-    def auto_shutter(self): return self.find_by(id="auto_shutter")
+    def auto_shutter_chkb(self): return self.find_by(id="auto_shutter")
 
     @property
-    def shutter_minus(self): return self.find_by(xpath="//*[@id='panel1']//input[@id='auto_shutter']/../..//button[contains(.,'-')]")
+    def shutter_minus_btn(self): return self.find_by(
+        xpath="//*[@id='panel1']//input[@id='auto_shutter']/../..//button[contains(.,'-')]")
 
     @property
-    def shutter_plus(self): return self.find_by(xpath="//*[@id='panel1']//input[@id='auto_shutter']/../..//button[contains(.,'+')]")
+    def shutter_plus_btn(self): return self.find_by(
+        xpath="//*[@id='panel1']//input[@id='auto_shutter']/../..//button[contains(.,'+')]")
 
     @property
     def shutter_field(self): return self.find_by(id="shutter")
@@ -399,8 +459,8 @@ class AquetiAdminPageConfigurationCameraImage(AquetiAdminPageConfigurationCamera
 
         move.move_to_element(self.denoising_slider).click_and_hold(self.denoising_slider).move_by_offset(pos * dx, 0).release().perform()
 
+# Compression
 
-class AquetiAdminPageConfigurationCameraCompression(AquetiAdminPageConfigurationCamera):
     @property
     def quality_high(self): return self.find_by(css="#panel2 a:contains(High)")
 
@@ -425,16 +485,16 @@ class AquetiAdminPageConfigurationCameraCompression(AquetiAdminPageConfiguration
     @property
     def encoding_dd(self): return self.find_by(id="encoding")
 
+# Focus
 
-class AquetiAdminPageConfigurationCameraFocus(AquetiAdminPageConfigurationCamera):
     @property
     def focus_chkb(self): return self.find_by(id="checkboxCustom2")
 
     @property
     def focus_now_btn(self): return self.find_by(css="#panel3 button:contains(Focus Now)")
 
+# Sensor
 
-class AquetiAdminPageConfigurationCameraSensor(AquetiAdminPageConfigurationCamera):
     @property
     def focus_minus(self): return self.find_by(css="#panel4 button.btn.btn-default.bootstrap-touchspin-down:contains(-)")
 
@@ -446,6 +506,11 @@ class AquetiAdminPageConfigurationCameraSensor(AquetiAdminPageConfigurationCamer
 
     @property
     def auto_focus_btn(self): return self.find_by(id="sensorAutoFocus")
+
+    def __init__(self, driver):
+        AquetiAdminPage.__init__(self, driver)
+
+        self.page_url += "/scop_configuration"
 
 
 class AquetiAdminPageConfigurationStorage(AquetiAdminPageConfiguration, AquetiAdminPageStorage):
