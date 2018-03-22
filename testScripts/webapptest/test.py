@@ -1,15 +1,48 @@
 import unittest
+from selenium.webdriver.common.keys import Keys
 from BaseTest import BaseTest
 from AquetiAdminPage import *
-import time
+import AQT
 
 
-class Test(BaseTest):
+class TD:
+    cam_props = {"status": "online",
+                 "recording": "false",
+                 "serialid": "undefined",
+                 "software": "undefined",
+                 "kernel": "undefined",
+                 "host": "undefined"}
+
+    sensor_props = {"model": "imx274",
+                    "host": "87878"}
+
+    storage_props = {"status": "online",
+                     "serialid": "aqt:Storage:1",
+                     "software": "undefined",
+                     "kernel": "undefined",
+                     "host": "undefined"}
+
+    render_props = {"serialid": "",
+                    "software": "undefined",
+                    "kernel": "undefined",
+                    "host": "undefined"}
+
+
+class APITest(BaseTest):
     browser = "chrome"
 
+    api = AQT.AquetiAPI()
+
+    vs = AQT.ViewState(api)
+    ts = AQT.TimeState(api)
+    iss = AQT.ImageSubsetState(api)
+    ps = AQT.PoseState(api)
+    sp = AQT.StreamProperties()
+    rapi = AQT.RenderStream(api, vs, ts, iss, ps, sp)
+
     @unittest.SkipTest
-    def test_0(self):
-        aap_sc = AquetiAdminPageStatusCamera(self.driver)
+    def test_cam_properties(self):
+        aap_sc = AquetiAdminPageStatusCamera(self)
         self.navigate_to(aap_sc.page_url)
         comps = aap_sc.components
 
@@ -18,78 +51,98 @@ class Test(BaseTest):
 
         self.assertEqual(len(comps), 2)
 
-        for comp in comps:
-            self.assertIn("aqt:Camera:", comp.text)
+        #for comp in comps:
+        #    self.assertIn("ferg", comp.text)
 
         comps[0].click()
 
-        self.assertEqual(aap_sc.prop_status.text, "online")
-        self.assertEqual(aap_sc.prop_recording.text, "false")
-        self.assertEqual(aap_sc.prop_serialid.text, "undefined")
-        self.assertEqual(aap_sc.prop_software.text, "undefined")
-        self.assertEqual(aap_sc.prop_kernel.text, "undefined")
-        self.assertEqual(aap_sc.prop_host.text, "undefined")
+        self.assertEqual(aap_sc.prop_status.text, TD.cam_props["status"])
+        self.assertEqual(aap_sc.prop_recording.text, TD.cam_props["recording"])
+        self.assertEqual(aap_sc.prop_serialid.text, TD.cam_props["serialid"])
+        self.assertEqual(aap_sc.prop_software.text, TD.cam_props["software"])
+        self.assertEqual(aap_sc.prop_kernel.text, TD.cam_props["kernel"])
+        self.assertEqual(aap_sc.prop_host.text, TD.cam_props["host"])
 
-        self.assertEqual(aap_sc.prop_sensor_model.text, "imx274")
-        self.assertEqual(aap_sc.prop_sensor_host.text, "87878")
+        self.assertEqual(aap_sc.prop_sensor_model.text, TD.sensor_props["model"])
+        self.assertEqual(aap_sc.prop_sensor_host.text, TD.sensor_props["host"])
 
     @unittest.SkipTest
-    def test_1(self):
-        aap_ss = AquetiAdminPageStatusStorage(self.driver)
+    def test_stor_properties(self):
+        aap_ss = AquetiAdminPageStatusStorage(self)
         self.navigate_to(aap_ss.page_url)
         comps = aap_ss.components
 
         self.assertEqual(len(comps), 2)
 
-        for comp in comps:
-            self.assertIn("aqt:Storage:", comp.text)
+        #for comp in comps:
+        #    self.assertIn("aqt:Storage:", comp.text)
 
         comps[0].click()
 
-        self.assertEqual(aap_ss.prop_status.text, "online")
-        self.assertEqual(aap_ss.prop_serialid.text, "aqt:Storage:1")
-        self.assertEqual(aap_ss.prop_software.text, "undefined")
-        self.assertEqual(aap_ss.prop_kernel.text, "undefined")
-        self.assertEqual(aap_ss.prop_host.text, "undefined")
+        self.assertEqual(aap_ss.prop_status.text, TD.storage_props["status"])
+        self.assertEqual(aap_ss.prop_serialid.text, TD.storage_props["serialid"])
+        self.assertEqual(aap_ss.prop_software.text, TD.storage_props["software"])
+        self.assertEqual(aap_ss.prop_kernel.text, TD.storage_props["kernel"])
+        self.assertEqual(aap_ss.prop_host.text, TD.storage_props["host"])
 
     @unittest.SkipTest
-    def test_2(self):
-        aap_sr = AquetiAdminPageStatusRender(self.driver)
+    def test_render_properties(self):
+        aap_sr = AquetiAdminPageStatusRender(self)
         self.navigate_to(aap_sr.page_url)
         comps = aap_sr.components
 
         self.assertIsNone(comps)
 
-        self.assertEqual(aap_sr.prop_serialid.text, "")
-        self.assertEqual(aap_sr.prop_software.text, "undefined")
-        self.assertEqual(aap_sr.prop_kernel.text, "undefined")
-        self.assertEqual(aap_sr.prop_host.text, "undefined")
+        self.assertEqual(aap_sr.prop_serialid.text, TD.render_props["serialid"])
+        self.assertEqual(aap_sr.prop_software.text, TD.render_props["software"])
+        self.assertEqual(aap_sr.prop_kernel.text, TD.render_props["kernel"])
+        self.assertEqual(aap_sr.prop_host.text, TD.render_props["host"])
 
     @unittest.SkipTest
-    def test_11(self):
-        aap_i = AquetiAdminPageIssue(self.driver)
+    def test_title(self):
+        aap_i = AquetiAdminPageIssue(self)
         self.navigate_to(aap_i.page_url)
 
         aap_sc = aap_i.submit_issue("title", "summary", "description")
 
         self.assertEqual(aap_sc.page_url, aap_sc.cur_page_url)
-    
+
     @unittest.SkipTest
-    def test_12(self):
-        aap_cc = AquetiAdminPageConfigurationCamera(self.driver)
+    def test_comp_name_update(self):
+        aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
 
-        aap_cc._(aap_cc.auto_gain)
-        aap_cc._(aap_cc.auto_whitebalance)
-        aap_cc._(aap_cc.auto_shutter)
+        nickname = "test"
 
-        aap_cc._(aap_cc.gain_plus)
-        aap_cc._(aap_cc.whitebalance_plus)
-        aap_cc._(aap_cc.shutter_plus)
+        aap_cc.update_nickname(nickname)
 
-        aap_cc._(aap_cc.gain_minus)
-        aap_cc._(aap_cc.whitebalance_minus)
-        aap_cc._(aap_cc.shutter_minus)
+        self.assertEqual(nickname, aap_cc.nickname.text)
+
+    @unittest.SkipTest
+    def test_internal_error(self):
+        aap_sc = AquetiAdminPageStatusCamera(self)
+        self.navigate_to(aap_sc.page_url)
+
+        aap_sc._(aap_sc.host)
+
+        self.assertIn("Internal Server Error", aap_sc.cur_page_source)
+
+    @unittest.SkipTest
+    def test_settings(self):
+        aap_cc = AquetiAdminPageConfigurationCamera(self)
+        self.navigate_to(aap_cc.page_url)
+
+        aap_cc._(aap_cc.auto_gain_chkb)
+        aap_cc._(aap_cc.auto_whitebalance_chkb)
+        aap_cc._(aap_cc.auto_shutter_chkb)
+
+        aap_cc._(aap_cc.gain_plus_btn)
+        aap_cc._(aap_cc.whitebalance_plus_btn)
+        aap_cc._(aap_cc.shutter_plus_btn)
+
+        aap_cc._(aap_cc.gain_minus_btn)
+        aap_cc._(aap_cc.whitebalance_minus_btn)
+        aap_cc._(aap_cc.shutter_minus_btn)
 
         aap_cc.move_sharpening_slider(20)
         aap_cc.move_denoising_slider(40)
@@ -97,15 +150,17 @@ class Test(BaseTest):
         aap_cc._(aap_cc.night_mode_chkb)
         aap_cc._(aap_cc.transport_mode_dd, "10 bit")
         aap_cc._(aap_cc.framerate_dd, "30 fps")
-    
+
+        self.assertEquals(self.api.GetParameters("sharpening"), 20)
+
     @unittest.SkipTest
     def test_sc_move(self):
-        aap_cc = AquetiAdminPageConfigurationCameraImage(self)
+        aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
 
         aap_cc.click_links()
 
-        aap_cc = AquetiAdminPageConfigurationCameraImage(self)
+        aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
 
         vs = dict()
@@ -129,12 +184,7 @@ class Test(BaseTest):
 
     @unittest.SkipTest
     def test_sc_zoom(self):
-        aap_cc = AquetiAdminPageConfigurationCameraImage(self)
-        self.navigate_to(aap_cc.page_url)
-
-        aap_cc.click_links()
-
-        aap_cc = AquetiAdminPageConfigurationCameraImage(self)
+        aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
 
         vs = dict()
@@ -151,7 +201,5 @@ class Test(BaseTest):
 
 
 if __name__ == "__main__":
-    #unittest.main()
-
     suite = unittest.TestLoader().loadTestsFromTestCase(APITest)
     unittest.TextTestRunner().run(suite)
