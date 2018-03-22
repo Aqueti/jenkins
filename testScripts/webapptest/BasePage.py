@@ -1,4 +1,3 @@
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -36,8 +35,7 @@ class BasePage:
         self.base_url = ""
         self.page_url = ""
 
-        self.log_path = test.log_path
-        self.screenshot_path = test.screenshot_path
+        self.test = test
 
     def find_by(self, **kwargs):
         elems = None
@@ -104,6 +102,7 @@ class BasePage:
                         return elems[0]
         except Exception as e:
             self.__add_to_log("Element not found: " + str(kwargs) + "\n")
+            self.test.fail("Element not found: " + str(kwargs) + "\n")
 
         return elems
 
@@ -161,6 +160,9 @@ class BasePage:
             self.__add_to_log(self.__get_description(elem, value, step_name))
 
             self.__perf_action(elem, value)
+
+            if "Internal Server Error" in self.cur_page_source:
+                self.test.fail()
 
     def switch_to(self, obj="", obj_name=""):
         if obj == "window":
@@ -235,7 +237,7 @@ class BasePage:
         return out + "\n"
 
     def __add_to_log(self, text):
-        with open(self.log_path, "a") as log:
+        with open(self.test.log_path, "a") as log:
             log.write(text)
 
     def get_label(self, elem):
@@ -245,7 +247,11 @@ class BasePage:
             max_depth = 5
 
         t_elem = elem
-        labels = self.driver.find_elements_by_css_selector("label[for=" + elem.get_attribute('id') + "]")
+        labels = []
+        try:
+            labels = self.driver.find_elements_by_css_selector("label[for=" + elem.get_attribute('id') + "]")
+        except Exception as e:
+            pass
 
         while len(labels) == 0 and max_depth > 0:
             t_elem = t_elem.find_element_by_xpath("..")
@@ -254,13 +260,13 @@ class BasePage:
 
             max_depth -= 1
 
-        if labels is not None:
+        if len(labels) > 0:
             return labels[0].get_attribute("innerText").strip()
         else:
             return ""
 
     def make_screenshot(self, path=""):
         if path == "":
-            self.driver.save_screenshot(self.screenshot_path)
+            self.driver.save_screenshot(self.test.screenshot_path)
         else:
             self.driver.save_screenshot(path)
