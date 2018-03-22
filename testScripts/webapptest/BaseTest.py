@@ -1,21 +1,21 @@
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver import ChromeOptions
 from selenium import webdriver
-from selenium.common import exceptions
 import unittest
 import datetime
 import os
+#import pymongo
 
 
 class BaseTest(unittest.TestCase):
     driver = None
     browser = "chrome"
 
+    #client = pymongo.MongoClient("mongodb://tester:tester@192.168.10.254/test_db")
+
     @property
     def screenshot_path(self):
         return '{0}/{1}_{2}.png'.format(self.base_dir, self.script_name, datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
-
-    def __call__(self, *args, **kwargs):
-        super(BaseTest, self).__call__(*args, **kwargs)
 
     @property
     def failureException(self):
@@ -28,16 +28,23 @@ class BaseTest(unittest.TestCase):
             self.driver.save_screenshot(self.screenshot_path)
         except Exception as e:
             pass
+
         BaseTestFailureException.__name__ = AssertionError.__name__
+
         return BaseTestFailureException
+
+    def __call__(self, *args, **kwargs):
+        super(BaseTest, self).__call__(*args, **kwargs)
 
     def setUp(self):
         if self.browser == "chrome":
-            #opts = ChromeOptions()
-            #opts.add_experimental_option("detach", True)
-            #self.driver = webdriver.Chrome(chrome_options=opts)
-            self.driver = webdriver.Chrome()
+            opts = ChromeOptions()
+            opts.add_experimental_option("detach", True)
+            caps = DesiredCapabilities.CHROME
+            caps["pageLoadStrategy"] = "none"
+            self.driver = webdriver.Chrome(desired_capabilities=caps)  # chrome_options=opts
         elif self.browser == "ff":
+            caps = DesiredCapabilities.FIREFOX
             self.driver = webdriver.Firefox()
         else:
             pass
@@ -69,7 +76,6 @@ class BaseTest(unittest.TestCase):
                         "Exec time: " +
                         str(datetime.timedelta(seconds=int((self.end_time - self.start_time).total_seconds()))))
 
-        print("teardown")
         self.driver.close()
 
     def run(self, result=None):
