@@ -37,9 +37,6 @@ class AquetiAdminPage(BasePage):
     def __call__(self, text):
         super(BasePage, self).__call__()
 
-    def __enter__(self):
-        print("enter!!")
-
     def click_links(self):
         self._(self.sidebar_status)
         self._(self.sidebar_configuration)
