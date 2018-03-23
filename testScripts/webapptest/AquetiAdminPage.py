@@ -107,6 +107,18 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
 
     @property
     def system_set_host_ip(self): return self.find_by(css="ul.dropdown-menu a:contains(Set Host IP)")
+        
+    @property
+    def search_field(self): return self.find_by(css="input.form-control[type='search']")
+
+    @property
+    def entries_num_dd(self): return self.find_by(css="select[name='example_length']")
+
+    @property
+    def previous(self): return self.find_by(partial_link_text="Previous")
+
+    @property
+    def previous(self): return self.find_by(partial_link_text="Next")
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
