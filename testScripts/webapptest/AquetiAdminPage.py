@@ -4,7 +4,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 class AquetiAdminPage(BasePage):
     @property
-    def sidebar_status(self): return self.find_by(partial_link_text="Status")  # css="nav#sidebar a:contains(Status)"
+    def sidebar_status(self): return self.find_by(partial_link_text="Status")
 
     @property
     def sidebar_configuration(self): return self.find_by(partial_link_text="Configuration")
@@ -31,7 +31,7 @@ class AquetiAdminPage(BasePage):
         BasePage.__init__(self, driver)
 
         self.page_title = "Aqueti Admin"
-        self.base_url = "http://10.0.0.185:5000"
+        self.base_url = "http://10.0.0.207:5003"  # http://10.0.0.185:5000
         self.page_url = self.base_url
 
     def __call__(self, text):
@@ -107,7 +107,7 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
 
     @property
     def system_set_host_ip(self): return self.find_by(css="ul.dropdown-menu a:contains(Set Host IP)")
-        
+
     @property
     def search_field(self): return self.find_by(css="input.form-control[type='search']")
 
@@ -119,6 +119,66 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
 
     @property
     def previous(self): return self.find_by(partial_link_text="Next")
+
+# Update Software
+
+    @property
+    def upload_form(self): return self.find_by(id="upload")
+
+    @property
+    def checksum_field(self): return self.find_by(id="checksum")
+
+    @property
+    def upload_btn(self): return self.find_by(id="uploadButton")
+
+# Time - Set Host Time
+
+    @property
+    def datetime_field(self): return self.find_by(css="div#set_host_time div.modal-body input.form_datetime")
+
+    @property
+    def update_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-primary")
+
+    @property
+    def close_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-secondary")
+
+# Time - Set Host Time
+
+    @property
+    def ipv4_field(self): return self.find_by(css="div#set_host_NTP div.modal-body input.form-control")
+
+    @property
+    def update_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-primary")
+
+    @property
+    def close_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-secondary")
+
+# System - Reboot Host Device
+
+    @property
+    def reboot_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-primary")
+
+    @property
+    def close_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-secondary")
+
+# System - Shutdown Host Device
+
+    @property
+    def shutdown_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-primary")
+
+    @property
+    def close_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-secondary")
+
+# System - Set Host IP
+
+    @property
+    def ipv4_field(self): return self.find_by(css="div#set_host_ip div.modal-body input.form-control")
+
+    @property
+    def update_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-primary")
+
+    @property
+    def close_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-secondary")
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
@@ -262,13 +322,13 @@ class AquetiAdminPageSystem(AquetiAdminPage):
 
 class AquetiAdminPageIssue(AquetiAdminPage):
     @property
-    def title_field(self): return self.find_by(id="title") #Title
+    def title_field(self): return self.find_by(id="title")  # Title
 
     @property
-    def summary_field(self): return self.find_by(id="summary") #Summary
+    def summary_field(self): return self.find_by(id="summary")  # Summary
 
     @property
-    def description_field(self): return self.find_by(id="description") #Description
+    def description_field(self): return self.find_by(id="description")  # Description
 
     @property
     def submit_btn(self): return self.find_by(id="submit")
@@ -282,9 +342,9 @@ class AquetiAdminPageIssue(AquetiAdminPage):
         self._(self.title_field, title)
         self._(self.summary_field, summary)
         self._(self.description_field, description)
-        self._(self.submit_button)
+        self._(self.submit_btn)
 
-        return AquetiAdminPageStatusCamera(self.driver)
+        return AquetiAdminPageStatusCamera(self)
 
 
 class AquetiAdminPageStatusCamera(AquetiAdminPageStatus, AquetiAdminPageCamera):
