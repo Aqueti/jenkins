@@ -3,6 +3,8 @@ from selenium.webdriver.common.keys import Keys
 from BaseTest import BaseTest
 from AquetiAdminPage import *
 import AQT
+import time
+import ctypes
 
 
 class TD:
@@ -39,6 +41,10 @@ class APITest(BaseTest):
     ps = AQT.PoseState(api)
     sp = AQT.StreamProperties()
     rapi = AQT.RenderStream(api, vs, ts, iss, ps, sp)
+
+    def isStatusOK(self, api):
+        if api.GetStatus() != AQT.aqt_STATUS_OKAY:
+            self.fail()
 
     @unittest.SkipTest
     def test_cam_properties(self):
@@ -99,9 +105,18 @@ class APITest(BaseTest):
         self.assertEqual(aap_sr.prop_host.text, TD.render_props["host"])
 
     @unittest.SkipTest
-    def test_title(self):
+    def test_issue_submition(self):
         aap_i = AquetiAdminPageIssue(self)
         self.navigate_to(aap_i.page_url)
+
+        self.assertNotIn("[This field is required.]", aap_i.cur_page_source)
+
+        aap_i._(aap_i.title_field, "")
+        aap_i._(aap_i.summary_field, "")
+        aap_i._(aap_i.description_field, "")
+        aap_i._(aap_i.submit_btn)
+
+        self.assertIn("[This field is required.]", aap_i.cur_page_source)
 
         aap_sc = aap_i.submit_issue("title", "summary", "description")
 
@@ -198,6 +213,77 @@ class APITest(BaseTest):
 
         self.assertEquals(vs['before'] * 2, vs['in'])
         self.assertEquals(vs['in'] * 0.6, vs['out'])
+
+    @unittest.SkipTest
+    def test_stream_types(self):
+        self.sp.Width(1920)
+        self.sp.Height(1080)
+        self.sp.FrameRate(30)
+
+        cams = self.api.GetAvailableCameras()
+
+        self.isStatusOK(self.rapi)
+
+        self.rapi.AddCamera(cams[0].Name())
+
+        self.isStatusOK(self.rapi)
+
+        self.rapi.SetStreamingState(True)
+
+        self.isStatusOK(self.rapi)
+
+        self.ts.PlaySpeed(1.0)
+
+        self.isStatusOK(self.rapi)
+
+        aqt_types = [AQT.aqt_STREAM_TYPE_JPEG, AQT.aqt_STREAM_TYPE_H264, AQT.aqt_STREAM_TYPE_H265]
+
+        for aqt_type in aqt_types:
+            self.sp.Type(aqt_type)
+
+            for i in range(60):
+                time.sleep(1 / 60)
+
+                frame = self.rapi.GetNextFrame()
+                status = self.rapi.GetStatus()
+
+                if status == AQT.aqt_STATUS_OKAY:
+                    if frame.Type() == AQT.aqt_JPEG_IMAGE:
+                        self.assertEqual(aqt_type, AQT.aqt_STREAM_TYPE_JPEG)
+                    elif frame.Type() in (AQT.aqt_H264_P_FRAME, AQT.aqt_H264_I_FRAME):
+                        self.assertIn(aqt_type, [AQT.aqt_H264_P_FRAME, AQT.aqt_H264_I_FRAME])
+                    elif frame.Type() in (AQT.aqt_H265_P_FRAME, AQT.aqt_H265_I_FRAME):
+                        self.assertIn(aqt_type, [AQT.aqt_H265_P_FRAME, AQT.aqt_H265_I_FRAME])
+
+    @unittest.SkipTest
+    def test_status(self):
+        cams = self.api.GetAvailableCameras()
+
+        self.isStatusOK(self.api)
+
+        cam = AQT.Camera(self.api, cams[0].Name())
+
+        self.isStatusOK(self.api)
+
+        canStream = cam.GetCanStreamLiveNow()
+
+        self.isStatusOK(self.api)
+
+        cam.Recording(True)
+
+        self.isStatusOK(self.api)
+
+        intervals = cam.GetStoredDataRanges()
+
+        self.isStatusOK(self.api)
+
+        modes = cam.GetStreamingModes()
+
+        self.isStatusOK(self.api)
+
+        # modes = cam.Parameters()
+
+        # self.isStatusOK(self.api)
 
 
 if __name__ == "__main__":
