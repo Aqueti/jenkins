@@ -140,8 +140,9 @@ class BasePage:
         elif tag_name == "input":
             type = elem.get_attribute('type').lower()
             if type in ("button", "submit"):
-                if "bootstrap-touchspin-" in elem.className:
-                    self.exec_js("return $(arguments[0]).trigger('mousedown').trigger('touchcancel');", elem)
+                if "className" in dir(elem):
+                    if "bootstrap-touchspin-" in elem.className:
+                        self.exec_js("return $(arguments[0]).trigger('mousedown').trigger('touchcancel');", elem)
                 else:
                     elem.click()
             elif type in ("text", "password"):
