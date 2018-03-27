@@ -31,7 +31,7 @@ class AquetiAdminPage(BasePage):
         BasePage.__init__(self, driver)
 
         self.page_title = "Aqueti Admin"
-        self.base_url = "http://10.0.0.207:5003"  # http://10.0.0.185:5000
+        self.base_url = "http://10.0.0.207:5003"  # .185:5000
         self.page_url = self.base_url
 
     def __call__(self, text):
@@ -41,6 +41,7 @@ class AquetiAdminPage(BasePage):
         self._(self.sidebar_status)
         self._(self.sidebar_configuration)
         self._(self.sidebar_maintenance)
+        self._(self.sidebar_status)
 
 
 class AquetiAdminPageStatus(AquetiAdminPage):
@@ -118,67 +119,67 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
     def previous(self): return self.find_by(partial_link_text="Previous")
 
     @property
-    def previous(self): return self.find_by(partial_link_text="Next")
+    def next(self): return self.find_by(partial_link_text="Next")
 
 # Update Software
 
     @property
-    def upload_form(self): return self.find_by(id="upload")
+    def us_upload_form(self): return self.find_by(id="upload")
 
     @property
-    def checksum_field(self): return self.find_by(id="checksum")
+    def us_checksum_field(self): return self.find_by(id="checksum")
 
     @property
-    def upload_btn(self): return self.find_by(id="uploadButton")
+    def us_upload_btn(self): return self.find_by(id="uploadButton")
 
 # Time - Set Host Time
 
     @property
-    def datetime_field(self): return self.find_by(css="div#set_host_time div.modal-body input.form_datetime")
+    def sht_datetime_field(self): return self.find_by(css="div#set_host_time div.modal-body input.form_datetime")
 
     @property
-    def update_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-primary")
+    def sht_update_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-primary")
 
     @property
-    def close_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-secondary")
+    def sht_close_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-secondary")
 
-# Time - Set Host Time
-
-    @property
-    def ipv4_field(self): return self.find_by(css="div#set_host_NTP div.modal-body input.form-control")
+# Time - Specify Host NTP
 
     @property
-    def update_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-primary")
+    def shn_ipv4_field(self): return self.find_by(css="div#set_host_NTP div.modal-body input.form-control")
 
     @property
-    def close_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-secondary")
+    def shn_update_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-primary")
+
+    @property
+    def shn_close_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-secondary")
 
 # System - Reboot Host Device
 
     @property
-    def reboot_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-primary")
+    def rhd_reboot_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-primary")
 
     @property
-    def close_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-secondary")
+    def rhd_close_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-secondary")
 
 # System - Shutdown Host Device
 
     @property
-    def shutdown_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-primary")
+    def shd_shutdown_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-primary")
 
     @property
-    def close_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-secondary")
+    def shd_close_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-secondary")
 
 # System - Set Host IP
 
     @property
-    def ipv4_field(self): return self.find_by(css="div#set_host_ip div.modal-body input.form-control")
+    def shi_ipv4_field(self): return self.find_by(css="div#set_host_ip div.modal-body input.form-control")
 
     @property
-    def update_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-primary")
+    def shi_update_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-primary")
 
     @property
-    def close_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-secondary")
+    def shi_close_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-secondary")
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
