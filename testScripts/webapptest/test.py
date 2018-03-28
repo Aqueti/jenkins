@@ -4,7 +4,6 @@ from BaseTest import BaseTest
 from AquetiAdminPage import *
 import AQT
 import time
-import ctypes
 
 
 class TD:
@@ -30,7 +29,7 @@ class TD:
                     "host": "undefined"}
 
 
-class APITest(BaseTest):
+class WebTest(BaseTest):
     browser = "chrome"
 
     api = AQT.AquetiAPI()
@@ -41,10 +40,6 @@ class APITest(BaseTest):
     ps = AQT.PoseState(api)
     sp = AQT.StreamProperties()
     rapi = AQT.RenderStream(api, vs, ts, iss, ps, sp)
-
-    def isStatusOK(self, api):
-        if api.GetStatus() != AQT.aqt_STATUS_OKAY:
-            self.fail()
 
     @unittest.SkipTest
     def test_cam_properties(self):
@@ -215,77 +210,107 @@ class APITest(BaseTest):
         self.assertEquals(vs['in'] * 0.6, vs['out'])
 
     @unittest.SkipTest
-    def test_stream_types(self):
-        self.sp.Width(1920)
-        self.sp.Height(1080)
-        self.sp.FrameRate(30)
+    def test_login_correct_credentials(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
 
-        cams = self.api.GetAvailableCameras()
+        aap_sc = aalp.login("test", "test")
 
-        self.isStatusOK(self.rapi)
-
-        self.rapi.AddCamera(cams[0].Name())
-
-        self.isStatusOK(self.rapi)
-
-        self.rapi.SetStreamingState(True)
-
-        self.isStatusOK(self.rapi)
-
-        self.ts.PlaySpeed(1.0)
-
-        self.isStatusOK(self.rapi)
-
-        aqt_types = [AQT.aqt_STREAM_TYPE_JPEG, AQT.aqt_STREAM_TYPE_H264, AQT.aqt_STREAM_TYPE_H265]
-
-        for aqt_type in aqt_types:
-            self.sp.Type(aqt_type)
-
-            for i in range(60):
-                time.sleep(1 / 60)
-
-                frame = self.rapi.GetNextFrame()
-                status = self.rapi.GetStatus()
-
-                if status == AQT.aqt_STATUS_OKAY:
-                    if frame.Type() == AQT.aqt_JPEG_IMAGE:
-                        self.assertEqual(aqt_type, AQT.aqt_STREAM_TYPE_JPEG)
-                    elif frame.Type() in (AQT.aqt_H264_P_FRAME, AQT.aqt_H264_I_FRAME):
-                        self.assertIn(aqt_type, [AQT.aqt_H264_P_FRAME, AQT.aqt_H264_I_FRAME])
-                    elif frame.Type() in (AQT.aqt_H265_P_FRAME, AQT.aqt_H265_I_FRAME):
-                        self.assertIn(aqt_type, [AQT.aqt_H265_P_FRAME, AQT.aqt_H265_I_FRAME])
+        self.assertEquals(aap_sc.page_url, aalp.cur_page_url)
 
     @unittest.SkipTest
-    def test_status(self):
-        cams = self.api.GetAvailableCameras()
+    def test_login_incorrect_credentials(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
 
-        self.isStatusOK(self.api)
+        aap_sc = aalp.login("", "")
 
-        cam = AQT.Camera(self.api, cams[0].Name())
+        self.assertIn(aalp.page_url, aalp.cur_page_url)
 
-        self.isStatusOK(self.api)
+    @unittest.SkipTest
+    def test_login_incorrect_login(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
 
-        canStream = cam.GetCanStreamLiveNow()
+        aap_sc = aalp.login("tset", "test")
 
-        self.isStatusOK(self.api)
+        self.assertIn("Username or password invalid", aalp.cur_page_source)
 
-        cam.Recording(True)
+    @unittest.SkipTest
+    def test_login_incorrect_password(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
 
-        self.isStatusOK(self.api)
+        aap_sc = aalp.login("test", "tset")
 
-        intervals = cam.GetStoredDataRanges()
+        self.assertIn("Username or password invalid", aalp.cur_page_source)
 
-        self.isStatusOK(self.api)
+    @unittest.SkipTest
+    def test_login_unauthorized_access(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
 
-        modes = cam.GetStreamingModes()
+        aap_sc = AquetiAdminPageStatusCamera(self)
+        self.navigate_to(aap_sc.page_url)
 
-        self.isStatusOK(self.api)
+        self.assertIn("Not Authorized to view this page", aap_sc.cur_page_source)
 
-        # modes = cam.Parameters()
+        aap_ss = AquetiAdminPageStatusStorage(self)
+        self.navigate_to(aap_ss.page_url)
 
-        # self.isStatusOK(self.api)
+        self.assertIn("Not Authorized to view this page", aap_ss.cur_page_source)
+
+        aap_sr = AquetiAdminPageStatusRender(self)
+        self.navigate_to(aap_sr.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_sr.cur_page_source)
+
+        aap_cs = AquetiAdminPageConfigurationSystem(self)
+        self.navigate_to(aap_cs.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_cs.cur_page_source)
+
+        aap_cc = AquetiAdminPageConfigurationCamera(self)
+        self.navigate_to(aap_cc.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_cc.cur_page_source)
+
+        aap_cst = AquetiAdminPageConfigurationStorage(self)
+        self.navigate_to(aap_cst.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_cst.cur_page_source)
+
+        aap_cr = AquetiAdminPageConfigurationRender(self)
+        self.navigate_to(aap_cr.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_cr.cur_page_source)
+
+        aap_mc = AquetiAdminPageMaintenanceCamera(self)
+        self.navigate_to(aap_mc.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_mc.cur_page_source)
+
+        aap_ms = AquetiAdminPageMaintenanceStorage(self)
+        self.navigate_to(aap_ms.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_ms.cur_page_source)
+
+        aap_mr = AquetiAdminPageMaintenanceRender(self)
+        self.navigate_to(aap_mr.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_mr.cur_page_source)
+
+        aap_r = AquetiAdminPageRecordings(self)
+        self.navigate_to(aap_r.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_r.cur_page_source)
+
+        aap_i = AquetiAdminPageIssue(self)
+        self.navigate_to(aap_i.page_url)
+
+        self.assertIn("Not Authorized to view this page", aap_i.cur_page_source)
 
 
 if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(APITest)
+    suite = unittest.TestLoader().loadTestsFromTestCase(WebTest)
     unittest.TextTestRunner().run(suite)
