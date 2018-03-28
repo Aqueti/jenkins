@@ -2,6 +2,31 @@ from BasePage import BasePage
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+class AquetiAdminLoginPage(BasePage):
+    @property
+    def username_field(self): return self.find_by(id="login-username")
+
+    @property
+    def password_field(self): return self.find_by(id="login-password")
+
+    @property
+    def login_btn(self): return self.find_by(css="form#login-form input[type='submit']")
+
+    def login(self, username, password):
+        self._(self.username_field, username)
+        self._(self.password_field, password)
+        self._(self.login_btn)
+        if self.cur_page_url == (self.page_url + "/scop_status"):
+            return AquetiAdminPageStatusCamera(self)
+
+    def __init__(self, driver):
+        BasePage.__init__(self, driver)
+
+        self.page_title = "Aqueti Admin"
+        self.base_url = "http://10.0.0.207:5003"
+        self.page_url = self.base_url
+
+
 class AquetiAdminPage(BasePage):
     @property
     def sidebar_status(self): return self.find_by(partial_link_text="Status")
@@ -22,10 +47,24 @@ class AquetiAdminPage(BasePage):
     def sidebar_btn(self): return self.find_by(css="button.sidebar-toggle")
 
     @property
-    def submit_issue_link(self): return self.find_by(css="nav a:contains(Submit Issue)")
+    def submit_issue(self): return self.find_by(css="nav a:contains(Submit Issue)")
 
     @property
-    def search_link(self): return self.find_by(css="a.search-open.nav-link")
+    def search(self): return self.find_by(css="a.search-open.nav-link")
+
+    @property
+    def logout(self): return self.find_by(id="logout")
+
+# Search
+
+    @property
+    def search_field(self): return self.find_by(css="searchForm input")
+
+    @property
+    def search_btn(self): return self.find_by(css="searchForm button")
+
+    @property
+    def close(self): return self.find_by(css="div.close-btn i.fa-close")
 
     def __init__(self, driver):
         BasePage.__init__(self, driver)
@@ -183,6 +222,35 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
+
+
+class AquetiAdminPageRecordings(AquetiAdminPage):
+    @property
+    def components(self): return self.find_by(css="nav#combar li")
+
+    @property
+    def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
+
+    # Edit Component
+
+    @property
+    def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
+
+    @property
+    def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
+
+    @property
+    def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
+
+    def update_nickname(self, name):
+        self._(self.update_nickname_pic)
+        self._(self.ec_nickname_field, name)
+        self._(self.ec_update_btn)
+
+    def __init__(self, driver):
+        AquetiAdminPage.__init__(self, driver)
+
+        self.page_url += "/system_recordings"
 
 
 class AquetiAdminPageCamera(AquetiAdminPage):
