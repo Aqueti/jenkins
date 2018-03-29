@@ -16,7 +16,7 @@ class AquetiAdminLoginPage(BasePage):
         self._(self.username_field, username)
         self._(self.password_field, password)
         self._(self.login_btn)
-        if self.cur_page_url == (self.page_url + "/scop_status"):
+        if self.cur_page_url == (self.base_url + "/scop_status"):
             return AquetiAdminPageStatusCamera(self)
 
     def __init__(self, driver):
@@ -24,7 +24,7 @@ class AquetiAdminLoginPage(BasePage):
 
         self.page_title = "Aqueti Admin"
         self.base_url = "http://10.0.0.207:5003"
-        self.page_url = self.base_url
+        self.page_url = self.base_url + "/login"
 
 
 class AquetiAdminPage(BasePage):
@@ -81,6 +81,44 @@ class AquetiAdminPage(BasePage):
         self._(self.sidebar_configuration)
         self._(self.sidebar_maintenance)
         self._(self.sidebar_status)
+
+
+class VideoPanel:
+    @property
+    def button_play(self): return self.find_by(id="button_play")
+
+    @property
+    def button_stop(self): return self.find_by(id="button_stop")
+
+    @property
+    def button_window(self): return self.find_by(id="button_window")
+
+    @property
+    def image(self): return self.find_by(id="video")
+
+    @property
+    def camera_radio(self): return self.find_by(id="camera")
+
+    @property
+    def sensor_radio(self): return self.find_by(id="sensor")
+
+    @property
+    def zoom_in_btn(self): return self.find_by(id="button_zoom_in")
+
+    @property
+    def zoom_out_btn(self): return self.find_by(id="button_zoom_out")
+
+    @property
+    def arrow_left_btn(self): return self.find_by(id="button_arrow_left")
+
+    @property
+    def arrow_right_btn(self): return self.find_by(id="button_arrow_right")
+
+    @property
+    def arrow_up_btn(self): return self.find_by(id="button_arrow_up")
+
+    @property
+    def arrow_down_btn(self): return self.find_by(id="button_arrow_up")
 
 
 class AquetiAdminPageStatus(AquetiAdminPage):
@@ -152,13 +190,28 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
     def search_field(self): return self.find_by(css="input.form-control[type='search']")
 
     @property
-    def entries_num_dd(self): return self.find_by(css="select[name='example_length']")
+    def show_entries_dd(self): return self.find_by(css="select[name='example_length']")
 
     @property
     def previous(self): return self.find_by(partial_link_text="Previous")
 
     @property
     def next(self): return self.find_by(partial_link_text="Next")
+
+    @property
+    def time_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Time')]")
+
+    @property
+    def type_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Type')]")
+
+    @property
+    def location_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Location')]")
+
+    @property
+    def message_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Message')]")
+
+    @property
+    def entries_info(self): return self.find_by(id="example_info")
 
 # Update Software
 
@@ -224,12 +277,36 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
         AquetiAdminPage.__init__(self, driver)
 
 
-class AquetiAdminPageRecordings(AquetiAdminPage):
+class AquetiAdminPageRecordings(AquetiAdminPage, VideoPanel):
     @property
     def components(self): return self.find_by(css="nav#combar li")
 
     @property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
+
+    @property
+    def show_entries_dd(self): return self.find_by(css="div#example_length select")
+
+    @property
+    def search_field(self): return self.find_by(css="div#example_filter input")
+
+    @property
+    def start_time_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Start Time')]")
+
+    @property
+    def start_end_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'End Time')]")
+
+    @property
+    def entries(self): return self.find_by(css="table#example tr")
+
+    @property
+    def entries_info(self): return self.find_by(id="example_info")
+
+    @property
+    def previous(self): return self.find_by(id="example_previous")
+
+    @property
+    def next(self): return self.find_by(id="example_next")
 
     # Edit Component
 
@@ -456,27 +533,9 @@ class AquetiAdminPageConfigurationSystem(AquetiAdminPageConfiguration, AquetiAdm
         self.page_url += "/pipeline_configuration"
 
 
-class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdminPageCamera):
+class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdminPageCamera, VideoPanel):
     @property
     def prop_sensors(self): return self.find_by(id="sensor-svg")
-
-    @property
-    def button_play(self): return self.find_by(id="button_play")
-
-    @property
-    def button_stop(self): return self.find_by(id="button_stop")
-
-    @property
-    def button_window(self): return self.find_by(id="button_window")
-
-    @property
-    def image(self): return self.find_by(id="myCanvas")
-
-    @property
-    def radio_camera(self): return self.find_by(id="camera")
-
-    @property
-    def radio_sensor(self): return self.find_by(id="sensor")
 
     @property
     def image_tab(self): return self.find_by(partial_link_text="Image")
@@ -489,24 +548,6 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
 
     @property
     def sensor_tab(self): return self.find_by(partial_link_text="Sensor")
-
-    @property
-    def zoom_in_btn(self): return self.find_by(id="button_zoom_in")
-
-    @property
-    def zoom_out_btn(self): return self.find_by(id="button_zoom_out")
-
-    @property
-    def arrow_left_btn(self): return self.find_by(id="button_arrow_left")
-
-    @property
-    def arrow_right_btn(self): return self.find_by(id="button_arrow_right")
-
-    @property
-    def arrow_up_btn(self): return self.find_by(id="button_arrow_up")
-
-    @property
-    def arrow_down_btn(self): return self.find_by(id="button_arrow_up")
 
 # Image
 
@@ -659,6 +700,7 @@ class AquetiAdminPageConfigurationStorage(AquetiAdminPageConfiguration, AquetiAd
 
 
 class AquetiAdminPageConfigurationRender(AquetiAdminPageConfiguration, AquetiAdminPageRender):
+
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
@@ -667,7 +709,6 @@ class AquetiAdminPageConfigurationRender(AquetiAdminPageConfiguration, AquetiAdm
 
 class AquetiAdminPageMaintenanceCamera(AquetiAdminPageMaintenance, AquetiAdminPageCamera):
 
-
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
@@ -675,6 +716,7 @@ class AquetiAdminPageMaintenanceCamera(AquetiAdminPageMaintenance, AquetiAdminPa
 
 
 class AquetiAdminPageMaintenanceStorage(AquetiAdminPageMaintenance, AquetiAdminPageStorage):
+
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
@@ -682,6 +724,7 @@ class AquetiAdminPageMaintenanceStorage(AquetiAdminPageMaintenance, AquetiAdminP
 
 
 class AquetiAdminPageMaintenanceRender(AquetiAdminPageMaintenance, AquetiAdminPageRender):
+
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
