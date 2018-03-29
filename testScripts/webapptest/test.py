@@ -214,12 +214,12 @@ class WebTest(BaseTest):
         aalp = AquetiAdminLoginPage(self)
         self.navigate_to(aalp.page_url)
 
-        aap_sc = aalp.login("test", "test")
+        aap_sc = aalp.login("admin", "1234")
 
         self.assertEquals(aap_sc.page_url, aalp.cur_page_url)
 
     @unittest.SkipTest
-    def test_login_incorrect_credentials(self):
+    def test_login_empty_credentials(self):
         aalp = AquetiAdminLoginPage(self)
         self.navigate_to(aalp.page_url)
 
@@ -232,7 +232,7 @@ class WebTest(BaseTest):
         aalp = AquetiAdminLoginPage(self)
         self.navigate_to(aalp.page_url)
 
-        aap_sc = aalp.login("tset", "test")
+        aap_sc = aalp.login("nimda", "1234")
 
         self.assertIn("Username or password invalid", aalp.cur_page_source)
 
@@ -241,7 +241,7 @@ class WebTest(BaseTest):
         aalp = AquetiAdminLoginPage(self)
         self.navigate_to(aalp.page_url)
 
-        aap_sc = aalp.login("test", "tset")
+        aap_sc = aalp.login("admin", "4321")
 
         self.assertIn("Username or password invalid", aalp.cur_page_source)
 
@@ -309,6 +309,30 @@ class WebTest(BaseTest):
         self.navigate_to(aap_i.page_url)
 
         self.assertIn("Not Authorized to view this page", aap_i.cur_page_source)
+
+    @unittest.SkipTest
+    def test_login_logout(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
+
+        aap_sc = aalp.login("admin", "1234")
+
+        aap_sc._(aap_sc.logout)
+
+        self.assertIn(aalp.page_url, aap_sc.cur_page_url)
+
+    @unittest.SkipTest
+    def test_login_logout_timeout(self):
+        aalp = AquetiAdminLoginPage(self)
+        self.navigate_to(aalp.page_url)
+
+        aap_sc = aalp.login("admin", "1234")
+
+        time.sleep(61)
+
+        self.navigate_to(aalp.page_url)
+
+        self.assertIn(aalp.page_url, aap_sc.cur_page_url)
 
 
 if __name__ == "__main__":
