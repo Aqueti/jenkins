@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.remote.webelement import WebElement
 import hashlib
 import random
 import time
@@ -25,6 +26,11 @@ class BasePage:
         return hashlib.md5(self.driver.page_source.encode('utf-8')).hexdigest()
 
     def __init__(self, test):
+        #def call(self, *args, **kwargs):
+        #    pass
+
+        #WebElement.__call__ = call
+
         self.driver = test.driver
 
         self.TIMEOUT = 2
@@ -271,3 +277,32 @@ class BasePage:
             self.driver.save_screenshot(self.test.screenshot_path)
         else:
             self.driver.save_screenshot(path)
+
+
+class Property:
+    def __init__(self, *args, **kwargs):
+        self.fget = args[0]
+
+    def __get__(self, *args, **kwargs):
+        page = args[0]
+        elem = self.fget(page)
+
+        def wrapper(*args, **kwargs):
+
+            if len(kwargs) == 0:
+                page._(elem)
+            else:
+                if "value" in kwargs.keys():
+                    page._(elem, kwargs["value"])
+                elif "act" in kwargs.keys():
+                    if "click" in kwargs.values():
+                        elem.click()
+                    elif "focus" in kwargs.values():
+                        elem.click()
+                    elif "default" in kwargs.values():
+                        page._(elem)
+                elif "get" in kwargs.keys():
+                    if "elem" in kwargs.values():
+                        return elem
+
+        return wrapper
