@@ -1,21 +1,21 @@
-from BasePage import BasePage
+from BasePage import *
 from selenium.webdriver.common.action_chains import ActionChains
 
 
 class AquetiAdminLoginPage(BasePage):
-    @property
+    @Property
     def username_field(self): return self.find_by(id="login-username")
 
-    @property
+    @Property
     def password_field(self): return self.find_by(id="login-password")
 
-    @property
+    @Property
     def login_btn(self): return self.find_by(css="form#login-form input[type='submit']")
 
     def login(self, username, password):
-        self._(self.username_field, username)
-        self._(self.password_field, password)
-        self._(self.login_btn)
+        self.username_field(value=username)
+        self.password_field(value=password)
+        self.login_btn()
         if self.cur_page_url == (self.base_url + "/scop_status"):
             return AquetiAdminPageStatusCamera(self)
 
@@ -28,42 +28,42 @@ class AquetiAdminLoginPage(BasePage):
 
 
 class AquetiAdminPage(BasePage):
-    @property
+    @Property
     def sidebar_status(self): return self.find_by(partial_link_text="Status")
 
-    @property
+    @Property
     def sidebar_configuration(self): return self.find_by(partial_link_text="Configuration")
 
-    @property
+    @Property
     def sidebar_maintenance(self): return self.find_by(partial_link_text="Maintenance")
 
-    @property
+    @Property
     def system_current_time(self): return self.find_by(id="system-current-time")
 
-    @property
+    @Property
     def system_current_date(self): return self.find_by(id="system-current-date")
 
-    @property
+    @Property
     def sidebar_btn(self): return self.find_by(css="button.sidebar-toggle")
 
-    @property
+    @Property
     def submit_issue(self): return self.find_by(css="nav a:contains(Submit Issue)")
 
-    @property
+    @Property
     def search(self): return self.find_by(css="a.search-open.nav-link")
 
-    @property
+    @Property
     def logout(self): return self.find_by(id="logout")
 
 # Search
 
-    @property
+    @Property
     def search_field(self): return self.find_by(css="searchForm input")
 
-    @property
+    @Property
     def search_btn(self): return self.find_by(css="searchForm button")
 
-    @property
+    @Property
     def close(self): return self.find_by(css="div.close-btn i.fa-close")
 
     def __init__(self, driver):
@@ -77,58 +77,58 @@ class AquetiAdminPage(BasePage):
         super(BasePage, self).__call__()
 
     def click_links(self):
-        self._(self.sidebar_status)
-        self._(self.sidebar_configuration)
-        self._(self.sidebar_maintenance)
-        self._(self.sidebar_status)
+        self.sidebar_status()
+        self.sidebar_configuration()
+        self.sidebar_maintenance()
+        self.sidebar_status()
 
 
 class VideoPanel:
-    @property
+    @Property
     def button_play(self): return self.find_by(id="button_play")
 
-    @property
+    @Property
     def button_stop(self): return self.find_by(id="button_stop")
 
-    @property
+    @Property
     def button_window(self): return self.find_by(id="button_window")
 
-    @property
+    @Property
     def image(self): return self.find_by(id="video")
 
-    @property
+    @Property
     def camera_radio(self): return self.find_by(id="camera")
 
-    @property
+    @Property
     def sensor_radio(self): return self.find_by(id="sensor")
 
-    @property
+    @Property
     def zoom_in_btn(self): return self.find_by(id="button_zoom_in")
 
-    @property
+    @Property
     def zoom_out_btn(self): return self.find_by(id="button_zoom_out")
 
-    @property
+    @Property
     def arrow_left_btn(self): return self.find_by(id="button_arrow_left")
 
-    @property
+    @Property
     def arrow_right_btn(self): return self.find_by(id="button_arrow_right")
 
-    @property
+    @Property
     def arrow_up_btn(self): return self.find_by(id="button_arrow_up")
 
-    @property
+    @Property
     def arrow_down_btn(self): return self.find_by(id="button_arrow_up")
 
 
 class AquetiAdminPageStatus(AquetiAdminPage):
-    @property
+    @Property
     def topbar_camera(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Camera')]")
 
-    @property
+    @Property
     def topbar_storage(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Storage')]")
 
-    @property
+    @Property
     def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
     def __init__(self, driver):
@@ -136,16 +136,16 @@ class AquetiAdminPageStatus(AquetiAdminPage):
 
 
 class AquetiAdminPageConfiguration(AquetiAdminPage):
-    @property
+    @Property
     def topbar_system(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'System')]")
 
-    @property
+    @Property
     def topbar_camera(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Camera')]")
 
-    @property
+    @Property
     def topbar_storage(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Storage')]")
 
-    @property
+    @Property
     def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
     def __init__(self, driver):
@@ -153,124 +153,124 @@ class AquetiAdminPageConfiguration(AquetiAdminPage):
 
 
 class AquetiAdminPageMaintenance(AquetiAdminPage):
-    @property
+    @Property
     def topbar_camera(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Camera')]")
 
-    @property
+    @Property
     def topbar_storage(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Storage')]")
 
-    @property
+    @Property
     def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
-    @property
+    @Property
     def update_software_btn(self): return self.find_by(css="button:contains(Update Software)")
 
-    @property
+    @Property
     def time_btn(self): return self.find_by(css="button:contains(Time)")
 
-    @property
+    @Property
     def system_btn(self): return self.find_by(css="button:contains(System)")
 
-    @property
+    @Property
     def time_set_host_time(self): return self.find_by(css="ul.dropdown-menu a:contains(Set Host Time)")
 
-    @property
+    @Property
     def time_specify_host_ntp(self): return self.find_by(css="ul.dropdown-menu a:contains(Specify Host NTP)")
 
-    @property
+    @Property
     def system_reboot_host_device(self): return self.find_by(css="ul.dropdown-menu a:contains(Reboot Host Device)")
 
-    @property
+    @Property
     def system_shutdown_host_device(self): return self.find_by(css="ul.dropdown-menu a:contains(Shutdown Host Device)")
 
-    @property
+    @Property
     def system_set_host_ip(self): return self.find_by(css="ul.dropdown-menu a:contains(Set Host IP)")
 
-    @property
+    @Property
     def search_field(self): return self.find_by(css="input.form-control[type='search']")
 
-    @property
+    @Property
     def show_entries_dd(self): return self.find_by(css="select[name='example_length']")
 
-    @property
+    @Property
     def previous(self): return self.find_by(partial_link_text="Previous")
 
-    @property
+    @Property
     def next(self): return self.find_by(partial_link_text="Next")
 
-    @property
+    @Property
     def time_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Time')]")
 
-    @property
+    @Property
     def type_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Type')]")
 
-    @property
+    @Property
     def location_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Location')]")
 
-    @property
+    @Property
     def message_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Message')]")
 
-    @property
+    @Property
     def entries_info(self): return self.find_by(id="example_info")
 
 # Update Software
 
-    @property
+    @Property
     def us_upload_form(self): return self.find_by(id="upload")
 
-    @property
+    @Property
     def us_checksum_field(self): return self.find_by(id="checksum")
 
-    @property
+    @Property
     def us_upload_btn(self): return self.find_by(id="uploadButton")
 
 # Time - Set Host Time
 
-    @property
+    @Property
     def sht_datetime_field(self): return self.find_by(css="div#set_host_time div.modal-body input.form_datetime")
 
-    @property
+    @Property
     def sht_update_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-primary")
 
-    @property
+    @Property
     def sht_close_btn(self): return self.find_by(css="div#set_host_time div.modal-footer button.btn-secondary")
 
 # Time - Specify Host NTP
 
-    @property
+    @Property
     def shn_ipv4_field(self): return self.find_by(css="div#set_host_NTP div.modal-body input.form-control")
 
-    @property
+    @Property
     def shn_update_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-primary")
 
-    @property
+    @Property
     def shn_close_btn(self): return self.find_by(css="div#set_host_NTP div.modal-footer button.btn-secondary")
 
 # System - Reboot Host Device
 
-    @property
+    @Property
     def rhd_reboot_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-primary")
 
-    @property
+    @Property
     def rhd_close_btn(self): return self.find_by(css="div#reboot_host div.modal-footer button.btn-secondary")
 
 # System - Shutdown Host Device
 
-    @property
+    @Property
     def shd_shutdown_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-primary")
 
-    @property
+    @Property
     def shd_close_btn(self): return self.find_by(css="div#shutdown_host div.modal-footer button.btn-secondary")
 
 # System - Set Host IP
 
-    @property
+    @Property
     def shi_ipv4_field(self): return self.find_by(css="div#set_host_ip div.modal-body input.form-control")
 
-    @property
+    @Property
     def shi_update_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-primary")
 
-    @property
+    @Property
     def shi_close_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-secondary")
 
     def __init__(self, driver):
@@ -278,51 +278,51 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
 
 
 class AquetiAdminPageRecordings(AquetiAdminPage, VideoPanel):
-    @property
+    @Property
     def components(self): return self.find_by(css="nav#combar li")
 
-    @property
+    @Property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
 
-    @property
+    @Property
     def show_entries_dd(self): return self.find_by(css="div#example_length select")
 
-    @property
+    @Property
     def search_field(self): return self.find_by(css="div#example_filter input")
 
-    @property
+    @Property
     def start_time_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'Start Time')]")
 
-    @property
+    @Property
     def start_end_sort(self): return self.find_by(xpath="//table[@id='example']//th[contains(.,'End Time')]")
 
-    @property
+    @Property
     def entries(self): return self.find_by(css="table#example tr")
 
-    @property
+    @Property
     def entries_info(self): return self.find_by(id="example_info")
 
-    @property
+    @Property
     def previous(self): return self.find_by(id="example_previous")
 
-    @property
+    @Property
     def next(self): return self.find_by(id="example_next")
 
     # Edit Component
 
-    @property
+    @Property
     def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
 
-    @property
+    @Property
     def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
 
-    @property
+    @Property
     def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def update_nickname(self, name):
-        self._(self.update_nickname_pic)
-        self._(self.ec_nickname_field, name)
-        self._(self.ec_update_btn)
+        self.update_nickname_pic()
+        self.ec_nickname_field(value=name)
+        self.ec_update_btn()
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
@@ -331,96 +331,96 @@ class AquetiAdminPageRecordings(AquetiAdminPage, VideoPanel):
 
 
 class AquetiAdminPageCamera(AquetiAdminPage):
-    @property
+    @Property
     def prop_status(self): return self.find_by(id="status")
 
-    @property
+    @Property
     def prop_recording(self): return self.find_by(id="recording")
 
-    @property
+    @Property
     def prop_serialid(self): return self.find_by(id="serial")
 
-    @property
+    @Property
     def prop_software(self): return self.find_by(id="software")
 
-    @property
+    @Property
     def prop_kernel(self): return self.find_by(id="kernel")
 
-    @property
+    @Property
     def prop_host(self): return self.find_by(id="host")
 
-    @property
+    @Property
     def host(self): return self.find_by(css="#host a")
 
-    @property
+    @Property
     def components(self): return self.find_by(css="nav#combar li")
 
-    @property
+    @Property
     def prop_cam_nickname(self): return self.find_by(id="nickname")
 
-    @property
+    @Property
     def prop_cam_model(self): return self.find_by(id="model")
 
-    @property
+    @Property
     def prop_cam_label(self): return self.find_by(id="label")
 
-    @property
+    @Property
     def nickname(self): return self.find_by(css="div.card>h1")
 
-    @property
+    @Property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
 
 # Edit Component
 
-    @property
+    @Property
     def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
 
-    @property
+    @Property
     def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
 
-    @property
+    @Property
     def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def update_nickname(self, name):
-        self._(self.update_nickname_pic)
-        self._(self.ec_nickname_field, name)
-        self._(self.ec_update_btn)
+        self.update_nickname_pic()
+        self.ec_nickname_field(value=name)
+        self.ec_update_btn()
 
     def __init__(self, driver):
         AquetiAdminPage.__init__(self, driver)
 
 
 class AquetiAdminPageStorage(AquetiAdminPage):
-    @property
+    @Property
     def prop_status(self): return self.find_by(id="status")
 
-    @property
+    @Property
     def prop_serialid(self): return self.find_by(id="id")
 
-    @property
+    @Property
     def prop_software(self): return self.find_by(id="software")
 
-    @property
+    @Property
     def prop_kernel(self): return self.find_by(id="kernel")
 
-    @property
+    @Property
     def prop_host(self): return self.find_by(id="host")
 
-    @property
+    @Property
     def components(self): return self.find_by(css="nav#combar li")
 
-    @property
+    @Property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
 
 # Edit Component
 
-    @property
+    @Property
     def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
 
-    @property
+    @Property
     def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
 
-    @property
+    @Property
     def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def __init__(self, driver):
@@ -428,33 +428,33 @@ class AquetiAdminPageStorage(AquetiAdminPage):
 
 
 class AquetiAdminPageRender(AquetiAdminPage):
-    @property
+    @Property
     def prop_serialid(self): return self.find_by(id="id")
 
-    @property
+    @Property
     def prop_software(self): return self.find_by(id="software")
 
-    @property
+    @Property
     def prop_kernel(self): return self.find_by(id="kernel")
 
-    @property
+    @Property
     def prop_host(self): return self.find_by(id="host")
 
-    @property
+    @Property
     def components(self): return self.find_by(css="nav#combar li")
 
-    @property
+    @Property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
 
 # Edit Component
 
-    @property
+    @Property
     def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
 
-    @property
+    @Property
     def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
 
-    @property
+    @Property
     def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def __init__(self, driver):
@@ -467,16 +467,16 @@ class AquetiAdminPageSystem(AquetiAdminPage):
 
 
 class AquetiAdminPageIssue(AquetiAdminPage):
-    @property
+    @Property
     def title_field(self): return self.find_by(id="title")  # Title
 
-    @property
+    @Property
     def summary_field(self): return self.find_by(id="summary")  # Summary
 
-    @property
+    @Property
     def description_field(self): return self.find_by(id="description")  # Description
 
-    @property
+    @Property
     def submit_btn(self): return self.find_by(id="submit")
 
     def __init__(self, driver):
@@ -485,22 +485,22 @@ class AquetiAdminPageIssue(AquetiAdminPage):
         self.page_url += "/submit_issue"
 
     def submit_issue(self, title, summary, description):
-        self._(self.title_field, title)
-        self._(self.summary_field, summary)
-        self._(self.description_field, description)
-        self._(self.submit_btn)
+        self.title_field(value=title)
+        self.summary_field(value=summary)
+        self.description_field(value=description)
+        self.submit_btn()
 
         return AquetiAdminPageStatusCamera(self)
 
 
 class AquetiAdminPageStatusCamera(AquetiAdminPageStatus, AquetiAdminPageCamera):
-    @property
+    @Property
     def prop_sensor_model(self): return self.find_by(id="sensor_model")
 
-    @property
+    @Property
     def prop_sensor_host(self): return self.find_by(id="sensor_host")
 
-    @property
+    @Property
     def prop_sensors(self): return self.find_by(id="sensor-svg")
 
     def __init__(self, driver):
@@ -524,7 +524,7 @@ class AquetiAdminPageStatusRender(AquetiAdminPageStatus, AquetiAdminPageRender):
 
 
 class AquetiAdminPageConfigurationSystem(AquetiAdminPageConfiguration, AquetiAdminPageSystem):
-    @property
+    @Property
     def node_graph(self): return self.find_by(id="node-graph")
 
     def __init__(self, driver):
@@ -534,96 +534,96 @@ class AquetiAdminPageConfigurationSystem(AquetiAdminPageConfiguration, AquetiAdm
 
 
 class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdminPageCamera, VideoPanel):
-    @property
+    @Property
     def prop_sensors(self): return self.find_by(id="sensor-svg")
 
-    @property
+    @Property
     def image_tab(self): return self.find_by(partial_link_text="Image")
 
-    @property
+    @Property
     def compression_tab(self): return self.find_by(partial_link_text="Compression")
 
-    @property
+    @Property
     def focus_tab(self): return self.find_by(partial_link_text="Focus")
 
-    @property
+    @Property
     def sensor_tab(self): return self.find_by(partial_link_text="Sensor")
 
 # Image
 
-    @property
+    @Property
     def auto_gain_chkb(self): return self.find_by(id="auto_gain")
 
-    @property
+    @Property
     def gain_minus_btn(self): return self.find_by(
         xpath="//*[@id='panel1']//input[@id='auto_gain']/../..//button[contains(.,'-')]")
 
-    @property
+    @Property
     def gain_plus_btn(self): return self.find_by(
         xpath="//*[@id='panel1']//input[@id='auto_gain']/../..//button[contains(.,'+')]")
 
-    @property
+    @Property
     def gain_field(self): return self.find_by(id="gain")
 
-    @property
+    @Property
     def auto_whitebalance_chkb(self): return self.find_by(id="auto_whitebalance")
 
-    @property
+    @Property
     def whitebalance_minus_btn(self): return self.find_by(
         xpath="//*[@id='panel1']//input[@id='auto_whitebalance']/../..//button[contains(.,'-')]")
 
-    @property
+    @Property
     def whitebalance_plus_btn(self): return self.find_by(
         xpath="//*[@id='panel1']//input[@id='auto_whitebalance']/../..//button[contains(.,'+')]")
 
-    @property
+    @Property
     def whitebalance_field(self): return self.find_by(id="whitebalance")
 
-    @property
+    @Property
     def auto_shutter_chkb(self): return self.find_by(id="auto_shutter")
 
-    @property
+    @Property
     def shutter_minus_btn(self): return self.find_by(
         xpath="//*[@id='panel1']//input[@id='auto_shutter']/../..//button[contains(.,'-')]")
 
-    @property
+    @Property
     def shutter_plus_btn(self): return self.find_by(
         xpath="//*[@id='panel1']//input[@id='auto_shutter']/../..//button[contains(.,'+')]")
 
-    @property
+    @Property
     def shutter_field(self): return self.find_by(id="shutter")
 
-    @property
+    @Property
     def sharpening_slider(self): return self.find_by(css="#panel1 div#sharpening_slider div[role='slider']")
 
-    @property
+    @Property
     def sharpening_slider_ribbon(self): return self.find_by(css="#panel1 div#sharpening_slider div.noUi-base")
 
-    @property
+    @Property
     def denoising_slider(self): return self.find_by(css="#panel1 div#denoising_slider div[role='slider']")
 
-    @property
+    @Property
     def denoising_slider_ribbon(self): return self.find_by(css="#panel1 div#denoising_slider div.noUi-base")
 
-    @property
+    @Property
     def night_mode_chkb(self): return self.find_by(id="night_mode")
 
-    @property
+    @Property
     def transport_mode_10bit(self): return self.find_by(css="#panel1 button a:contains(10 bit)")
 
-    @property
+    @Property
     def transport_mode_12bit(self): return self.find_by(css="#panel1 button a:contains(12 bit)")
 
-    @property
+    @Property
     def framerate_25fps(self): return self.find_by(css="#panel1 button a:contains(25 fps)")
 
-    @property
+    @Property
     def framerate_30fps(self): return self.find_by(css="#panel1 button a:contains(30 fps)")
 
-    @property
+    @Property
     def transport_mode_dd(self): return self.find_by(id="transport_mode")
 
-    @property
+    @Property
     def framerate_dd(self): return self.find_by(id="framerate")
 
     def move_sharpening_slider(self, pos):
@@ -640,50 +640,50 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
 
 # Compression
 
-    @property
+    @Property
     def quality_high(self): return self.find_by(css="#panel2 a:contains(High)")
 
-    @property
+    @Property
     def quality_medium(self): return self.find_by(css="#panel2 a:contains(Medium)")
 
-    @property
+    @Property
     def quality_low(self): return self.find_by(css="#panel2 a:contains(Low)")
 
-    @property
+    @Property
     def encoding_jpeg(self): return self.find_by(css="#panel2 a:contains(JPEG)")
 
-    @property
+    @Property
     def encoding_h264(self): return self.find_by(css="#panel2 a:contains(H264)")
 
-    @property
+    @Property
     def encoding_h265(self): return self.find_by(css="#panel2 a:contains(H265)")
 
-    @property
+    @Property
     def quality_dd(self): return self.find_by(id="quality")
 
-    @property
+    @Property
     def encoding_dd(self): return self.find_by(id="encoding")
 
 # Focus
 
-    @property
+    @Property
     def focus_chkb(self): return self.find_by(id="checkboxCustom2")
 
-    @property
+    @Property
     def focus_now_btn(self): return self.find_by(css="#panel3 button:contains(Focus Now)")
 
 # Sensor
 
-    @property
+    @Property
     def focus_minus(self): return self.find_by(css="#panel4 button.btn.btn-default.bootstrap-touchspin-down:contains(-)")
 
-    @property
+    @Property
     def focus_plus(self): return self.find_by(css="#panel4 button.btn.btn-default.bootstrap-touchspin-up:contains(+)")
 
-    @property
+    @Property
     def focus_field(self): return self.find_by(id="sensorfocus")
 
-    @property
+    @Property
     def auto_focus_btn(self): return self.find_by(id="sensorAutoFocus")
 
     def __init__(self, driver):
