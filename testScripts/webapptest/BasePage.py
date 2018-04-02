@@ -25,13 +25,27 @@ class BasePage:
     def cur_page_source_hash(self):
         return hashlib.md5(self.driver.page_source.encode('utf-8')).hexdigest()
 
-    def __init__(self, test):
-        #def call(self, *args, **kwargs):
-        #    pass
+    def __init__(self, *args):
 
-        #WebElement.__call__ = call
+        page_obj = self
 
-        self.driver = test.driver
+        def call(self, *args, **kwargs):
+            if len(kwargs) == 0:
+                page_obj._(self)
+            else:
+                if "value" in kwargs.keys():
+                    page_obj._(self, kwargs["value"])
+                elif "act" in kwargs.keys():
+                    if "click" in kwargs.values():
+                        self.click()
+                    elif "focus" in kwargs.values():
+                        page_obj.exec_js("arguments[0].focus();", self)
+                    elif "scroll_to" in kwargs.values():
+                        page_obj.exec_js("arguments[0].scrollIntoView(true);", self)
+                    elif "default" in kwargs.values():
+                        page_obj._(self)
+
+        WebElement.__call__ = call
 
         self.TIMEOUT = 2
 
@@ -41,7 +55,12 @@ class BasePage:
         self.base_url = ""
         self.page_url = ""
 
-        self.test = test
+        if "Context" in str(type(args[0])):
+            self.driver = args[0].test.driver
+            self.test = args[0].test
+        else:
+            self.driver = args[0].driver
+            self.test = args[0]
 
     def find_by(self, **kwargs):
         elems = None
@@ -108,7 +127,8 @@ class BasePage:
                         return elems[0]
         except Exception as e:
             self.__add_to_log("Element not found: " + str(kwargs) + "\n")
-            self.test.fail("Element not found: " + str(kwargs) + "\n")
+            if self.test is not None:
+                self.test.fail("Element not found: " + str(kwargs) + "\n")
 
         return elems
 
@@ -169,7 +189,8 @@ class BasePage:
             self.__perf_action(elem, value)
 
             if "Internal Server Error" in self.cur_page_source:
-                self.test.fail()
+                if self.test is not None:
+                    self.test.fail()
 
     def switch_to(self, obj="", obj_name=""):
         if obj == "window":
@@ -244,8 +265,9 @@ class BasePage:
         return out + "\n"
 
     def __add_to_log(self, text):
-        with open(self.test.log_path, "a") as log:
-            log.write(text)
+        if self.test is not None:
+            with open(self.test.log_path, "a") as log:
+                log.write(text)
 
     def get_label(self, elem):
         max_depth = 2
@@ -274,35 +296,13 @@ class BasePage:
 
     def make_screenshot(self, path=""):
         if path == "":
-            self.driver.save_screenshot(self.test.screenshot_path)
+            if self.test is not None:
+                self.driver.save_screenshot(self.test.screenshot_path)
         else:
             self.driver.save_screenshot(path)
 
-
-class Property:
-    def __init__(self, *args, **kwargs):
-        self.fget = args[0]
-
-    def __get__(self, *args, **kwargs):
-        page = args[0]
-        elem = self.fget(page)
-
-        def wrapper(*args, **kwargs):
-
-            if len(kwargs) == 0:
-                page._(elem)
-            else:
-                if "value" in kwargs.keys():
-                    page._(elem, kwargs["value"])
-                elif "act" in kwargs.keys():
-                    if "click" in kwargs.values():
-                        elem.click()
-                    elif "focus" in kwargs.values():
-                        elem.click()
-                    elif "default" in kwargs.values():
-                        page._(elem)
-                elif "get" in kwargs.keys():
-                    if "elem" in kwargs.values():
-                        return elem
-
-        return wrapper
+    def navigate_to(self, url=""):
+        if url == "":
+            self.driver.get(self.page_url)
+        else:
+            self.driver.get(url)
