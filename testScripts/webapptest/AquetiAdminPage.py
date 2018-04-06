@@ -23,7 +23,7 @@ class AquetiAdminLoginPage(BasePage):
         BasePage.__init__(self, *args)
 
         self.page_title = "Aqueti Admin"
-        self.base_url = "http://10.0.0.207:5003"
+        self.base_url = "http://10.0.0.158:5000"
         self.page_url = self.base_url + "/login"
 
 
