@@ -12,7 +12,7 @@ pipeline {
         failFast true
         parallel {
         stage('Render: build') {
-          agent { label "compiler_1" }
+          agent { label "compiler" }
           steps {            
             //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
             
@@ -45,7 +45,7 @@ pipeline {
         }
         
         stage('Render: test') {
-          agent { label "compiler_1" }
+          agent { label "compiler" }
 
           steps {           
             //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
