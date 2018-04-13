@@ -1,18 +1,18 @@
 #!/usr/bin/env groovy
 
 pipeline {    
-   agent none
+  agent none
    
-   options {
-		timeout(time: 1, unit: 'HOURS')
-	} 
-   
+  options {
+    timeout(time: 1, unit: 'HOURS')
+  }
+
    stages {
       stage('Parallel build') {           
         failFast true
         parallel {
         stage('Render: build') {
-          agent { label "compiler" }
+          agent { label "compiler_1" }
           steps {            
             //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
             
@@ -38,14 +38,14 @@ pipeline {
           }
           
           post {  
-            always {
+            always { 
               deleteDir()
             }
           }
         }
         
         stage('Render: test') {
-          agent { label "compiler" }
+          agent { label "compiler_1" }
 
           steps {           
             //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
@@ -81,17 +81,16 @@ pipeline {
               
             sh 'mkdir -p jenkins/build/acos'
             dir('jenkins/build/acos') {               
-               sh "cmake ../../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=OFF -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
+               sh "cmake ../../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=OFF -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF -DARGUS_INCLUDE_DIR:PATH=/usr/lib/aarch64-linux-gnu/tegra/"
                sh "make -j5"
-
-               sh "echo Run aci when ready"
             }
               
             dir('jenkins/build/acos') {
-              sh "cmake ../../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF"
+              sh "cmake ../../.. -DBUILD_API:BOOL=OFF -DBUILD_ACI:BOOL=ON -DBUILD_AGT:BOOL=OFF -DBUILD_APPLICATIONS:BOOL=OFF -DBUILD_TESTS:BOOL=OFF -DBUILD_DEB_PACKAGE:BOOL=ON -DDOXYGEN_DIR:STRING=~/Documentation -DBUILD_AUTOFOCUS:BOOL=OFF -DBUILD_OPENCV:BOOL=OFF -DVERSION_TAG=${env.BRANCH_NAME} -DUSE_HTTPS:BOOL=OFF -DARGUS_INCLUDE_DIR:PATH=/usr/lib/aarch64-linux-gnu/tegra/"
               sh "make -j5"
                 
               dir('aci-prefix/src/aci-build') {
+               sh "make package" 
                stash includes: '*.deb', excludes:'*@*', name: 'aci'               
               }
             }   
@@ -111,6 +110,11 @@ pipeline {
          steps {                 
             echo "Deploy"
             
+            sh "mkdir -p jkns"
+            dir("jkns") {
+                git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+            }
+            
             sh "mkdir -p deploy/${env.BRANCH_NAME}/${env.BUILD_NUMBER}"
             dir("deploy/${env.BRANCH_NAME}/${env.BUILD_NUMBER}") {
                unstash 'acos'
@@ -121,17 +125,16 @@ pipeline {
               
                archiveArtifacts artifacts: '**/*.deb', fingerprint: true
                
-               git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
-               
-               sh "pipeline/bash/web_scr/genReleasePage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
+               sh "../../../jkns/pipeline/bash/web_scr/genReleasePage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
                
                unstash 'documentation'
                sh "tar -xvf Documentation.tar"
 
-               sh "pipeline/bash/web_scr/genMainPage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
+               sh "../../../jkns/pipeline/bash/web_scr/genMainPage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
             }
             
             sh "rm -rf deploy"
+            sh "rm -rf jkns"
          }
       } 
 
@@ -139,25 +142,31 @@ pipeline {
          agent { label 'cam_server_1' }
          steps {                 
             echo "Build Tests"
-
-            git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+           
+            unstash 'acos'
+            unstash 'agt'
+            unstash 'apps'
+            unstash 'aci'
             
-            dir("testScripts/apitest/") {
+            sh "mkdir -p jkns"
+            dir("jkns") {
+                git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+            }
+            
+            dir("jkns/testScripts/apitest/") {
                sh "cmake ."
                sh "make -j"
             }
             
-            sh 'pipeline/bash/run_scr/install.sh'
+            sh 'jkns/pipeline/bash/run_scr/install.sh ${JOB_NAME} ${BRANCH_NAME}'
          }
       }
 
       stage('Run tests\nTX1') {
         agent { label 'cam_server_1' }
         steps {
-          unstash 'run_scr'
-
           withEnv(['ENV_PATH="TX1"']) {
-            sh 'pipeline/bash/run_scr/run.sh TX1 ${JOB_NAME} ${BRANCH_NAME}' 
+            sh 'jkns/pipeline/bash/run_scr/run.sh TX1 ${JOB_NAME} ${BRANCH_NAME}' 
           }
           
           junit '**/results.xml'
@@ -168,7 +177,7 @@ pipeline {
         agent { label 'cam_server_1' }
         steps {          
           withEnv(['ENV_PATH="TX2"']) {
-            sh 'pipeline/bash/run_scr/run.sh TX2 ${JOB_NAME} ${BRANCH_NAME}' 
+            sh 'jkns/pipeline/bash/run_scr/run.sh TX2 ${JOB_NAME} ${BRANCH_NAME}' 
           } 
           
           junit '**/results.xml'
@@ -183,7 +192,7 @@ pipeline {
 
   post { 
     always {      
-      deleteDir()
+     echo 'always'
     }
  
     success {       
