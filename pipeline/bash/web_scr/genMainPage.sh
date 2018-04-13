@@ -1,11 +1,11 @@
 #!/bin/bash
 
 DOC_HOME="/storage/Web/software/Documentation/acos"
-WEBHOME="/storage/Web/repositories"
+WEBHOME="/storage/Web/repositories_old2"
 DATE=`date`
 MASTER_FILE="$WEBHOME/index.html"
 DEV_FILE="$WEBHOME/branches.html"
-S3_DEST="s3://aqueti.operations/repositories"
+S3_DEST="s3://aqueti.operations/repositories_old2"
 BRANCH=$1
 
 if [ $BRANCH == "master" ]; then
