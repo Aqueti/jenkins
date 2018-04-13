@@ -14,7 +14,7 @@ pipeline {
         stage('Render: build') {
           agent { label "compiler_1" }
           steps {            
-            //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
+            //git credentialsId: '', url: 'https://github.com/Aqueti/acos.git'
             
             stash includes: "release_notes.txt", name: 'release_notes'
             
@@ -48,7 +48,7 @@ pipeline {
           agent { label "compiler_1" }
 
           steps {           
-            //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
+            //git credentialsId: '', url: 'https://github.com/Aqueti/acos.git'
           
             sh "mkdir -p jenkins/build/acos"
             dir('jenkins/build/acos') {
@@ -77,7 +77,7 @@ pipeline {
           agent { label "tegra_compiler_2" }
         
           steps {            
-            //git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/acos.git'
+            //git credentialsId: '', url: 'https://github.com/Aqueti/acos.git'
               
             sh 'mkdir -p jenkins/build/acos'
             dir('jenkins/build/acos') {               
@@ -112,7 +112,7 @@ pipeline {
             
             sh "mkdir -p jkns"
             dir("jkns") {
-                git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+                git credentialsId: '', url: 'https://github.com/Aqueti/jenkins.git'
             }
             
             sh "mkdir -p deploy/${env.BRANCH_NAME}/${env.BUILD_NUMBER}"
@@ -150,7 +150,7 @@ pipeline {
             
             sh "mkdir -p jkns"
             dir("jkns") {
-                git credentialsId: 'f8369ff8-0a35-4fb9-ac05-b1638c8f1385', url: 'https://github.com/Aqueti/jenkins.git'
+                git credentialsId: '', url: 'https://github.com/Aqueti/jenkins.git'
             }
             
             dir("jkns/testScripts/apitest/") {
