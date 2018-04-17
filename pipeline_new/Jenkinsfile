@@ -146,8 +146,8 @@ pipeline {
                 unstash 'homunculus'
                 // unstash 'aci'
                 
-                sh "../../../jenkins/pipeline_new/bash/genReleasePage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
-                sh "../../../jenkins/pipeline_new/bash/genMainPage.sh ${env.BRANCH_NAME}"
+                sh "../../../pipeline_new/bash/genReleasePage.sh ${BRANCH_NAME} ${BUILD_NUMBER}"
+                sh "../../../pipeline_new/bash/genMainPage.sh ${env.BRANCH_NAME}"
             }
             
             sh "rm -r deploy"
