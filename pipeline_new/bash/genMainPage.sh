@@ -8,8 +8,7 @@ DEV_FILE="$WEBHOME/branches.html"
 S3_DEST="s3://aqueti.operations/repositories"
 BRANCH=$1
 
-: '
-if [ $BRANCH == "master" ]; then
+if [ $BRANCH == "_master_" ]; then
    echo "Removing old documentation at $DOC_HOME"
    rm -r $DOC_HOME/*
    mkdir -p $DOC_HOME
@@ -19,7 +18,6 @@ if [ $BRANCH == "master" ]; then
 else 
    echo "Not master branch. Branch is $BRANCH"
 fi
-'
 
 echo "Copying all files to $WEBHOME"
 mkdir -p $WEBHOME/$1/$2
