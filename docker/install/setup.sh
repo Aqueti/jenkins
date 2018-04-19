@@ -17,4 +17,11 @@ service avahi-daemon start
 
 fab deploy
 
-cp /tmp/install/homunculus.conf /etc/supervisor/conf.d/homunculus.conf
+fab log
+
+cp -r /tmp/install/conf.d/* /etc/supervisor/conf.d/
+
+service ssh stop
+service dbus stop
+service avahi-daemon stop
+service supervisor stop
