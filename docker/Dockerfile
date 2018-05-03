@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 MAINTAINER astepenko@aqueti.com
 
 RUN apt-get update
-RUN apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip fabric libavahi-common-dev libavahi-client-dev iputils-* net-tools lsof
+RUN apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip fabric libavahi-common-dev libavahi-client-dev net-tools lsof iputils-*
 
 RUN adduser --quiet --disabled-password --shell /bin/bash --home /home/mosaic --gecos "User" mosaic
 
