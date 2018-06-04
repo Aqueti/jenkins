@@ -1,9 +1,10 @@
 #!/bin/bash
 
-grep -lr -e "env.password = 'homunculus'" fabfile.py | xargs sed -i "s/env.password = 'homunculus'/env.password = 'DARPAaware'/g"
+# grep -lr -e "env.password = ''" fabfile.py | xargs sed -i "s/env.password = 'homunculus'/env.password = ''/g"
 
 service ssh start
 
+apt update
 fab install_requirements
 
 service supervisor start

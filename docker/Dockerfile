@@ -20,7 +20,7 @@ WORKDIR /tmp/install
 
 RUN dpkg -i AquetiAPI-linux64.deb
 
-RUN tar -xzf homunculus.tar.gz
+RUN tar -xf homunculus.tar.gz
 
 RUN cp setup.sh Homunculus
 
