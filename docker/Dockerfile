@@ -23,11 +23,11 @@ RUN cp -r /tmp/install/conf.d/* /etc/supervisor/conf.d/
 
 WORKDIR /home/www/Homunculus
 
-RUN pip3 install --upgrade pip
+RUN pip install --upgrade pip setuptools wheel virtualenv
 
 RUN pyvenv-3.5 venv
 
-RUN /bin/bash -c "source venv/bin/activate && pip3 install -Ur requirements.txt"
+RUN /bin/bash -c "source venv/bin/activate && pip install -Ur requirements.txt"
 
 EXPOSE 5000
 
