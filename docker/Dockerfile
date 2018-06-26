@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 MAINTAINER astepenko@aqueti.com
 
-RUN apt-get update && apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip fabric libavahi-common-dev libavahi-client-dev python3-venv supervisor iputils-*
+RUN apt-get update && apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip libavahi-common-dev libavahi-client-dev python3-venv supervisor iputils-*
 
 RUN adduser --quiet --disabled-password --shell /bin/bash --home /home/www --gecos "User" www
 
@@ -23,7 +23,7 @@ RUN cp -r /tmp/install/conf.d/* /etc/supervisor/conf.d/
 
 WORKDIR /home/www/Homunculus
 
-RUN python3 -m venv venv
+RUN pyvenv-3.5 venv
 
 RUN /bin/bash -c "source venv/bin/activate && pip install -Ur requirements.txt"
 
