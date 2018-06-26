@@ -4,30 +4,32 @@ MAINTAINER astepenko@aqueti.com
 RUN apt-get update
 RUN apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip fabric libavahi-common-dev libavahi-client-dev iputils-*
 
-RUN adduser --quiet --disabled-password --shell /bin/bash --home /home/mosaic --gecos "User" mosaic
+RUN adduser --quiet --disabled-password --shell /bin/bash --home /home/www --gecos "User" www
 
-RUN usermod -aG sudo,root mosaic
+RUN usermod -aG sudo,root www
 
-RUN echo "mosaic:DARPAaware" | chpasswd
+RUN echo "www:www" | chpasswd
 
-RUN echo 'mosaic ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN echo 'www ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 RUN mkdir /tmp/install
 
 COPY install /tmp/install
 
-WORKDIR /tmp/install
+RUN apt-get -y install supervisor python3-venv
 
-RUN dpkg -i AquetiAPI-linux64.deb
+RUN dpkg -i /tmp/install/AquetiAPI-linux64.deb
 
-RUN tar -xf homunculus.tar.gz
+RUN tar -xzf /tmp/install/homunculus.tar.gz -C /home/www/
 
-RUN cp setup.sh Homunculus
+RUN cp -r /tmp/install/conf.d/* /etc/supervisor/conf.d/
 
-WORKDIR /tmp/install/Homunculus
+WORKDIR /home/www/Homunculus
 
-RUN sh setup.sh
+RUN python3 -m venv venv
 
-EXPOSE 5004
+RUN /bin/bash -c "source venv/bin/activate && pip install -Ur requirements.txt"
 
-CMD ["/usr/bin/supervisord", "-n"]
+EXPOSE 5000
+
+CMD ["/usr/bin/supervisord"]
