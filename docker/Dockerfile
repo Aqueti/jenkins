@@ -23,6 +23,8 @@ RUN cp -r /tmp/install/conf.d/* /etc/supervisor/conf.d/
 
 WORKDIR /home/www/Homunculus
 
+RUN pip install --upgrade pip
+
 RUN pyvenv-3.5 venv
 
 RUN /bin/bash -c "source venv/bin/activate && pip install -Ur requirements.txt"
