@@ -63,6 +63,9 @@ if "--cam" in sys.argv:
         cam_ip = '192.168.10.'
         start_ip = 6
         num_of_tegras = 5
+    else:
+        print("cam wasn't found")
+        exit(1)
 else:
     print("cam isn't specified\n")
     print_help()
