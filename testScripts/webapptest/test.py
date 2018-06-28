@@ -1,7 +1,7 @@
-import unittest
+import pytest
 from selenium.webdriver.common.keys import Keys
 from BaseTest import BaseTest
-from AquetiAdminPage import *
+from AquetiPage import *
 import AQT
 import time
 
@@ -29,19 +29,10 @@ class TD:
                     "host": "undefined"}
 
 
-class WebTest(BaseTest):
+class TestWebApp(BaseTest):
     browser = "chrome"
 
-    api = AQT.AquetiAPI()
-
-    vs = AQT.ViewState(api)
-    ts = AQT.TimeState(api)
-    iss = AQT.ImageSubsetState(api)
-    ps = AQT.PoseState(api)
-    sp = AQT.StreamProperties()
-    rapi = AQT.RenderStream(api, vs, ts, iss, ps, sp)
-
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_cam_properties(self):
         aap_sc = AquetiAdminPageStatusCamera(self)
         self.navigate_to(aap_sc.page_url)
@@ -67,7 +58,7 @@ class WebTest(BaseTest):
         self.assertEqual(aap_sc.prop_sensor_model.text, TD.sensor_props["model"])
         self.assertEqual(aap_sc.prop_sensor_host.text, TD.sensor_props["host"])
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_stor_properties(self):
         aap_ss = AquetiAdminPageStatusStorage(self)
         self.navigate_to(aap_ss.page_url)
@@ -86,7 +77,7 @@ class WebTest(BaseTest):
         self.assertEqual(aap_ss.prop_kernel.text, TD.storage_props["kernel"])
         self.assertEqual(aap_ss.prop_host.text, TD.storage_props["host"])
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_render_properties(self):
         aap_sr = AquetiAdminPageStatusRender(self)
         self.navigate_to(aap_sr.page_url)
@@ -99,7 +90,7 @@ class WebTest(BaseTest):
         self.assertEqual(aap_sr.prop_kernel.text, TD.render_props["kernel"])
         self.assertEqual(aap_sr.prop_host.text, TD.render_props["host"])
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_issue_submition(self):
         aap_i = AquetiAdminPageIssue(self)
         self.navigate_to(aap_i.page_url)
@@ -117,7 +108,7 @@ class WebTest(BaseTest):
 
         self.assertEqual(aap_sc.page_url, aap_sc.cur_page_url)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_comp_name_update(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
@@ -128,7 +119,7 @@ class WebTest(BaseTest):
 
         self.assertEqual(nickname, aap_cc.nickname.text)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_internal_error(self):
         aap_sc = AquetiAdminPageStatusCamera(self)
         self.navigate_to(aap_sc.page_url)
@@ -137,7 +128,7 @@ class WebTest(BaseTest):
 
         self.assertIn("Internal Server Error", aap_sc.cur_page_source)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_settings(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
@@ -163,7 +154,7 @@ class WebTest(BaseTest):
 
         self.assertEquals(self.api.GetParameters("sharpening"), 20)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_sc_move(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
@@ -192,7 +183,7 @@ class WebTest(BaseTest):
         self.assertNotEquals(vs['left'], vs['right'])
         self.assertNotEquals(vs['right'], vs['before'])
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_sc_zoom(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
         self.navigate_to(aap_cc.page_url)
@@ -209,45 +200,45 @@ class WebTest(BaseTest):
         self.assertEquals(vs['before'] * 2, vs['in'])
         self.assertEquals(vs['in'] * 0.6, vs['out'])
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_correct_credentials(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = aalp.login("admin", "1234")
 
         self.assertEquals(aap_sc.page_url, aalp.cur_page_url)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_empty_credentials(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = aalp.login("", "")
 
         self.assertIn(aalp.page_url, aalp.cur_page_url)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_incorrect_login(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = aalp.login("nimda", "1234")
 
         self.assertIn("Username or password invalid", aalp.cur_page_source)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_incorrect_password(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = aalp.login("admin", "4321")
 
         self.assertIn("Username or password invalid", aalp.cur_page_source)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_unauthorized_access(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = AquetiAdminPageStatusCamera(self)
@@ -310,9 +301,9 @@ class WebTest(BaseTest):
 
         self.assertIn("Not Authorized to view this page", aap_i.cur_page_source)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_logout(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = aalp.login("admin", "1234")
@@ -321,9 +312,9 @@ class WebTest(BaseTest):
 
         self.assertIn(aalp.page_url, aap_sc.cur_page_url)
 
-    @unittest.SkipTest
+    @pytest.mark.skip(reason="")
     def test_login_logout_timeout(self):
-        aalp = AquetiAdminLoginPage(self)
+        aalp = AquetiLoginPage(self)
         self.navigate_to(aalp.page_url)
 
         aap_sc = aalp.login("admin", "1234")
@@ -334,7 +325,10 @@ class WebTest(BaseTest):
 
         self.assertIn(aalp.page_url, aap_sc.cur_page_url)
 
+    def test_login_correct_credentials(self):       
+        alp = AquetiLoginPage(self)
+        self.navigate_to(alp.page_url)
 
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(WebTest)
-    unittest.TextTestRunner().run(suite)
+        aap_sc = alp.login("admin", "1234")
+
+        self.assertEquals(aap_sc.page_url, alp.cur_page_url)

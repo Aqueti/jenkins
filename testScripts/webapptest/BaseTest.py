@@ -49,7 +49,7 @@ class BaseTest(object):
             opts.add_experimental_option("detach", True)
             caps = DesiredCapabilities.CHROME
             caps["pageLoadStrategy"] = "normal"  # none
-            self.driver = webdriver.Chrome(desired_capabilities=caps)  # chrome_options=opts
+            self.driver = webdriver.Chrome(desired_capabilities=caps,  executable_path=r'/home/astepenko/Downloads/src/jenkins/testScripts/webapptest/chromedriver')  # chrome_options=opts
         elif self.browser == "ff":
             caps = DesiredCapabilities.FIREFOX
             self.driver = webdriver.Firefox()
