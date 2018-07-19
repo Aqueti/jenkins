@@ -21,7 +21,7 @@ RUN mkdir /tmp/install
 
 COPY install /tmp/install
 
-RUN dpkg -i /tmp/install/AquetiAPI-linux64.deb
+RUN dpkg -i /tmp/install/AquetiAPI*.deb
 
 RUN tar -xf /tmp/install/homunculus.tar.gz -C /home/www/
 
