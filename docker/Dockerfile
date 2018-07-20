@@ -17,6 +17,10 @@ RUN echo "www:www" | chpasswd
 
 RUN echo 'www ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+RUN mkdir /var/tmp/aqueti
+
+RUN chmod -R +wr /var/tmp/aqueti
+
 RUN mkdir /tmp/install
 
 COPY install /tmp/install
