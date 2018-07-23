@@ -3,7 +3,7 @@ MAINTAINER astepenko@aqueti.com
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip libavahi-common-dev libavahi-client-dev python3-venv supervisor tzdata wget ffmpeg iputils-*
+RUN apt-get update && apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip libavahi-common-dev libavahi-client-dev python3-venv supervisor tzdata wget ffmpeg net-tools iputils-*
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
