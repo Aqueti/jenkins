@@ -27,7 +27,7 @@ def print_help():
     print("--cam\t\tCamera id")
     print("--branch\tBranch name")
     print("--build\t\tBuild number")
-    print("--type\tdebug/release")
+    print("--type\t\tdebug/release")
 
     exit(1)
 
@@ -39,11 +39,7 @@ if "--help" in sys.argv:
 if "--cam" in sys.argv:
     cam_id = sys.argv[sys.argv.index("--cam") + 1]
 
-    if cam_id == str(12):
-        cam_ip = '10.1.12.'
-        start_ip = 1
-        num_of_tegras = 9
-    elif cam_id == str(4):
+    if cam_id == str(4):
         cam_ip = '10.1.4.'
         start_ip = 1
         num_of_tegras = 10
@@ -53,6 +49,18 @@ if "--cam" in sys.argv:
         num_of_tegras = 10
     elif cam_id == str(11):
         cam_ip = '10.1.11.'
+        start_ip = 1
+        num_of_tegras = 9
+    elif cam_id == str(12):
+        cam_ip = '10.1.12.'
+        start_ip = 1
+        num_of_tegras = 9
+    elif cam_id == str(14):
+        cam_ip = '10.1.14.'
+        start_ip = 1
+        num_of_tegras = 10
+    elif cam_id == str(15):
+        cam_ip = '10.1.4.'
         start_ip = 1
         num_of_tegras = 10
     elif cam_id == str(166):        
@@ -64,12 +72,10 @@ if "--cam" in sys.argv:
         start_ip = 6
         num_of_tegras = 5
     else:
-        print("cam wasn't found")
-        exit(1)
+        cam_ip = ''
 else:
     print("cam isn't specified\n")
-    print_help()
-    exit(1)
+    cam_ip = ''
 
 if "--type" in sys.argv:
     type = sys.argv[sys.argv.index("--type") + 1]
@@ -124,54 +130,58 @@ for e in res:
                     files["daemon_x86"] = e.text
             else:
                 files["daemon_aarch64"] = e.text
-        elif "aci" in e.text:
+        elif "ACI" in e.text:
             files["aci"] = e.text
         elif "API" in e.text:
             files["api"] = e.text
+        elif "QView" in e.text:
+            files["qviewer"] = e.text
+        elif "QWebServer" in e.text:
+            files["qwebserver"] = e.text
         elif "homunculus" in e.text:
             files["homunculus"] = e.text
+        elif "CalibrationTools" in e.text:
+            files["ctools"] = e.text
 
         file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
         with open(folder_path + e.text, 'wb') as output:
             output.write(file.read())
             print("saved file: " + folder_path + e.text)
 
-for i in range(start_ip, num_of_tegras + start_ip):
-    tegra_ip = cam_ip + str(i)
-    print('*************')
-    print(tegra_ip)
-    print('*************')
-    os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")
-    os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "' 2>/dev/null")
-
-    #os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")
-    #os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
-
-if type == "release":
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86"])
-else:
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86_debug"])
-
-os.system("sudo dpkg -i " + folder_path + files["api"])
-if os.path.exists(folder_path + "Homunculus"):
-    os.system("rm -rf " + folder_path + "Homunculus")
-os.system("tar -xzf " + folder_path + files["homunculus"] + " -C " + folder_path)
-
-if isRun:
+if cam_ip != '':
     for i in range(start_ip, num_of_tegras + start_ip):
         tegra_ip = cam_ip + str(i)
-        os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'")
+        print('*************')
+        print(tegra_ip)
+        print('*************')
+        os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")
+        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon 2>/dev/null'")
+        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + " 2>/dev/null'")
+        os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
 
-    time.sleep(1)
-    os.system("sudo pkill -9 Aqueti")
-    os.system("AquetiDaemonProcess 1>out.txt 2>err.txt &")
+        #os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")
+        #os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
-    os.system("sudo pkill -9 gunicorn")
-    os.chdir(folder_path + "Homunculus")
-    os.system("pyvenv-3.5 venv")
-    os.system(". venv/bin/activate")
-    os.system("pip install -Ur requirements.txt")
-    os.system("gunicorn --reload --worker-class eventlet --workers 1 --bind 0.0.0.0:5000 homunculus:app 1>guout.txt 2>guerr.txt &")
-    #os.system("zcat " + files['docker_image'] + " | docker load")
+if type == "release":
+    if 'daemon_x86' in files.keys():
+        os.system("sudo dpkg -r aquetidaemon")
+        os.system("sudo dpkg -i " + folder_path + files["daemon_x86"])
+else:
+    if 'daemon_x86_debug' in files.keys():
+        os.system("sudo dpkg -r aquetidaemon")
+        os.system("sudo dpkg -i " + folder_path + files["daemon_x86_debug"])
+
+if 'api' in files.keys():
+    os.system("sudo dpkg -r aquetiapi")
+    os.system("sudo dpkg -i " + folder_path + files["api"])
+if 'ctools' in files.keys():
+    os.system("sudo dpkg -r calibrationtools")    
+    os.system("sudo dpkg -i " + folder_path + files["ctools"])
+if 'qviewer' in files.keys():
+    os.system("sudo rm /opt/QView* 2>/dev/null")
+    os.system("sudo cp " + files["qviewer"] + " /opt")
+if 'qwebserver' in files.keys():
+    if "dpkg -s docker-ce 1>/dev/null 2>&1" == 0:
+        os.system("zcat " + files["qwebserver"] + " | sudo docker load")
 
 print("***** Done *****")
