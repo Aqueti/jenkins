@@ -25,6 +25,12 @@ class BasePage:
     def cur_page_source_hash(self):
         return hashlib.md5(self.driver.page_source.encode('utf-8')).hexdigest()
 
+    prev_page_url = ""
+    step_name = ""
+    page_title = ""
+    base_url = ""
+    page_url = ""
+
     def __init__(self, *args):
 
         page_obj = self
@@ -48,12 +54,6 @@ class BasePage:
         WebElement.__call__ = call
 
         self.TIMEOUT = 2
-
-        self.prev_page_url = ""
-        self.step_name = ""
-        self.page_title = ""
-        self.base_url = ""
-        self.page_url = ""
 
         if "Context" in str(type(args[0])):
             self.driver = args[0].test.driver

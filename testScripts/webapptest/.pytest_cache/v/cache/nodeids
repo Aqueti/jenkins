@@ -14,5 +14,6 @@
   "test.py::TestWebApp::()::test_login_unauthorized_access",
   "test.py::TestWebApp::()::test_login_logout",
   "test.py::TestWebApp::()::test_login_logout_timeout",
-  "test.py::TestWebApp::()::test_login_correct_credentials"
+  "test.py::TestWebApp::()::test_login_correct_credentials",
+  "test.py::TestWebApp::()::test_vvv"
 ]

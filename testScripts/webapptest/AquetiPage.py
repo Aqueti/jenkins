@@ -6,10 +6,10 @@ class AquetiPage(BasePage):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
+    base_url = "http://10.0.0.166:5000"
+
     def __init__(self, *args):
         BasePage.__init__(self, *args)
-
-        self.base_url = "http://192.168.10.253:5000"  
 
         def __call__(self, text):
             super(BasePage, self).__call__()
@@ -68,12 +68,13 @@ class AquetiViewerPage(AquetiPage, AquetiViewerPanel):
 
     def login(self):
         if self.cur_page_url == (self.base_url + "/login"):
-            return AquetiLoginPage(self)
+            return AquetiLoginPage(self.test)
+
+    page_url = AquetiPage.base_url
+    page_title = "Aqueti View"
 
     def __init__(self, *args):
         AquetiPage.__init__(self, *args)
-
-        self.page_title = "Aqueti View"
 
 
 class AquetiLoginPage(AquetiPage):
@@ -84,20 +85,20 @@ class AquetiLoginPage(AquetiPage):
     def password_field(self): return self.find_by(id="login-password")
 
     @property
-    def login_btn(self): return self.find_by(css="form#login-form input[type='submit']")
+    def login_btn(self): return self.find_by(css="form#login-form button[type='submit']")
 
     def login(self, username, password):
         self.username_field(value=username)
         self.password_field(value=password)
         self.login_btn()
-        if self.cur_page_url == (self.base_url + "/scop_status"):
-            return AquetiAdminPageStatusCamera(self)
+        if self.driver.current_url == AquetiAdminPageSystem.page_url:
+            return AquetiAdminPageSystem(self.test)
+
+    page_title = "Aqueti Admin"
+    page_url = AquetiPage.base_url + "/login"
 
     def __init__(self, *args):
         AquetiPage.__init__(self, *args)
-
-        self.page_title = "Aqueti Admin"
-        self.page_url = self.base_url + "/login"
 
 
 class AquetiAdminPage(AquetiPage):
@@ -135,7 +136,7 @@ class AquetiAdminPage(AquetiPage):
     def submit_issue_lnk(self): return self.find_by(css="#navbarSupportedContent a:contains(Submit Issue)")
 
     @property
-    def logout(self): return self.find_by(id="logout")
+    def logout_lnk(self): return self.find_by(id="logout")
 
     @property
     def logo_pic(self): return self.find_by(id="logo")
@@ -189,6 +190,11 @@ class AquetiAdminPage(AquetiPage):
 
         self.page_title = "Aqueti Admin"
 
+    def logout(self):
+        self.logout_lnk()
+
+        return AquetiViewerPage(self.test)
+
     def click_links(self):
         self.sidebar_cameras()
         self.sidebar_data()
@@ -207,8 +213,13 @@ class AquetiAdminPageSystem(AquetiAdminPage):
     @property
     def render_list(self): return self.find_by(id="render")
 
+    page_url = AquetiAdminPage.base_url + "/system"
+
     def __init__(self, *args):
         AquetiAdminPage.__init__(self, *args)
+
+
+
 
 
 class AquetiAdminPageConfiguration(AquetiAdminPage):
@@ -537,11 +548,6 @@ class AquetiAdminPageRender(AquetiAdminPage):
         AquetiAdminPage.__init__(self, *args)
 
 
-class AquetiAdminPageSystem(AquetiAdminPage):
-    def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
-
-
 class AquetiAdminPageIssue(AquetiAdminPage):
     @property
     def title_field(self): return self.find_by(id="title")  # Title
@@ -566,7 +572,7 @@ class AquetiAdminPageIssue(AquetiAdminPage):
         self.description_field(value=description)
         self.submit_btn()
 
-        return AquetiAdminPageStatusCamera(self)
+        return AquetiAdminPageStatusCamera(self.test)
 
 
 class AquetiAdminPageStatusCamera(AquetiAdminPageCamera):

@@ -4,9 +4,13 @@ from BaseTest import BaseTest
 from AquetiPage import *
 import AQT
 import time
+import cv2
 
 
 class TD:
+    username = "admin"
+    password = "1234"
+
     cam_props = {"status": "online",
                  "recording": "false",
                  "serialid": "undefined",
@@ -34,104 +38,104 @@ class TestWebApp(BaseTest):
 
     @pytest.mark.skip(reason="")
     def test_cam_properties(self):
-        aap_sc = AquetiAdminPageStatusCamera(self)
-        self.navigate_to(aap_sc.page_url)
-        comps = aap_sc.components
+        aap_sys = AquetiAdminPageStatusCamera(self)
+        aap_sys.navigate_to()
+        comps = aap_sys.components
 
-        print(aap_sc.system_current_time.text)
-        print(aap_sc.system_current_date.text)
+        print(aap_sys.system_current_time.text)
+        print(aap_sys.system_current_date.text)
 
-        self.assertEqual(len(comps), 2)
+        assert len(comps) == 2
 
         #for comp in comps:
         #    self.assertIn("ferg", comp.text)
 
         comps[0].click()
 
-        self.assertEqual(aap_sc.prop_status.text, TD.cam_props["status"])
-        self.assertEqual(aap_sc.prop_recording.text, TD.cam_props["recording"])
-        self.assertEqual(aap_sc.prop_serialid.text, TD.cam_props["serialid"])
-        self.assertEqual(aap_sc.prop_software.text, TD.cam_props["software"])
-        self.assertEqual(aap_sc.prop_kernel.text, TD.cam_props["kernel"])
-        self.assertEqual(aap_sc.prop_host.text, TD.cam_props["host"])
+        assert aap_sys.prop_status.text == TD.cam_props["status"]
+        assert aap_sys.prop_recording.text == TD.cam_props["recording"]
+        assert aap_sys.prop_serialid.text == TD.cam_props["serialid"]
+        assert aap_sys.prop_software.text == TD.cam_props["software"]
+        assert aap_sys.prop_kernel.text == TD.cam_props["kernel"]
+        assert aap_sys.prop_host.text == TD.cam_props["host"]
 
-        self.assertEqual(aap_sc.prop_sensor_model.text, TD.sensor_props["model"])
-        self.assertEqual(aap_sc.prop_sensor_host.text, TD.sensor_props["host"])
+        assert aap_sys.prop_sensor_model.text == TD.sensor_props["model"]
+        assert aap_sys.prop_sensor_host.text == TD.sensor_props["host"]
 
     @pytest.mark.skip(reason="")
     def test_stor_properties(self):
         aap_ss = AquetiAdminPageStatusStorage(self)
-        self.navigate_to(aap_ss.page_url)
+        aap_ss.navigate_to()
         comps = aap_ss.components
 
-        self.assertEqual(len(comps), 2)
+        assert len(comps) == 2
 
         #for comp in comps:
         #    self.assertIn("aqt:Storage:", comp.text)
 
         comps[0].click()
 
-        self.assertEqual(aap_ss.prop_status.text, TD.storage_props["status"])
-        self.assertEqual(aap_ss.prop_serialid.text, TD.storage_props["serialid"])
-        self.assertEqual(aap_ss.prop_software.text, TD.storage_props["software"])
-        self.assertEqual(aap_ss.prop_kernel.text, TD.storage_props["kernel"])
-        self.assertEqual(aap_ss.prop_host.text, TD.storage_props["host"])
+        assert aap_ss.prop_status.text == TD.storage_props["status"]
+        assert aap_ss.prop_serialid.text == TD.storage_props["serialid"]
+        assert aap_ss.prop_software.text == TD.storage_props["software"]
+        assert aap_ss.prop_kernel.text == TD.storage_props["kernel"]
+        assert aap_ss.prop_host.text == TD.storage_props["host"]
 
     @pytest.mark.skip(reason="")
     def test_render_properties(self):
         aap_sr = AquetiAdminPageStatusRender(self)
-        self.navigate_to(aap_sr.page_url)
+        aap_sr.navigate_to()
         comps = aap_sr.components
 
-        self.assertIsNone(comps)
+        assert comps is None
 
-        self.assertEqual(aap_sr.prop_serialid.text, TD.render_props["serialid"])
-        self.assertEqual(aap_sr.prop_software.text, TD.render_props["software"])
-        self.assertEqual(aap_sr.prop_kernel.text, TD.render_props["kernel"])
-        self.assertEqual(aap_sr.prop_host.text, TD.render_props["host"])
+        assert aap_sr.prop_serialid.text == TD.render_props["serialid"]
+        assert aap_sr.prop_software.text == TD.render_props["software"]
+        assert aap_sr.prop_kernel.text == TD.render_props["kernel"]
+        assert aap_sr.prop_host.text == TD.render_props["host"]
 
     @pytest.mark.skip(reason="")
     def test_issue_submition(self):
         aap_i = AquetiAdminPageIssue(self)
-        self.navigate_to(aap_i.page_url)
+        aap_i.navigate_to()
 
-        self.assertNotIn("[This field is required.]", aap_i.cur_page_source)
+        assert "[This field is required.]" not in aap_i.cur_page_source
 
         aap_i._(aap_i.title_field, "")
         aap_i._(aap_i.summary_field, "")
         aap_i._(aap_i.description_field, "")
         aap_i._(aap_i.submit_btn)
 
-        self.assertIn("[This field is required.]", aap_i.cur_page_source)
+        assert "[This field is required.]" in aap_i.cur_page_source
 
         aap_sc = aap_i.submit_issue("title", "summary", "description")
 
-        self.assertEqual(aap_sc.page_url, aap_sc.cur_page_url)
+        assert aap_sc.page_url == aap_sc.cur_page_url
 
     @pytest.mark.skip(reason="")
     def test_comp_name_update(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
-        self.navigate_to(aap_cc.page_url)
+        aap_cc.navigate_to()
 
         nickname = "test"
 
         aap_cc.update_nickname(nickname)
 
-        self.assertEqual(nickname, aap_cc.nickname.text)
+        assert nickname == aap_cc.nickname.text
 
     @pytest.mark.skip(reason="")
     def test_internal_error(self):
-        aap_sc = AquetiAdminPageStatusCamera(self)
-        self.navigate_to(aap_sc.page_url)
+        aap_sys = AquetiAdminPageStatusCamera(self)
+        aap_sys.navigate_to()
 
-        aap_sc._(aap_sc.host)
+        aap_sys._(aap_sys.host) # old style
 
-        self.assertIn("Internal Server Error", aap_sc.cur_page_source)
+        assert "Internal Server Error" == aap_sys.cur_page_source
 
     @pytest.mark.skip(reason="")
     def test_settings(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
-        self.navigate_to(aap_cc.page_url)
+        aap_cc.navigate_to()
 
         aap_cc._(aap_cc.auto_gain_chkb)
         aap_cc._(aap_cc.auto_whitebalance_chkb)
@@ -152,17 +156,17 @@ class TestWebApp(BaseTest):
         aap_cc._(aap_cc.transport_mode_dd, "10 bit")
         aap_cc._(aap_cc.framerate_dd, "30 fps")
 
-        self.assertEquals(self.api.GetParameters("sharpening"), 20)
+        assert self.api.GetParameters("sharpening") == 20
 
     @pytest.mark.skip(reason="")
     def test_sc_move(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
-        self.navigate_to(aap_cc.page_url)
+        aap_cc.navigate_to()
 
         aap_cc.click_links()
 
         aap_cc = AquetiAdminPageConfigurationCamera(self)
-        self.navigate_to(aap_cc.page_url)
+        aap_cc.navigate_to()
 
         vs = dict()
         vs['before'] = [self.vs.PanDegrees(), self.vs.TiltDegrees(), self.vs.HorizontalFOVDegrees(), self.vs.VerticalFOVDegrees()]
@@ -177,16 +181,16 @@ class TestWebApp(BaseTest):
 
         print("{0}\n{1}\n{2}\n{3}\n{4}".format(vs['before'], vs['up'], vs['down'], vs['left'], vs['right']))
 
-        self.assertNotEquals(vs['before'], vs['up'])
-        self.assertNotEquals(vs['up'], vs['down'])
-        self.assertNotEquals(vs['down'], vs['left'])
-        self.assertNotEquals(vs['left'], vs['right'])
-        self.assertNotEquals(vs['right'], vs['before'])
+        assert vs['before'] == vs['up']
+        assert vs['up'] == vs['down']
+        assert vs['down'] == vs['left']
+        assert vs['left'] == vs['right']
+        assert vs['right'] == vs['before']
 
     @pytest.mark.skip(reason="")
     def test_sc_zoom(self):
         aap_cc = AquetiAdminPageConfigurationCamera(self)
-        self.navigate_to(aap_cc.page_url)
+        aap_cc.navigate_to()
 
         vs = dict()
         vs['before'] = self.vs.Zoom()
@@ -197,138 +201,139 @@ class TestWebApp(BaseTest):
 
         print("{0}\n{1}\n{2}".format(vs['before'], vs['in'], vs['out']))
 
-        self.assertEquals(vs['before'] * 2, vs['in'])
-        self.assertEquals(vs['in'] * 0.6, vs['out'])
+        assert vs['before'] * 2 == vs['in']
+        assert vs['in'] * 0.6 == vs['out']
 
     @pytest.mark.skip(reason="")
     def test_login_correct_credentials(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = aalp.login("admin", "1234")
+        aap_sys = alp.login("admin", "1234")
 
-        self.assertEquals(aap_sc.page_url, aalp.cur_page_url)
+        assert aap_sys.page_url == alp.cur_page_url
 
     @pytest.mark.skip(reason="")
     def test_login_empty_credentials(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = aalp.login("", "")
+        aap_sys = alp.login("", "")
 
-        self.assertIn(aalp.page_url, aalp.cur_page_url)
+        assert alp.page_url in aap_sys.cur_page_url
 
     @pytest.mark.skip(reason="")
     def test_login_incorrect_login(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = aalp.login("nimda", "1234")
+        aap_sys = alp.login("nimda", "1234")
 
-        self.assertIn("Username or password invalid", aalp.cur_page_source)
+        assert "Not Authorized to view this page" in alp.cur_page_source
 
     @pytest.mark.skip(reason="")
     def test_login_incorrect_password(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = aalp.login("admin", "4321")
+        aap_sys = alp.login("admin", "4321")
 
-        self.assertIn("Username or password invalid", aalp.cur_page_source)
+        assert "Not Authorized to view this page" in alp.cur_page_source
 
     @pytest.mark.skip(reason="")
     def test_login_unauthorized_access(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = AquetiAdminPageStatusCamera(self)
-        self.navigate_to(aap_sc.page_url)
+        aap_sys = AquetiAdminPageStatusCamera(self)
+        aap_sys.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_sc.cur_page_source)
+        assert "Not Authorized to view this page" in aap_sys.cur_page_source
 
         aap_ss = AquetiAdminPageStatusStorage(self)
-        self.navigate_to(aap_ss.page_url)
+        aap_ss.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_ss.cur_page_source)
+        assert "Not Authorized to view this page" in aap_ss.cur_page_source
 
         aap_sr = AquetiAdminPageStatusRender(self)
-        self.navigate_to(aap_sr.page_url)
+        aap_sr.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_sr.cur_page_source)
+        assert "Not Authorized to view this page" in aap_sr.cur_page_source
 
         aap_cs = AquetiAdminPageConfigurationSystem(self)
-        self.navigate_to(aap_cs.page_url)
+        aap_cs.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_cs.cur_page_source)
+        assert "Not Authorized to view this page" in aap_cs.cur_page_source
 
         aap_cc = AquetiAdminPageConfigurationCamera(self)
-        self.navigate_to(aap_cc.page_url)
+        aap_cc.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_cc.cur_page_source)
+        assert "Not Authorized to view this page" in aap_cc.cur_page_source
 
         aap_cst = AquetiAdminPageConfigurationStorage(self)
-        self.navigate_to(aap_cst.page_url)
+        aap_cst.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_cst.cur_page_source)
+        assert "Not Authorized to view this page" in aap_cst.cur_page_source
 
         aap_cr = AquetiAdminPageConfigurationRender(self)
-        self.navigate_to(aap_cr.page_url)
+        aap_cr.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_cr.cur_page_source)
+        assert "Not Authorized to view this page" in aap_cr.cur_page_source
 
         aap_mc = AquetiAdminPageMaintenanceCamera(self)
-        self.navigate_to(aap_mc.page_url)
+        aap_mc.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_mc.cur_page_source)
+        assert "Not Authorized to view this page" in aap_mc.cur_page_source
 
         aap_ms = AquetiAdminPageMaintenanceStorage(self)
-        self.navigate_to(aap_ms.page_url)
+        aap_ms.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_ms.cur_page_source)
+        assert "Not Authorized to view this page" in aap_ms.cur_page_source
 
         aap_mr = AquetiAdminPageMaintenanceRender(self)
-        self.navigate_to(aap_mr.page_url)
+        aap_mr.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_mr.cur_page_source)
+        assert "Not Authorized to view this page" in aap_mr.cur_page_source
 
         aap_r = AquetiAdminPageRecordings(self)
-        self.navigate_to(aap_r.page_url)
+        aap_r.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_r.cur_page_source)
+        assert "Not Authorized to view this page" in aap_r.cur_page_source
 
         aap_i = AquetiAdminPageIssue(self)
-        self.navigate_to(aap_i.page_url)
+        aap_i.navigate_to()
 
-        self.assertIn("Not Authorized to view this page", aap_i.cur_page_source)
+        assert "Not Authorized to view this page" in aap_i.cur_page_source
 
     @pytest.mark.skip(reason="")
     def test_login_logout(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = aalp.login("admin", "1234")
+        aap_sys = alp.login(TD.username, TD.password)
 
-        aap_sc._(aap_sc.logout)
+        avp = aap_sys.logout()
 
-        self.assertIn(aalp.page_url, aap_sc.cur_page_url)
+        assert avp.page_title == avp.cur_page_title
 
     @pytest.mark.skip(reason="")
     def test_login_logout_timeout(self):
-        aalp = AquetiLoginPage(self)
-        self.navigate_to(aalp.page_url)
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
 
-        aap_sc = aalp.login("admin", "1234")
+        aap_sys = alp.login(TD.username, TD.password)
 
         time.sleep(61)
 
-        self.navigate_to(aalp.page_url)
+        aap_sys.navigate_to()
 
-        self.assertIn(aalp.page_url, aap_sc.cur_page_url)
+        assert alp.page_url in aap_sys.cur_page_url
 
+    @pytest.mark.skip(reason="")
     def test_login_correct_credentials(self):       
         alp = AquetiLoginPage(self)
-        self.navigate_to(alp.page_url)
+        alp.navigate_to()
 
-        aap_sc = alp.login("admin", "1234")
+        aap_sys = alp.login(TD.username, TD.password)
 
-        self.assertEquals(aap_sc.page_url, alp.cur_page_url)
+        assert aap_sys.page_title == aap_sys.cur_page_title

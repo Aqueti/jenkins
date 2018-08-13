@@ -16,7 +16,7 @@ class NAPI:
     ps = AQT.PoseState(api)
     sp = AQT.StreamProperties()
 
-    rapi = None
+    stream = None
 
     frame = None
 
@@ -27,9 +27,9 @@ class NAPI:
             self.frame.ReleaseData()
 
         while True:
-            self.frame = self.rapi.GetNextFrame()
+            self.frame = self.stream.GetNextFrame()
 
-            if self.rapi.GetStatus() == AQT.aqt_STATUS_OKAY:
+            if self.stream.GetStatus() == AQT.aqt_STATUS_OKAY:
                 break
 
     def set_resolution(self, tp="1080p"):
@@ -56,12 +56,12 @@ class NAPI:
         self.sp.FullScreen(True)
         self.sp.Display(0)
 
-        self.rapi = AQT.RenderStream(self.api, self.vs, self.ts, self.iss, self.ps, self.sp)
+        self.stream = AQT.RenderStream(self.api, self.vs, self.ts, self.iss, self.ps, self.sp)
 
         cams = self.api.GetAvailableCameras()
         self.cur_cam = cams[0]
-        self.rapi.AddCamera(self.cam.Name())
-        self.rapi.SetStreamingState(True)
+        self.stream.AddCamera(self.cam.Name())
+        self.stream.SetStreamingState(True)
         self.ts.PlaySpeed(1.0)
 
         self.get_next_frame()
