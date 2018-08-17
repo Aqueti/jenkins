@@ -9,8 +9,6 @@ pipeline {
   
   environment {
       BRANCH_NAME = 'master'
-      docker_hub_username = 'aqueti'
-      docker_hub_password = ''
   }
 
    stages {
