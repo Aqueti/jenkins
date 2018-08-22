@@ -8,7 +8,7 @@ DEV_FILE="$WEBHOME/branches.html"
 S3_DEST="s3://aqueti.operations/repositories"
 BRANCH=$1
 
-if [ $BRANCH == "slider" ]; then
+if [ $BRANCH == "master" ]; then
    echo "Removing old documentation at $DOC_HOME"
    rm -r $DOC_HOME/*
    mkdir -p $DOC_HOME
