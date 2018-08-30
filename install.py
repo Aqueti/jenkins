@@ -51,6 +51,10 @@ if "--cam" in sys.argv:
         cam_ip = '10.0.8.'
         start_ip = 1
         num_of_tegras = 10
+    elif cam_id == str(9):
+        cam_ip = '10.1.9.'
+        start_ip = 1
+        num_of_tegras = 9
     elif cam_id == str(11):
         cam_ip = '10.1.11.'
         start_ip = 1
