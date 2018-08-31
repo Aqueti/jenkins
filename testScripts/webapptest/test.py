@@ -2,9 +2,15 @@ import pytest
 from selenium.webdriver.common.keys import Keys
 from BaseTest import BaseTest
 from AquetiPage import *
-import AQT
 import time
 import cv2
+import numpy as np
+import os
+try:
+    import AQT
+except ImportError:
+    print('no AQT lib found')
+    exit(1)
 
 
 class TD:
@@ -38,7 +44,7 @@ class TestWebApp(BaseTest):
 
     @pytest.mark.skip(reason="")
     def test_cam_properties(self):
-        aap_sys = AquetiAdminPageStatusCamera(self)
+        aap_sys = AquetiAdminPageSystem(self)
         aap_sys.navigate_to()
         comps = aap_sys.components
 
@@ -204,12 +210,14 @@ class TestWebApp(BaseTest):
         assert vs['before'] * 2 == vs['in']
         assert vs['in'] * 0.6 == vs['out']
 
+
+
     @pytest.mark.skip(reason="")
     def test_login_correct_credentials(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
 
-        aap_sys = alp.login("admin", "1234")
+        aap_sys = alp.login(TD.username, TD.password)
 
         assert aap_sys.page_url == alp.cur_page_url
 
@@ -220,25 +228,27 @@ class TestWebApp(BaseTest):
 
         aap_sys = alp.login("", "")
 
-        assert alp.page_url in aap_sys.cur_page_url
+        assert alp.page_url in alp.cur_page_url
 
     @pytest.mark.skip(reason="")
     def test_login_incorrect_login(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
 
-        aap_sys = alp.login("nimda", "1234")
+        aap_sys = alp.login("nimda", TD.password)
 
-        assert "Not Authorized to view this page" in alp.cur_page_source
+        assert "Username or password invalid" in alp.cur_page_source
 
     @pytest.mark.skip(reason="")
     def test_login_incorrect_password(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
 
-        aap_sys = alp.login("admin", "4321")
+        aap_sys = alp.login(TD.username, "4321")
 
-        assert "Not Authorized to view this page" in alp.cur_page_source
+        assert "Username or password invalid" in alp.cur_page_source
+
+
 
     @pytest.mark.skip(reason="")
     def test_login_unauthorized_access(self):
@@ -250,60 +260,9 @@ class TestWebApp(BaseTest):
 
         assert "Not Authorized to view this page" in aap_sys.cur_page_source
 
-        aap_ss = AquetiAdminPageStatusStorage(self)
-        aap_ss.navigate_to()
+        aap_sys.navigate_to(AquetiAdminPage.base_url + "/log")
 
-        assert "Not Authorized to view this page" in aap_ss.cur_page_source
-
-        aap_sr = AquetiAdminPageStatusRender(self)
-        aap_sr.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_sr.cur_page_source
-
-        aap_cs = AquetiAdminPageConfigurationSystem(self)
-        aap_cs.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_cs.cur_page_source
-
-        aap_cc = AquetiAdminPageConfigurationCamera(self)
-        aap_cc.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_cc.cur_page_source
-
-        aap_cst = AquetiAdminPageConfigurationStorage(self)
-        aap_cst.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_cst.cur_page_source
-
-        aap_cr = AquetiAdminPageConfigurationRender(self)
-        aap_cr.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_cr.cur_page_source
-
-        aap_mc = AquetiAdminPageMaintenanceCamera(self)
-        aap_mc.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_mc.cur_page_source
-
-        aap_ms = AquetiAdminPageMaintenanceStorage(self)
-        aap_ms.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_ms.cur_page_source
-
-        aap_mr = AquetiAdminPageMaintenanceRender(self)
-        aap_mr.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_mr.cur_page_source
-
-        aap_r = AquetiAdminPageRecordings(self)
-        aap_r.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_r.cur_page_source
-
-        aap_i = AquetiAdminPageIssue(self)
-        aap_i.navigate_to()
-
-        assert "Not Authorized to view this page" in aap_i.cur_page_source
+        assert "Not Authorized to view this page" in aap_sys.cur_page_source
 
     @pytest.mark.skip(reason="")
     def test_login_logout(self):
@@ -337,3 +296,129 @@ class TestWebApp(BaseTest):
         aap_sys = alp.login(TD.username, TD.password)
 
         assert aap_sys.page_title == aap_sys.cur_page_title
+
+
+class TestAPIWebApp(BaseTest):
+    browser = "chrome"
+
+    urls = AQT.StringVector()
+    urls.push_back("aqt://Server166")
+    api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
+
+    def vector_to_array(self, c_vector):
+        return [c_vector[i].Name() for i in range(0, c_vector.size())]
+
+    def get_image(self):
+        time.sleep(0.1)
+
+        stream = cv2.VideoCapture('http://10.0.0.166:5000/video/video_feed')
+
+        cnt = 0
+        success = False
+        while not success:
+            success, image = stream.read()
+            time.sleep(0.1)
+            cnt += 1
+            if cnt == 10:
+                return None
+
+        return image
+
+    @pytest.mark.skip(reason="")
+    def test_displayed_cams(self):
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        list_of_cams_from_api = self.vector_to_array(self.api.GetAvailableCameras()).sort()
+        list_of_cams_from_gui = avp.get_camera_list().sort()
+
+        assert list_of_cams_from_api == list_of_cams_from_gui
+        assert avp.get_play_btn_status() == 'pause'
+
+    @pytest.mark.skip(reason="")
+    def test_displayed_cams2(self):
+        print(self.api.GetParameters("/aqt/camera/166"))
+
+    @pytest.mark.skip(reason="")
+    def test_step_back(self):
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        avp.live_btn()
+
+        for i in range(0, 3):
+            avp.step_back_btn()
+
+            time.sleep(4)
+
+            img1 = self.get_image()
+            img2 = self.get_image()
+
+            assert img1 is not None and np.array_equal(img1, img2)
+
+    @pytest.mark.skip(reason="")
+    def test_step_forward(self):
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        avp.live_btn()
+
+        for i in range(0, 3):
+            avp.step_forward_btn()
+
+            time.sleep(4)
+
+            img1 = self.get_image()
+            img2 = self.get_image()
+
+            assert img1 is not None and np.array_equal(img1, img2)
+
+    @pytest.mark.skip(reason="")
+    def test_play_pause(self):
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        avp.live_btn()
+
+        for i in range(0, 4):
+            avp.play_btn()
+
+            time.sleep(4)
+
+            img1 = self.get_image()
+            img2 = self.get_image()
+
+            if i % 2 == 0:
+                assert img1 is not None and np.array_equal(img1, img2)
+                pass
+            else:
+                assert img1 is not None and not np.array_equal(img1, img2)
+                pass
+
+    #@pytest.mark.skip(reason="")
+    def test_live(self):
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        avp.live_btn()
+
+        for i in range(0, 3):
+
+            if i == 0:
+                avp.play_btn()
+            elif i == 1:
+                avp.step_back_btn()
+            else:
+                avp.step_forward_btn()
+
+            time.sleep(2)
+
+            img1 = self.get_image()
+
+            avp.live_btn()
+
+            time.sleep(2)
+
+            img2 = self.get_image()
+
+            assert img1 is not None and not np.array_equal(img1, img2)
