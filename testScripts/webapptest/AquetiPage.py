@@ -32,7 +32,7 @@ class AquetiViewerPanel:
     def live_btn(self): return self.find_by(id="button_live")
 
     @property
-    def speed_dd(self): return self.find_by(id="speed")
+    def speed_dd(self): return self.find_by(css="button[data-id='speed']")
 
     @property
     def zoom_in_btn(self): return self.find_by(id="button_zoom_in")
@@ -53,7 +53,10 @@ class AquetiViewerPanel:
     def arrow_down_btn(self): return self.find_by(id="button_arrow_up")
 
     @property
-    def timeline(self): return self.find_by(id="visualization")    
+    def timeline(self): return self.find_by(id="visualization")
+
+    def get_play_btn_status(self):
+        return self.play_btn.find_element_by_tag_name('i').get_attribute("class").split(" ")[1][len('fa-'):]
 
 
 class AquetiViewerPage(AquetiPage, AquetiViewerPanel):
@@ -65,6 +68,10 @@ class AquetiViewerPage(AquetiPage, AquetiViewerPanel):
 
     @property
     def logo_pic(self): return self.find_by(id="logo")
+
+    def get_camera_list(self):
+        cams_names = ['/aqt/camera/' + i.text for i in self.cams_dd.find_elements_by_tag_name("option")]
+        return cams_names
 
     def login(self):
         if self.cur_page_url == (self.base_url + "/login"):
@@ -202,6 +209,15 @@ class AquetiAdminPage(AquetiPage):
         self.sidebar_logs()
         self.sidebar_system()
 
+    def open_cam_page(self, cam_id):
+        cam_links = [lnk for lnk in self.camera_list.find_elements_by_tag_name('a')]
+
+        for lnk in cam_links:
+            href = lnk.get_attribute("href")
+            if href[href.rindex('/') + 1:] == cam_id:
+                lnk.click()
+                return AquetiAdminPageCamera(self.test)
+
 
 class AquetiAdminPageSystem(AquetiAdminPage):
     @property
@@ -217,9 +233,6 @@ class AquetiAdminPageSystem(AquetiAdminPage):
 
     def __init__(self, *args):
         AquetiAdminPage.__init__(self, *args)
-
-
-
 
 
 class AquetiAdminPageConfiguration(AquetiAdminPage):
@@ -457,6 +470,47 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     @property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
 
+    @property
+    def settings(self): return self.find_by(id="headingSettings")
+
+# Settings
+
+    @property
+    def auto_gain_chkb(self): return self.find_by(id="auto_gain")
+
+    @property
+    def auto_exposure_chkb(self): return self.find_by(id="auto_exposure_time")
+
+    @property
+    def auto_analog_gain_chkb(self): return self.find_by(id="auto_analog_gain")
+
+    @property
+    def whitebalance_mode_dd(self): return self.find_by(id="whitebalance_mode")
+
+    @property
+    def night_mode_chkb(self): return self.find_by(id="night_mode")
+
+    @property
+    def framerate_dd(self): return self.find_by(id="framerate")
+
+    @property
+    def sharpening_slider(self): return self.find_by(css="div#sharpening_slider div[role='slider']")
+
+    @property
+    def sharpening_slider_ribbon(self): return self.find_by(css="div#sharpening_slider div.noUi-base")
+
+    @property
+    def denoising_slider(self): return self.find_by(css="div#denoising_slider div[role='slider']")
+
+    @property
+    def denoising_slider_ribbon(self): return self.find_by(css="div#denoising_slider div.noUi-base")
+
+    @property
+    def saturation_slider(self): return self.find_by(css="div#saturation_slider div[role='slider']")
+
+    @property
+    def saturation_slider_ribbon(self): return self.find_by(css="div#saturation_slider div.noUi-base")
+
 # Edit Component
 
     @property
@@ -689,18 +743,6 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
 
     @property
     def night_mode_chkb(self): return self.find_by(id="night_mode")
-
-    @property
-    def transport_mode_10bit(self): return self.find_by(css="#panel1 button a:contains(10 bit)")
-
-    @property
-    def transport_mode_12bit(self): return self.find_by(css="#panel1 button a:contains(12 bit)")
-
-    @property
-    def framerate_25fps(self): return self.find_by(css="#panel1 button a:contains(25 fps)")
-
-    @property
-    def framerate_30fps(self): return self.find_by(css="#panel1 button a:contains(30 fps)")
 
     @property
     def transport_mode_dd(self): return self.find_by(id="transport_mode")
