@@ -1,0 +1,34 @@
+#!/bin/sh
+
+docker rm -f $(docker ps -a -f status=exited -q)
+docker images | grep aqueti | awk '{print $1}' | xargs docker rm
+
+# load docker image
+zcat /tmp/QWebServer-image*.tar.gz | docker load
+
+user_name=$SUDO_USER
+image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | head -1`
+sys_name=`cat /etc/aqueti/daemonConfiguration.json | grep system | sed 's#"system".[^"]*##g' | sed 's#[ "]##g'`
+
+#if [ -z "${image_name}" ]; then
+    COMMANDTOSTARTDOCKER="sudo docker run --rm -p 5000:5000 -e AQUETI_SYSTEM_NAME=${sys_name} -v /etc/localtime:/etc/localtime:ro -v /var/tmp/aqueti:/var/tmp/aqueti -v /home/${user_name}/.ssh:/root/.ssh ${image_name}"
+
+    HOMUNCULUSICON="#!/usr/bin/env xdg-open\n
+    [Desktop Entry]\n
+    Version=1.0\n
+    Name=QWebServer\n
+    Exec=$COMMANDTOSTARTDOCKER\n
+    Icon=/etc/aqueti/icons/AquetiLogo.png\n
+    Terminal=true\n
+    Type=Application\n
+    Categories=Development"
+    HOMUNCULUSICONPATH="/home/${user_name}/Desktop/QWebServer.desktop"
+    echo $HOMUNCULUSICON > $HOMUNCULUSICONPATH
+    chown ${user_name}:${user_name} $HOMUNCULUSICONPATH
+    chmod +x $HOMUNCULUSICONPATH
+#fi
+
+# delete temporary docker image file
+rm /tmp/QWebServer-image*.tar.gz
+
+exit 0
