@@ -6,7 +6,7 @@ class AquetiPage(BasePage):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = "http://10.0.0.166:5000"
+    base_url = "http://10.0.0.232:5000"
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
@@ -94,7 +94,7 @@ class AquetiLoginPage(AquetiPage):
     @property
     def login_btn(self): return self.find_by(css="form#login-form button[type='submit']")
 
-    def login(self, username, password):
+    def login(self, username='admin', password='1234'):
         self.username_field(value=username)
         self.password_field(value=password)
         self.login_btn()
@@ -500,10 +500,16 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     def sharpening_slider_ribbon(self): return self.find_by(css="div#sharpening_slider div.noUi-base")
 
     @property
+    def sharpening_slider_value(self): return self.find_by(css="div#sharpening_slider div[role='slider'] div.noUi-tooltip")
+
+    @property
     def denoising_slider(self): return self.find_by(css="div#denoising_slider div[role='slider']")
 
     @property
     def denoising_slider_ribbon(self): return self.find_by(css="div#denoising_slider div.noUi-base")
+
+    @property
+    def denoising_slider_value(self): return self.find_by(css="div#denoising_slider div[role='slider'] div.noUi-tooltip")
 
     @property
     def saturation_slider(self): return self.find_by(css="div#saturation_slider div[role='slider']")
@@ -511,10 +517,56 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     @property
     def saturation_slider_ribbon(self): return self.find_by(css="div#saturation_slider div.noUi-base")
 
-# Edit Component
+    @property
+    def saturation_slider_value(self): return self.find_by(css="div#saturation_slider div[role='slider'] div.noUi-tooltip")
 
     @property
-    def ec_nickname_field(self): return self.find_by(css="div.modal-content input.form-control")
+    def image_tab(self): return self.find_by(xpath="//a[contains(@class, 'nav-link') and contains(.,'Image')]")
+
+    @property
+    def compression_tab(self): return self.find_by(xpath="//a[contains(@class, 'nav-link') and contains(.,'Compression')]")
+
+    @property
+    def calibrate_tab(self): return self.find_by(xpath="//a[contains(@class, 'nav-link') and contains(.,'Calibrate')]")
+
+    @property
+    def focus_tab(self): return self.find_by(xpath="//a[contains(@class, 'nav-link') and contains(.,'Focus')]")
+
+    @property
+    def advanced_tab(self): return self.find_by(xpath="//a[contains(@class, 'nav-link') and contains(.,'Advanced')]")
+
+# Calibrate tab
+
+    @property
+    def calibrate_btn(self): return self.find_by(id="modelGeneration")
+
+    @property
+    def set_model_btn(self): return self.find_by(id="setModel")
+
+    @property
+    def get_model_btn(self): return self.find_by(id="getModel")
+
+    @property
+    def reset_model_btn(self): return self.find_by(id="resetMod")
+
+# Focus tab
+
+    @property
+    def ft_mode_btn(self): return self.find_by(xpath="//div[@id='panel4']//button[contains(.,'Mode')]")
+
+    @property
+    def ft_coarse_fine_lnk(self): return self.find_by(xpath="//a[contains(.,'Coarse + Fine')]")
+
+# Advanced tab
+
+    @property
+    def settings_lnk(self): return self.find_by(xpath="//a[contains(@class, 'btn-primary') and contains(.,'Settings')]")
+
+    def click_settings_link(self):
+        self.settings_lnk()
+        return AquetiAdminPageSensors(self.test)
+
+# Edit Component
 
     @property
     def ec_close_btn(self): return self.find_by(xpath="//button[contains(.,'Close')]")
@@ -527,8 +579,40 @@ class AquetiAdminPageCamera(AquetiAdminPage):
         self.ec_nickname_field(value=name)
         self.ec_update_btn()
 
+
     def __init__(self, *args):
         AquetiAdminPage.__init__(self, *args)
+
+
+class AquetiAdminPageSensors(AquetiAdminPage):
+    @property
+    def sensor_list(self): return self.find_by(id="sensorList")
+
+    @property
+    def coarse_fine_focus_lnk(self): return self.find_by(xpath="//a[contains(., 'Coarse + Fine')]")
+
+    #@property
+    #def mode_focus_btn(self): return self.find_by(css="button.btn.btn-primary.dropdown-toggle[data-toggle='dropdown']")
+
+    @property
+    def sensor_settings(self): return self.find_by(xpath="//div[contains(@class,'card-header') and contains(., 'Sensor Settings')]")
+
+    @property
+    def focus_val_input(self): return self.find_by(id="sensorfocus")
+
+    @property
+    def camera_page_lnk(self): return self.find_by(xpath="//div[contains(@class,'container-fluid')]//a[contains(@href, '/camera/')]")
+
+    @property
+    def focus_plus_btn(self): return self.find_by(xpath="//div[contains(@class, 'card-header') and contains(., 'Sensor Settings')]/..//button[contains(.,'+')]")
+
+    def select_sensor(self, sensor_name):
+        self.find_by(xpath="//ul[@id='sensorList']/li[contains(.,'" + str(sensor_name) + "')]")()
+
+    def click_camera_page_lnk(self):
+        self.camera_page_lnk()
+        return AquetiAdminPageCamera(self.test)
+
 
 
 class AquetiAdminPageStorage(AquetiAdminPage):
