@@ -2,9 +2,12 @@ import pytest
 from selenium.webdriver.common.keys import Keys
 from BaseTest import BaseTest
 from AquetiPage import *
+from QAdminPage import *
 import time
 import cv2
+import json
 import numpy as np
+import subprocess
 import os
 try:
     import AQT
@@ -301,8 +304,12 @@ class TestWebApp(BaseTest):
 class TestAPIWebApp(BaseTest):
     browser = "chrome"
 
+    cam_id = "12"
+    cam_path = "/aqt/camera" + cam_id
+    server_path = "http://10.0.0.232:5000/video/video_feed"
+
     urls = AQT.StringVector()
-    urls.push_back("aqt://Server166")
+    urls.push_back("aqt://Camera12")
     api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
 
     def vector_to_array(self, c_vector):
@@ -311,7 +318,7 @@ class TestAPIWebApp(BaseTest):
     def get_image(self):
         time.sleep(0.1)
 
-        stream = cv2.VideoCapture('http://10.0.0.166:5000/video/video_feed')
+        stream = cv2.VideoCapture(self.server_path)
 
         cnt = 0
         success = False
@@ -324,6 +331,9 @@ class TestAPIWebApp(BaseTest):
 
         return image
 
+    def get_info(self):
+        return json.loads(self.api.GetParameters(self.cam_path))
+
     @pytest.mark.skip(reason="")
     def test_displayed_cams(self):
         avp = AquetiViewerPage(self)
@@ -334,10 +344,6 @@ class TestAPIWebApp(BaseTest):
 
         assert list_of_cams_from_api == list_of_cams_from_gui
         assert avp.get_play_btn_status() == 'pause'
-
-    @pytest.mark.skip(reason="")
-    def test_displayed_cams2(self):
-        print(self.api.GetParameters("/aqt/camera/166"))
 
     @pytest.mark.skip(reason="")
     def test_step_back(self):
@@ -395,7 +401,7 @@ class TestAPIWebApp(BaseTest):
                 assert img1 is not None and not np.array_equal(img1, img2)
                 pass
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_live(self):
         avp = AquetiViewerPage(self)
         avp.navigate_to()
@@ -422,3 +428,219 @@ class TestAPIWebApp(BaseTest):
             img2 = self.get_image()
 
             assert img1 is not None and not np.array_equal(img1, img2)
+
+    @pytest.mark.skip(reason="")
+    def test_ir_filter(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page(self.cam_id)
+        aapc.settings()
+
+        aapc.night_mode_chkb()
+        time.sleep(1)
+        info = self.get_info()
+
+        assert info['ir'] == False
+
+        aapc.night_mode_chkb()
+        time.sleep(1)
+        info = self.get_info()
+
+        assert info['ir'] == True
+
+    @pytest.mark.skip(reason="")
+    def test_sliders(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page(self.cam_id)
+        aapc.settings()
+
+        for p in [i * 10 for i in range(0, 100)]:
+            aapc.sharpening_slider(p)
+            aapc.denoising_slider(p)
+            aapc.saturation_slider(p)
+
+            info = json.loads(self.api.GetParameters(self.cam_path))
+
+            time.sleep(2.5)
+
+            assert float(info['sharpening']) == float(aapc.sharpening_slider_value.text)
+            assert float(info['denoising']) == float(aapc.denoising_slider_value.text)
+            assert float(info['saturation']) == float(aapc.saturation_slider_value.text)
+
+        # info['digital_gain']
+        # info['analog_gain']
+        #
+        # info['whitebalance_mode']
+        # info['auto_digtial_gain_enabled']
+        # info['system_auto_interval']
+        # info['operating_mode']
+        # info['quality']
+        # info['auto_whitebalance']
+        # info['ir']
+        # info['auto_model_generation_interval_seconds']
+        # info['auto_exposure_enabled']
+        #
+        # info['auto_whitebalance_interval_seconds']
+        # info['auto_model_generation_enabled']
+        #
+        # info['system_auto_enabled']
+        # info['auto_analog_gain_enabled']
+        # info['data_routing_policy']
+        #
+        # info['exposure_time_milliseconds']
+
+        for framerate in [i * 5 for i in range(1, 7)]:
+            aapc.framerate_dd(framerate)
+
+            time.sleep(7)
+
+            info = self.get_info()
+
+            assert info['framerate'] == framerate
+
+    @pytest.mark.skip(reason="")
+    def test_autofocus(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page("12")
+        aapc.settings()
+
+        aapc.advanced_tab()
+        aaps = aapc.adv_settings_btn()
+
+        aaps.select_sensor('1209')
+
+        aaps.sensor_settings()
+
+        time.sleep(5)
+
+        for i in range(1, 10000):
+            aaps.mode_focus_btn()
+
+            aaps.coarse_fine_focus_lnk()
+
+            time.sleep(60)
+
+            aaps.make_screenshot()
+
+    @pytest.mark.skip(reason="")
+    def test_gennewmodel(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page(self.cam_id)
+        aapc.settings()
+
+        for i in range(1, 1000):
+            aapc.focus_tab()
+
+            aapc.focus_tab_mode_btn()
+
+            aapc.focus_tab_coarse_fine_lnk()
+
+            time.sleep(120)
+
+            aapc.calibrate_tab()
+
+            aapc.calibrate_btn()
+
+            time.sleep(240)
+
+            args = ['mkdir', '/var/tmp/aqueti/modelgen_' + str(i)]
+            subprocess.Popen(args)
+            args = ['cp', '-r', '/var/tmp/aqueti/modelgen/*.*', '/var/tmp/aqueti/modelgen_' + str(i)]
+            subprocess.Popen(args)
+
+            time.sleep(5)
+
+            #aaps.make_screenshot()
+
+    #@pytest.mark.skip(reason="")
+    def test_gennewmodel(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page(self.cam_id)
+        aapc.settings()
+
+        for i in range(1, 1000):
+            aapc.focus_tab()
+
+            aapc.ft_mode_btn()
+
+            aapc.ft_coarse_fine_lnk()
+
+            time.sleep(120)
+
+            aapc.advanced_tab()
+
+            aaps = aapc.click_settings_link()
+
+            rnd_sensor_id = [random.randint(1, 18) for i in range(0, random.randint(1, 9))]
+
+            for sensor_id in set(rnd_sensor_id):
+                while not aaps.sensor_list.is_displayed():
+                    time.sleep(0.25)
+
+                aaps.select_sensor(str(self.cam_id) + '0' + str(sensor_id))
+
+                if not aaps.focus_val_input.is_displayed():
+                    aaps.sensor_settings()
+
+                aaps.focus_val_input("1")
+
+                aaps.focus_plus_btn()
+
+            time.sleep(5)
+
+            aapc = aaps.click_camera_page_lnk()
+
+            aapc.settings()
+
+            aapc.calibrate_tab()
+
+            aapc.calibrate_btn()
+
+            time.sleep(240)
+
+            args = ['mkdir', '/var/tmp/aqueti/modelgen_' + str(i)]
+            subprocess.Popen(args).wait()
+            args = ['cp', '-r', '/var/tmp/aqueti/modelgen/*.*', '/var/tmp/aqueti/modelgen_' + str(i)]
+            subprocess.Popen(args).wait()
+
+            aaps.make_screenshot()
+
+class TestQAdmin(BaseTest):
+    browser = "chrome"
+
+    @pytest.mark.skip(reason="")
+    def test_qadmin(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        #qad.camera_lnk()
+        time.sleep(1)
+        qad.storage_lnk()
+        time.sleep(1)
+        qad.render_lnk()
+        time.sleep(1)
+        qad.system_lnk()
+        time.sleep(1)
+        qad.logs_lnk()
+        time.sleep(1)
+        qad.dashboard_lnk()
+        time.sleep(1)
