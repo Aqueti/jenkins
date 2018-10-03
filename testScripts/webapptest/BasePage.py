@@ -67,57 +67,70 @@ class BasePage:
         elems = None
 
         try:
+            IS_VISIBLE = True
+            if "param" in kwargs.keys():
+                if "invisible" in kwargs["param"]:
+                    IS_VISIBLE = False
+
             if "id" in kwargs.keys():
-                WebDriverWait(self.driver, self.TIMEOUT).until(EC.presence_of_element_located((By.ID, kwargs["id"])))
+                if IS_VISIBLE:
+                    WebDriverWait(self.driver, self.TIMEOUT).until(EC.presence_of_element_located((By.ID, kwargs["id"])))
                 elems = self.driver.find_element_by_id(kwargs["id"])
             else:
                 for key, val in sorted(kwargs.items(), key=lambda x: x[0]):
                     if key == "name":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.NAME, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.NAME, val)))
                             elems = self.driver.find_elements_by_name(val)
                         else:
                             elems = elems.find_elements_by_name(val)
                     elif key == "link_text":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.LINK_TEXT, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.LINK_TEXT, val)))
                             elems = self.driver.find_elements_by_link_text(val)
                         else:
                             elems = elems.find_elements_by_link_text(val)
                     elif key == "partial_link_text":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.PARTIAL_LINK_TEXT, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.PARTIAL_LINK_TEXT, val)))
                             elems = self.driver.find_elements_by_partial_link_text(val)
                         else:
                             elems = elems.find_elements_by_partial_link_text(val)
                     elif key == "tag_name":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.TAG_NAME, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.TAG_NAME, val)))
                             elems = self.driver.find_elements_by_tag_name(val)
                         else:
                             elems = elems.find_elements_by_tag_name(val)
                     elif key == "class_name":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.CLASS_NAME, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.CLASS_NAME, val)))
                             elems = self.driver.find_elements_by_class_name(val)
                         else:
                             elems = elems.find_elements_by_class_name(val)
                     elif key == "css":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.CSS_SELECTOR, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.CSS_SELECTOR, val)))
                             elems = self.driver.find_elements_by_css_selector(val)
                         else:
                             elems = elems.find_elements_by_css_selector(val)
                     elif key == "xpath":
                         if elems is None:
-                            WebDriverWait(self.driver, self.TIMEOUT).until(
-                                EC.visibility_of_any_elements_located((By.XPATH, val)))
+                            if IS_VISIBLE:
+                                WebDriverWait(self.driver, self.TIMEOUT).until(
+                                    EC.visibility_of_any_elements_located((By.XPATH, val)))
                             elems = self.driver.find_elements_by_xpath(val)
                         else:
                             elems = elems.find_elements_by_xpath(val)

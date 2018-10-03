@@ -770,8 +770,10 @@ class TestQAdmin(BaseTest):
 
         qacs.compression_tab()
 
-        qacs.compression_dd(act='default')
+        qacs.compression_dd()
 
-        qacs.get_dd_value("low")()
+        time.sleep(0.5)
 
-        time.sleep(5)
+        qacs.get_dd_value("high")()
+
+        time.sleep(1)

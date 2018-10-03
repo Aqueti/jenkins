@@ -304,7 +304,7 @@ class QAdminCameraSettings(QAdminPage, QAdminStreamBox):
 # Image
 
     @property
-    def compression_dd(self): return self.find_by(id="quality_select")
+    def compression_dd(self): return self.find_by(xpath="//input[@id='quality_select']/../../div[@class='v-input__append-inner']")
 
 # Compression
 
