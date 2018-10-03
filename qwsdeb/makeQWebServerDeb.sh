@@ -11,7 +11,7 @@ mkdir -p QWebServer/tmp
 cp $DOCKERIMAGEPATH QWebServer/tmp/
 
 # make debian control file
-VERSIONSTRING="2.0.3.0"
+VERSIONSTRING="2.0.3.1"
 DEBCONTROLFILE="Package: QWebServer
 Version: $VERSIONSTRING
 Maintainer: Aqueti

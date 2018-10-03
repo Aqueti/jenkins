@@ -49,6 +49,7 @@ class BasePage:
                     elif "scroll_to" in kwargs.values():
                         page_obj.exec_js("arguments[0].scrollIntoView(true);", self)
                     elif "default" in kwargs.values():
+                        # page_obj.driver.execute_script("arguments[0].setAttribute(arguments[1], arguments[2]);", self, "default", "")
                         page_obj._(self)
 
         WebElement.__call__ = call
@@ -126,9 +127,10 @@ class BasePage:
                     if len(elems) == 1:
                         return elems[0]
         except Exception as e:
-            self.__add_to_log("Element not found: " + str(kwargs) + "\n")
+            err_msg = "Element not found: " + str(kwargs) + "\n"
+            self.__add_to_log(err_msg)
             if self.test is not None:
-                self.test.fail("Element not found: " + str(kwargs) + "\n")
+                self.test.fail(err_msg)
 
         return elems
 
@@ -155,10 +157,12 @@ class BasePage:
             elem.clear()
             elem.send_keys(value)
         elif tag_name == "div":
-            if elem.get_attribute("role") in "slider":
-                move = ActionChains(self.driver)
-                arr = value.split(",")
-                move.click_and_hold(elem).move_by_offset(int(arr[0]) * int(arr[1]), 0).release().perform()
+            role = elem.get_attribute("role")
+            if role is not None:
+                if "slider" in role:
+                    move = ActionChains(self.driver)
+                    arr = value.split(",")
+                    move.click_and_hold(elem).move_by_offset(int(arr[0]) * int(arr[1]), 0).release().perform()
             else:
                 elem.click()
         elif tag_name == "iframe":
@@ -237,8 +241,10 @@ class BasePage:
         elif tag_name == "button":
             out += "Click '" + elem.get_attribute('innerText').strip() + "' button"
         elif tag_name == "div":
-            if elem.get_attribute("role") in "slider":
-                out += "Move slider '" + self.get_label(elem) + "' by " + value.split(",")[0].strip()
+            role = elem.get_attribute("role")
+            if role is not None:
+                if role in "slider":
+                    out += "Move slider '" + self.get_label(elem) + "' by " + value.split(",")[0].strip()
             else:
                 out += "Click unknown element, tagName=" + elem.tag_name
         elif tag_name == "iframe":

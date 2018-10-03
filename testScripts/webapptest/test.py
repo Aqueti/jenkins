@@ -331,6 +331,9 @@ class TestAPIWebApp(BaseTest):
 
         return image
 
+    def is_image_black(self):
+        pass
+
     def get_info(self):
         return json.loads(self.api.GetParameters(self.cam_path))
 
@@ -567,7 +570,7 @@ class TestAPIWebApp(BaseTest):
 
             #aaps.make_screenshot()
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_gennewmodel(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
@@ -627,6 +630,8 @@ class TestAPIWebApp(BaseTest):
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
+    cam_id = '12'
+
     @pytest.mark.skip(reason="")
     def test_qadmin(self):
         qad = QAdminDashboard(self)
@@ -644,3 +649,129 @@ class TestQAdmin(BaseTest):
         time.sleep(1)
         qad.dashboard_lnk()
         time.sleep(1)
+
+    @pytest.mark.skip(reason="")
+    def test_links_on_dashboard(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.TIMEOUT = 5
+
+        qas = qad.click_system_lnk()
+
+        assert qas.page_url == qas.cur_page_url
+
+        qad.navigate_to()
+
+        time.sleep(1)
+
+        qac = qad.click_camera_lnk()
+
+        assert qac.page_url == qac.cur_page_url
+
+        qad.navigate_to()
+
+        time.sleep(1)
+
+        qas = qad.click_storage_lnk()
+
+        assert qas.page_url == qas.cur_page_url
+
+        qad.navigate_to()
+
+        time.sleep(1)
+
+        qar = qad.click_render_lnk()
+
+        assert qar.page_url == qar.cur_page_url
+
+    @pytest.mark.skip(reason="")
+    def test_mcams_num(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.TIMEOUT = 5
+
+        qac = qad.click_camera_lnk()
+
+        qac.TIMEOUT = 10
+
+        cams = qac.get_mcams_number('12') # 0 - available, 1 - total
+
+        assert int(cams[0]) == 19 and int(cams[1]) == 19
+
+    @pytest.mark.skip(reason="")
+    def test_mcams_num2(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.TIMEOUT = 5
+
+        qac = qad.click_camera_lnk()
+
+        qac.TIMEOUT = 10
+
+        cams = qac.get_mcams_number('12') # 0 - available, 1 - total
+
+        assert int(cams[0]) == 19 and int(cams[1]) == 19
+
+    @pytest.mark.skip(reason="")
+    def test_mcams_num3(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.TIMEOUT = 5
+
+        qac = qad.click_camera_lnk()
+
+        qac.TIMEOUT = 10
+
+        cams = qac.get_mcams_number('12') # 0 - available, 1 - total
+
+        assert int(cams[0]) == 19 and int(cams[1]) == 19
+
+    @pytest.mark.skip(reason="")
+    def test_mcams_recording_status(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.TIMEOUT = 5
+
+        qac = qad.menu_camera()
+
+        qac.TIMEOUT = 15
+
+        qacr = qac.menu_reservations()
+
+        qacr.camera_dd()
+
+        qacr.get_dd_value(self.cam_id)()
+
+        qacr.recording_chkb()
+
+        time.sleep(0.5)
+
+        qacr.menu_camera()
+
+        is_streaming = qac.get_stream_status(self.cam_id)
+
+        is_recording = qac.get_rec_status(self.cam_id)
+
+        assert is_streaming and  is_recording
+
+    #@pytest.mark.skip(reason="")
+    def test_mcams_recording_status2(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        qacs.compression_tab()
+
+        qacs.compression_dd(act='default')
+
+        qacs.get_dd_value("low")()
+
+        time.sleep(5)

@@ -15,5 +15,20 @@
   "test.py::TestWebApp::()::test_login_logout",
   "test.py::TestWebApp::()::test_login_logout_timeout",
   "test.py::TestWebApp::()::test_login_correct_credentials",
-  "test.py::TestWebApp::()::test_vvv"
+  "test.py::TestAPIWebApp::()::test_displayed_cams",
+  "test.py::TestAPIWebApp::()::test_step_back",
+  "test.py::TestAPIWebApp::()::test_step_forward",
+  "test.py::TestAPIWebApp::()::test_play_pause",
+  "test.py::TestAPIWebApp::()::test_live",
+  "test.py::TestAPIWebApp::()::test_ir_filter",
+  "test.py::TestAPIWebApp::()::test_sliders",
+  "test.py::TestAPIWebApp::()::test_autofocus",
+  "test.py::TestAPIWebApp::()::test_gennewmodel",
+  "test.py::TestQAdmin::()::test_qadmin",
+  "test.py::TestQAdmin::()::test_links_on_dashboard",
+  "test.py::TestQAdmin::()::test_mcams_num",
+  "test.py::TestQAdmin::()::test_mcams_num2",
+  "test.py::TestQAdmin::()::test_mcams_num3",
+  "test.py::TestQAdmin::()::test_mcams_recording_status",
+  "test.py::TestQAdmin::()::test_mcams_recording_status2"
 ]
