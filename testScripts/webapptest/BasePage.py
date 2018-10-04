@@ -137,8 +137,9 @@ class BasePage:
                     else:
                         pass
 
-                    if len(elems) == 1:
-                        return elems[0]
+                    if elems is not None:
+                        if len(elems) == 1:
+                            return elems[0]
         except Exception as e:
             err_msg = "Element not found: " + str(kwargs) + "\n"
             self.__add_to_log(err_msg)
