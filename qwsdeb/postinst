@@ -1,7 +1,7 @@
 #!/bin/sh
 
 docker rm -f $(docker ps -a -f status=exited -q)
-docker images | grep aqueti | awk '{print $1}' | xargs docker rm
+docker rmi $(docker images "aqueti/*" -q --no-trunc)
 
 # load docker image
 zcat /tmp/QWebServer-image*.tar.gz | docker load
