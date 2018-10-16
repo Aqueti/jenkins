@@ -5,10 +5,6 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && apt-get -y install apt-transport-https duplicity python-pip avahi-utils avahi-daemon libnss-mdns systemd rsyslog apt-utils sudo vim ssh python3-pip libavahi-common-dev libavahi-client-dev python3-venv supervisor tzdata wget net-tools iputils-ping ffmpeg
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
-
 RUN adduser --quiet --disabled-password --shell /bin/bash --home /home/www --gecos "User" www
 
 RUN usermod -aG sudo,root www
