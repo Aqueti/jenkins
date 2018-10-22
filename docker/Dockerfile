@@ -30,8 +30,6 @@ RUN cp -r /tmp/install/conf.d/* /etc/supervisor/conf.d/
 
 WORKDIR /home/www/Homunculus
 
-ENV LC_ALL=C
-
 RUN pip install --upgrade pip setuptools wheel virtualenv supervisor-stdout
 
 RUN pyvenv-3.5 venv
