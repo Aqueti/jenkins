@@ -4,21 +4,26 @@ from selenium import webdriver
 import pytest
 import datetime
 import os
-#import pymongo
+import subprocess
+import time
+import pymongo
 
 
 class BaseTest(object):
     driver = None
     browser = "chrome"
 
-    script_name = ""
-    start_time = ""
-    end_time = ""
-    result = ""
-    base_dir = ""
-    log_path = ""
-
     mongo_client = None
+
+    result = "PASSED"
+    script_name = None
+    start_time = None
+    end_time = None
+
+    log_path = None
+    base_dir = "/home/astepenko/Pictures/tests/"
+    mongo_path = r"mongodb://10.0.0.120:27017/"
+    chrome_path = r'/home/astepenko/Downloads/src/jenkins/testScripts/webapptest/chromedriver'
 
     @property
     def screenshot_path(self):
@@ -49,24 +54,19 @@ class BaseTest(object):
             opts.add_experimental_option("detach", True)
             caps = DesiredCapabilities.CHROME
             caps["pageLoadStrategy"] = "normal"  # none
-            self.driver = webdriver.Chrome(desired_capabilities=caps,  executable_path=r'/home/astepenko/Downloads/src/jenkins/testScripts/webapptest/chromedriver')  # chrome_options=opts
+            self.driver = webdriver.Chrome(desired_capabilities=caps,  executable_path=self.chrome_path)  # chrome_options=opts
         elif self.browser == "ff":
             caps = DesiredCapabilities.FIREFOX
             self.driver = webdriver.Firefox()
         else:
             pass
 
-        self.driver.maximize_window()
+        if self.driver is not None:
+            self.driver.maximize_window()
 
         self.script_name = self.__class__.__name__ + "_" + method.__name__
 
         self.start_time = datetime.datetime.now()
-
-        self.result = "PASSED"
-
-        self.base_dir = '/home/astepenko/Pictures/tests/'
-
-        # client = pymongo.MongoClient("mongodb://tester:tester@192.168.10.254/test_db")
 
         if not os.path.exists(self.base_dir):
             os.makedirs(self.base_dir)
@@ -86,7 +86,8 @@ class BaseTest(object):
                         str(datetime.timedelta(seconds=int((self.end_time - self.start_time).total_seconds()))))
 
         # self.driver.close()
-        self.driver.quit()
+        if self.driver is not None:
+            self.driver.quit()
 
     def navigate_to(self, url=""):
         if url == "back":
@@ -99,3 +100,38 @@ class BaseTest(object):
     def add_to_log(self, text):
         with open(self.log_path, "a") as log:
             log.write(text)
+
+    def exec(self, cmd):
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if result.stdout.decode('utf-8') != "":
+            return result.stdout.decode('utf-8')
+        else:
+            return result.stderr.decode('utf-8')
+
+    def get_nw_usage(eth_name, sleep_duration = 1):
+        cmd = "cat /proc/$(pgrep AquetiDaemon)/net/dev | grep " + eth_name + " | awk '{print$2}'"
+
+        start = int(exec(cmd).strip())
+        time.sleep(sleep_duration)
+        stop = int(exec(cmd).strip())
+
+        return (stop - start) * 8 / 1024 ** 2
+
+    def query_db(self, db_name, coll_name, action="count"):
+        client = pymongo.MongoClient(self.mongo_path)
+
+        if db_name == "":
+            if coll_name in ('models', 'reservations', 'scops', 'tracks'):
+                db_name = "acos"
+            elif coll_name in 'files':
+                db_name = "acos_local"
+
+        db = client['acos']
+        collection = db['models']
+
+        if action == "count":
+            return collection.count()
+        else:
+            return ""
+
