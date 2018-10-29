@@ -118,7 +118,7 @@ class BaseTest(object):
 
         return (stop - start) * 8 / 1024 ** 2
 
-    def query_db(self, db_name, coll_name, action="count"):
+    def get_db_col(self, db_name, coll_name):
         client = pymongo.MongoClient(self.mongo_path)
 
         if db_name == "":
@@ -130,8 +130,29 @@ class BaseTest(object):
         db = client['acos']
         collection = db['models']
 
+        return collection
+
+    def query_db(self, db_name, coll_name, action="count"):
+        collection = self.get_db_col(db_name, coll_name)
+
         if action == "count":
             return collection.count()
         else:
             return ""
+
+    def find_diff(self, path):
+        db_name = "acos"
+        coll_name = "files"
+        coll = self.get_db_col(db_name, coll_name)
+
+        res = []
+
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith(".hc"):
+                    fpath = os.path.join(root, file)
+                    if coll.find({"filename": fpath}).count() != 1:
+                        res.append()
+
+        return res
 
