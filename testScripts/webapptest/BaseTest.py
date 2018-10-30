@@ -118,41 +118,13 @@ class BaseTest(object):
 
         return (stop - start) * 8 / 1024 ** 2
 
-    def get_db_col(self, db_name, coll_name):
-        client = pymongo.MongoClient(self.mongo_path)
-
+    def get_col_obj(self, db_name, col_name):
         if db_name == "":
-            if coll_name in ('models', 'reservations', 'scops', 'tracks'):
+            if col_name in ('models', 'reservations', 'scops', 'tracks'):
                 db_name = "acos"
-            elif coll_name in 'files':
+            elif col_name in 'files':
                 db_name = "acos_local"
 
-        db = client['acos']
-        collection = db['models']
+        client = pymongo.MongoClient(self.mongo_path)
 
-        return collection
-
-    def query_db(self, db_name, coll_name, action="count"):
-        collection = self.get_db_col(db_name, coll_name)
-
-        if action == "count":
-            return collection.count()
-        else:
-            return ""
-
-    def find_diff(self, path):
-        db_name = "acos"
-        coll_name = "files"
-        coll = self.get_db_col(db_name, coll_name)
-
-        res = []
-
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                if file.endswith(".hc"):
-                    fpath = os.path.join(root, file)
-                    if coll.find({"filename": fpath}).count() != 1:
-                        res.append()
-
-        return res
-
+        return client[db_name][col_name]
