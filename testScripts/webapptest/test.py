@@ -632,6 +632,22 @@ class TestQAdmin(BaseTest):
 
     cam_id = '12'
 
+    def find_diff(self, path):
+        db_name = "acos"
+        col_name = "files"
+        col = self.get_col_obj(db_name, col_name)
+
+        res = []
+
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith(".hc"):
+                    fpath = os.path.join(root, file)
+                    if col.find({"filename": fpath}).count() != 1:
+                        res.append()
+
+        return res
+
     @pytest.mark.skip(reason="")
     def test_qadmin(self):
         qad = QAdminDashboard(self)
@@ -741,11 +757,13 @@ class TestQAdmin(BaseTest):
 
         qac.TIMEOUT = 15
 
-        qacr = qac.menu_reservations()
+        qacr = qac.menu_cam_reservations()
+
+        time.sleep(0.5)
 
         qacr.camera_dd()
 
-        qacr.get_dd_value(self.cam_id)()
+        qacr.get_dd_elem(self.cam_id)()
 
         qacr.recording_chkb()
 
@@ -757,10 +775,10 @@ class TestQAdmin(BaseTest):
 
         is_recording = qac.get_rec_status(self.cam_id)
 
-        assert is_streaming and  is_recording
+        assert is_streaming and is_recording
 
-    #@pytest.mark.skip(reason="")
-    def test_mcams_recording_status2(self):
+    @pytest.mark.skip(reason="")
+    def test_compression(self):
         qad = QAdminDashboard(self)
         qad.navigate_to()
 
@@ -774,6 +792,194 @@ class TestQAdmin(BaseTest):
 
         time.sleep(0.5)
 
-        qacs.get_dd_value("high")()
+        cmp_types = ["high","medium","low"]
+
+        for cmp_type in cmp_types:
+            qacs.get_dd_elem(cmp_type)()
+            time.sleep(5)
+
+    @pytest.mark.skip(reason="")
+    def test_global_loop(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        if qacs.global_chkb.is_selected():
+            qacs.global_chkb()
 
         time.sleep(1)
+
+        qacs.global_txt(value="1")
+
+    @pytest.mark.skip(reason="")
+    def test_exposure(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        if qacs.global_chkb.is_selected():
+            qacs.global_chkb()
+            time.sleep(1)
+
+        if qacs.exposure_chkb.is_selected():
+            qacs.exposure_chkb()
+            time.sleep(1)
+
+        if qacs.analog_gain_chkb.is_selected():
+            qacs.analog_gain_chkb()
+            time.sleep(1)
+
+        qacs.global_txt(value='2')
+
+        qacs.exposure_txt(value='3')
+
+        qacs.analog_gain_txt(value='3')
+
+        qacs.digital_gain_txt(value='3')
+
+    @pytest.mark.skip(reason="")
+    def test_sharpening(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        qacs.sharpening_txt(value='0')
+
+        qacs.denoising_txt(value='0')
+
+        qacs.saturation_txt(value='0')
+
+    @pytest.mark.skip(reason="")
+    def test_night_mode(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        for i in range(0,10):
+            qacs.night_mode_chkb()
+            time.sleep(2)
+
+    @pytest.mark.skip(reason="")
+    def test_framerate(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        fr_arr = ["5","10","15","20","25","30"]
+
+        for fr_val in fr_arr:
+            qacs.framerate_dd()
+            while not qacs.get_dd_elem(fr_val, False).is_displayed():
+                time.sleep(0.5)
+            qacs.get_dd_elem(fr_val, False)(act="click")
+            time.sleep(3)
+
+    @pytest.mark.skip(reason="")
+    def test_autowb(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        time.sleep(2)
+
+        if qacs.global_chkb.is_selected():
+            qacs.global_chkb()
+
+        time.sleep(1)
+
+        wb_arr = ["AUTO","CLOUDY","FIXED","FLUORESCENT","HORIZON","INCANDESCENT","SHADE","SUNLIGHT","TUNGSTEN"]
+
+        for wb_val in wb_arr:
+            qacs.whitebalance_dd()
+            while not qacs.get_dd_elem(wb_val).is_displayed():
+                time.sleep(0.5)
+            qacs.get_dd_elem(wb_val)(act="click")
+            time.sleep(3)
+
+        #add func to check black screen
+
+    @pytest.mark.skip(reason="")
+    def test_focum_mcam(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacm = qad.menu_cam_microcameras()
+
+        time.sleep(2)
+
+        qacm.camera_dd()
+
+        qacm.get_dd_elem("/aqt/camera/12")(act="click")
+
+        time.sleep(1)
+
+        qacm.microcamera_dd()
+
+        qacm.get_dd_elem("1209")(act="click")
+
+        time.sleep(2)
+
+        qacm.focus_txt(value="0.55")
+
+        qacm.focus_coarse_btn()
+
+        time.sleep(30)
+
+    @pytest.mark.skip(reason="")
+    def test_storage(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qass = qad.menu_storage_settings()
+
+        qass.block_size_txt(value="4194304")
+
+        qass.blocks_per_cont_txt(value="16")
+
+        qass.max_storage_threads_txt(value="16")
+
+        qass.cache_size_txt(value="10000")
+
+        qass.garbage_collection_threshold_txt(value="90")
+
+        qass.garbage_collection_interval_txt(value="60")
+
+        qass.maximum_disk_usage_txt(value="99")
+
+        time.sleep(5)
+
+    @pytest.mark.skip(reason="")
+    def test_calibration(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qac = qad.menu_cam_settings()
+
+        qac.cam_select_dd("18")
+
+        qac.calibrate_tab()
+
+        for i in range(0, 100):
+            qac.ct_calibrate_btn()
+
+            num_of_docs = self.get_col_obj("acos", "models").count()
+
+            time.sleep(240)
+
+            assert self.get_col_obj("acos", "models").count() == (num_of_docs + 1)
