@@ -37,9 +37,9 @@ class Component(object):
         return "ssh " + uname + "@" + ip + " '" + cmd + "'"
 
     def exec(self, cmd):
-        #result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(cmd)
-        return
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #print(cmd)
+        #return
 
         if result.stdout.decode('utf-8') != "":
             return result.stdout.decode('utf-8')
@@ -76,6 +76,11 @@ class Camera(Component):
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon restart")
             self.exec(cmd)
 
+    def reboot(self, **kwargs):
+        for ip in self.get_ip_list(**kwargs):
+            cmd = self.get_ssh_str(ip, "sudo reboot")
+            self.exec(cmd)
+
     def get_status(self, ip):
         cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon status | grep Active")
         self.exec(cmd)
@@ -83,11 +88,17 @@ class Camera(Component):
     def copy_remote_file(self, **kwargs):
         for ip in self.get_ip_list(**kwargs):
             if "to_tegra" in kwargs:
-                cmd = "cat " + kwargs["path_from"] + " | " + self.get_ssh_str(ip, 'sudo sh -c "cat >' + kwargs["path_to"] + '"')
+                #cmd = "cat " + kwargs["path_from"] + " | " + self.get_ssh_str(ip, 'sudo sh -c "cat >' + kwargs["path_to"] + '"')
+                cmd = "scp " + kwargs["path_from"] + " nvidia@" + ip + ":./; " + self.get_ssh_str(ip, "sudo cp " + kwargs["path_from"][kwargs["path_from"].rfind("/") + 1:] + " " + kwargs["path_to"])
                 self.exec(cmd)
             elif "from_tegra" in kwargs:
                 cmd = "scp nvidia@" + ip + ":" + kwargs["path_from"] + " " + kwargs["path_to"]
-                return self.exec(cmd)
+                self.exec(cmd)
+
+    def read(self, **kwargs):
+        for ip in self.get_ip_list(**kwargs):
+            cmd = self.get_ssh_str(ip, "cat " + kwargs["f_name"])
+            return self.exec(cmd)
 
     def __init__(self, cam_ip):
         self.num_of_tegras = int(cam_ip[cam_ip.rfind('.') + 1:])
@@ -96,11 +107,11 @@ class Camera(Component):
 
 class Render(Component):
     def start(self):
-        cmd = self.get_ssh_str(self.render_ip, "sh -c 'AquetiDaemonProcess &'", "mosaic")
+        cmd = "sh -c 'AquetiDaemonProcess &'"
         return self.exec(cmd)
 
     def stop(self):
-        cmd = self.get_ssh_str(self.render_ip, "sh -c 'sudo pkill -2 AquetiDaemon'", "mosaic")
+        cmd = "sh -c 'sudo pkill -2 AquetiDaemon'"
         return self.exec(cmd)
 
     def restart(self):
@@ -110,7 +121,7 @@ class Render(Component):
         self.start()
 
     def get_status(self):
-        cmd = self.get_ssh_str(self.render_ip, "sh -c 'pgrep AquetiDaemon'", "mosaic")
+        cmd = "sh -c 'pgrep AquetiDaemon'"
         return self.exec(cmd)
 
     def __init__(self, render_ip):
