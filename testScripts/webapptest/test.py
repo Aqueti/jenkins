@@ -1,11 +1,14 @@
 import pytest
-from selenium.webdriver.common.keys import Keys
 from BaseTest import BaseTest
 from AquetiPage import *
 from QAdminPage import *
+from BaseEnv import *
+from pprint import pprint
 import time
+import re
 import cv2
 import json
+import datetime as dt
 import numpy as np
 import subprocess
 import os
@@ -627,6 +630,31 @@ class TestAPIWebApp(BaseTest):
 
             aaps.make_screenshot()
 
+    @pytest.mark.skip(reason="")
+    def test_archive(self):
+        def get_rnd_text():
+            ch_arr = [chr(ch) for ch in range(ord('a'), ord('z') + 1)]
+
+            res = [ch_arr[random.randint(1, len(ch_arr))] for i in range(8)]
+
+            return ''.join(res)
+
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        for i in range(100):
+            alp = avp.click_login_lnk()
+
+            aaps = alp.login()
+
+            aapi = aaps.click_submit_issue_lnk()
+            avp = aapi.submit_issue(get_rnd_text(), get_rnd_text(), get_rnd_text())
+
+            out = self.exec("ls -al *zip")
+
+            assert out != ""
+
+
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
@@ -983,3 +1011,64 @@ class TestQAdmin(BaseTest):
             time.sleep(240)
 
             assert self.get_col_obj("acos", "models").count() == (num_of_docs + 1)
+
+
+class TestState(BaseTest):
+    browser = None
+
+    env = Environment(render_ip="127.0.0.1", cam_ip="192.168.10.1")
+
+    def clear_state(self, f_path):
+
+        with open(f_path) as f:
+            try:
+                data = json.load(f)
+            except:
+                exit(1)
+
+        for e in data:
+            root_e = e
+
+        for e in data[root_e]:
+            if re.match("\d+", e):
+                data[root_e][e]['focus_count'] = 0
+                data[root_e][e]['focus_position'] = 0
+                data[root_e][e]['ir_count'] = 0
+                data[root_e][e]['ir_status'] = False
+            elif e == "cumulative_run_time":
+                data[root_e][e] = 0
+            elif e == "current_run_time":
+                data[root_e][e] = 0
+
+        with open(f_path, 'w') as outfile:
+            json.dump(data, outfile, indent=4, sort_keys=True)
+
+    # @pytest.mark.skip(reason="")
+    def test_state(self):
+        render_path = "/home/astepenko/state.json"
+        tegra_path = "/etc/aqueti/state.json"
+
+        self.env.cam.copy_remote_file(path_to=render_path, path_from=tegra_path, from_tegra=[1])
+
+        self.clear_state(render_path)
+
+        self.env.cam.copy_remote_file(path_from=render_path, path_to=tegra_path, to_tegra=[1])
+
+        cumrt_next = 0
+        for i in range(10):
+            self.env.cam.restart(tegra=[1])
+
+            time.sleep(30)
+
+            res = json.loads(self.env.cam.read(f_name=tegra_path, tegra=[1]))
+
+            cumrt = res[list(res.keys())[0]]['cumulative_run_time']
+            currt = res[list(res.keys())[0]]['current_run_time']
+
+            cumrt_next = cumrt + currt
+
+            print('\n%s' % i)
+            print('cumulative_run_time: %s' % cumrt)
+            print('current_run_time: %s' % currt)
+
+            assert cumrt_next == cumrt
