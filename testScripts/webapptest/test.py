@@ -11,6 +11,7 @@ import json
 import datetime as dt
 import numpy as np
 import subprocess
+import math
 import os
 try:
     import AQT
@@ -23,88 +24,9 @@ class TD:
     username = "admin"
     password = "1234"
 
-    cam_props = {"status": "online",
-                 "recording": "false",
-                 "serialid": "undefined",
-                 "software": "undefined",
-                 "kernel": "undefined",
-                 "host": "undefined"}
-
-    sensor_props = {"model": "imx274",
-                    "host": "87878"}
-
-    storage_props = {"status": "online",
-                     "serialid": "aqt:Storage:1",
-                     "software": "undefined",
-                     "kernel": "undefined",
-                     "host": "undefined"}
-
-    render_props = {"serialid": "",
-                    "software": "undefined",
-                    "kernel": "undefined",
-                    "host": "undefined"}
-
 
 class TestWebApp(BaseTest):
     browser = "chrome"
-
-    @pytest.mark.skip(reason="")
-    def test_cam_properties(self):
-        aap_sys = AquetiAdminPageSystem(self)
-        aap_sys.navigate_to()
-        comps = aap_sys.components
-
-        print(aap_sys.system_current_time.text)
-        print(aap_sys.system_current_date.text)
-
-        assert len(comps) == 2
-
-        #for comp in comps:
-        #    self.assertIn("ferg", comp.text)
-
-        comps[0].click()
-
-        assert aap_sys.prop_status.text == TD.cam_props["status"]
-        assert aap_sys.prop_recording.text == TD.cam_props["recording"]
-        assert aap_sys.prop_serialid.text == TD.cam_props["serialid"]
-        assert aap_sys.prop_software.text == TD.cam_props["software"]
-        assert aap_sys.prop_kernel.text == TD.cam_props["kernel"]
-        assert aap_sys.prop_host.text == TD.cam_props["host"]
-
-        assert aap_sys.prop_sensor_model.text == TD.sensor_props["model"]
-        assert aap_sys.prop_sensor_host.text == TD.sensor_props["host"]
-
-    @pytest.mark.skip(reason="")
-    def test_stor_properties(self):
-        aap_ss = AquetiAdminPageStatusStorage(self)
-        aap_ss.navigate_to()
-        comps = aap_ss.components
-
-        assert len(comps) == 2
-
-        #for comp in comps:
-        #    self.assertIn("aqt:Storage:", comp.text)
-
-        comps[0].click()
-
-        assert aap_ss.prop_status.text == TD.storage_props["status"]
-        assert aap_ss.prop_serialid.text == TD.storage_props["serialid"]
-        assert aap_ss.prop_software.text == TD.storage_props["software"]
-        assert aap_ss.prop_kernel.text == TD.storage_props["kernel"]
-        assert aap_ss.prop_host.text == TD.storage_props["host"]
-
-    @pytest.mark.skip(reason="")
-    def test_render_properties(self):
-        aap_sr = AquetiAdminPageStatusRender(self)
-        aap_sr.navigate_to()
-        comps = aap_sr.components
-
-        assert comps is None
-
-        assert aap_sr.prop_serialid.text == TD.render_props["serialid"]
-        assert aap_sr.prop_software.text == TD.render_props["software"]
-        assert aap_sr.prop_kernel.text == TD.render_props["kernel"]
-        assert aap_sr.prop_host.text == TD.render_props["host"]
 
     @pytest.mark.skip(reason="")
     def test_issue_submition(self):
@@ -574,7 +496,7 @@ class TestAPIWebApp(BaseTest):
             #aaps.make_screenshot()
 
     @pytest.mark.skip(reason="")
-    def test_gennewmodel(self):
+    def test_gennewmodel2(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
 
@@ -635,24 +557,29 @@ class TestAPIWebApp(BaseTest):
         def get_rnd_text():
             ch_arr = [chr(ch) for ch in range(ord('a'), ord('z') + 1)]
 
-            res = [ch_arr[random.randint(1, len(ch_arr))] for i in range(8)]
+            res = [ch_arr[random.randint(1, len(ch_arr))] for i in range(random.randint(1, 32))]
 
             return ''.join(res)
 
         avp = AquetiViewerPage(self)
         avp.navigate_to()
 
+        path = "/var/tmp/aqueti/"
+
         for i in range(100):
             alp = avp.click_login_lnk()
 
             aaps = alp.login()
 
+            arch_name = get_rnd_text()
+            summary = get_rnd_text()
+            description = get_rnd_text()
             aapi = aaps.click_submit_issue_lnk()
-            avp = aapi.submit_issue(get_rnd_text(), get_rnd_text(), get_rnd_text())
+            avp = aapi.submit_issue(arch_name, summary, description)
 
-            out = self.exec("ls -al *zip")
+            out = self.exec("unzip " + path + arch_name + ".zip")
 
-            assert out != ""
+            assert "error" not in out
 
 
 class TestQAdmin(BaseTest):
@@ -1018,16 +945,16 @@ class TestState(BaseTest):
 
     env = Environment(render_ip="127.0.0.1", cam_ip="192.168.10.1")
 
-    def clear_state(self, f_path):
+    def clear_state(self, render_path, tegra_path):
+        self.env.cam.copy_remote_file(path_to=render_path, path_from=tegra_path, from_tegra=[1])
 
-        with open(f_path) as f:
+        with open(render_path) as f:
             try:
                 data = json.load(f)
             except:
                 exit(1)
 
-        for e in data:
-            root_e = e
+        root_e = list(data.keys())[0]
 
         for e in data[root_e]:
             if re.match("\d+", e):
@@ -1040,35 +967,35 @@ class TestState(BaseTest):
             elif e == "current_run_time":
                 data[root_e][e] = 0
 
-        with open(f_path, 'w') as outfile:
+        with open(render_path, 'w') as outfile:
             json.dump(data, outfile, indent=4, sort_keys=True)
 
-    # @pytest.mark.skip(reason="")
+        self.env.cam.copy_remote_file(path_from=render_path, path_to=tegra_path, to_tegra=[1])
+
+    @pytest.mark.skip(reason="")
     def test_state(self):
         render_path = "/home/astepenko/state.json"
         tegra_path = "/etc/aqueti/state.json"
 
-        self.env.cam.copy_remote_file(path_to=render_path, path_from=tegra_path, from_tegra=[1])
+        self.clear_state(render_path, tegra_path)
 
-        self.clear_state(render_path)
-
-        self.env.cam.copy_remote_file(path_from=render_path, path_to=tegra_path, to_tegra=[1])
-
+        sleep_time = 60
         cumrt_next = 0
-        for i in range(10):
+        for i in range(2 * 60):
             self.env.cam.restart(tegra=[1])
 
-            time.sleep(30)
+            time.sleep(sleep_time)
 
             res = json.loads(self.env.cam.read(f_name=tegra_path, tegra=[1]))
 
             cumrt = res[list(res.keys())[0]]['cumulative_run_time']
             currt = res[list(res.keys())[0]]['current_run_time']
 
-            cumrt_next = cumrt + currt
-
             print('\n%s' % i)
             print('cumulative_run_time: %s' % cumrt)
             print('current_run_time: %s' % currt)
 
-            assert cumrt_next == cumrt
+
+            assert (sleep_time - math.ceil(currt / 1e6)) < 15 and cumrt_next == cumrt
+
+            cumrt_next = cumrt + currt
