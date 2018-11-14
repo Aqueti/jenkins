@@ -1,26 +1,45 @@
 from datetime import datetime, timedelta
+from BaseTest import BaseTest
+from BaseEnv import *
 import pytest
+import pprint
 import random
 import time
 import json
 import os
+import sys
+import ctypes
 import AQT
 
 
-class NAPI:
-    api = AQT.AquetiAPI()
+class GO:
+    api = None
 
-    vs = AQT.ViewState(api)
-    ts = AQT.TimeState(api)
-    iss = AQT.ImageSubsetState(api)
-    ps = AQT.PoseState(api)
-    sp = AQT.StreamProperties()
+    vs = None
+    ts = None
+    iss = None
+    ps = None
+    sp = None
 
     stream = None
 
     frame = None
 
     cur_cam = None
+
+    def __init__(self):
+        urls = AQT.StringVector()
+        urls.push_back("aqt://Camera2")
+        self.api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
+
+        self.vs = AQT.ViewState(self.api)
+        self.ts = AQT.TimeState(self.api)
+        self.iss = AQT.ImageSubsetState(self.api)
+        self.ps = AQT.PoseState(self.api)
+        self.sp = AQT.StreamProperties()
+
+    def get_detailed_status(self, s):
+        return json.loads(self.api.GetDetailedStatus(s))
 
     def get_next_frame(self):
         if self.frame is not None:
@@ -46,7 +65,7 @@ class NAPI:
             self.sp.Width(854)
             self.sp.Height(480)
 
-    def start_stream(self):
+    def create_stream(self):
         self.sp.FrameRate(30)
         self.sp.CanSkip(True)
         self.sp.Quality(0.8)
@@ -58,9 +77,12 @@ class NAPI:
 
         self.stream = AQT.RenderStream(self.api, self.vs, self.ts, self.iss, self.ps, self.sp)
 
+    def start_stream(self):
+        self.create_stream()
+
         cams = self.api.GetAvailableCameras()
-        self.cur_cam = cams[0]
-        self.stream.AddCamera(self.cam.Name())
+        self.c_cam = cams[0]
+        self.stream.AddCamera(self.c_cam.Name())
         self.stream.SetStreamingState(True)
         self.ts.PlaySpeed(1.0)
 
@@ -94,8 +116,8 @@ class NAPI:
             self.vs.PanSpeedDegrees(0)
 
     def change_cam(self, cam_name):
-        self.rapi.RemoveCamera(self.cam.Name())
-        self.rapi.AddCamera(cam_name)
+        self.api.RemoveCamera(self.cam.Name())
+        self.api.AddCamera(cam_name)
 
     def toggle_win_mode(self):
         if self.sp.Type() == AQT.aqt_JPEG_IMAGE:
@@ -104,17 +126,19 @@ class NAPI:
             self.sp.Type(AQT.aqt_JPEG_IMAGE)
 
 
-class TestAPI:
-    napi = NAPI()
+class Test_API(BaseTest):
+    browser = None
 
-    def setup(self):
-        pass
+    go = None
 
-    def teardown(self):
+    def setup_method(self):
+        self.go = GO()
+
+    def teardown_method(self):
         pass
 
     def is_api_status_ok(self):
-        if self.napi.api.GetStatus() != AQT.aqt_STATUS_OKAY:
+        if self.go.api.GetStatus() != AQT.aqt_STATUS_OKAY:
             self.fail()
 
     @pytest.mark.skip(reason="")
@@ -122,17 +146,17 @@ class TestAPI:
         aqt_types = [AQT.aqt_STREAM_TYPE_JPEG, AQT.aqt_STREAM_TYPE_H264, AQT.aqt_STREAM_TYPE_H265]
 
         for aqt_type in aqt_types:
-            self.napi.sp.Type(aqt_type)
-            self.napi.start_stream()
+            self.go.sp.Type(aqt_type)
+            self.go.start_stream()
 
             for i in range(10):
-                self.napi.get_next_frame()
+                self.go.get_next_frame()
 
-                if self.napi.frame.Type() == AQT.aqt_JPEG_IMAGE:
+                if self.go.frame.Type() == AQT.aqt_JPEG_IMAGE:
                     assert aqt_type == AQT.aqt_STREAM_TYPE_JPEG
-                elif self.napi.frame.Type() in (AQT.aqt_H264_P_FRAME, AQT.aqt_H264_I_FRAME):
+                elif self.go.frame.Type() in (AQT.aqt_H264_P_FRAME, AQT.aqt_H264_I_FRAME):
                     assert aqt_type == AQT.aqt_STREAM_TYPE_H264
-                elif self.napi.frame.Type() in (AQT.aqt_H265_P_FRAME, AQT.aqt_H265_I_FRAME):
+                elif self.go.frame.Type() in (AQT.aqt_H265_P_FRAME, AQT.aqt_H265_I_FRAME):
                     assert aqt_type == AQT.aqt_STREAM_TYPE_H265
                 else:
                     self.fail()
@@ -142,32 +166,32 @@ class TestAPI:
         aqt_res = ["4k", "1080p", "720p", "480p"]
 
         for res in aqt_res:
-            self.napi.set_resolution(res)
-            self.napi.start_stream()
+            self.go.set_resolution(res)
+            self.go.start_stream()
 
             for i in range(10):
-                self.napi.get_next_frame()
+                self.go.get_next_frame()
 
                 if res == "4k":
-                    assert self.napi.frame.Width() == 3840
-                    assert self.napi.frame.Height() == 2160
+                    assert self.go.frame.Width() == 3840
+                    assert self.go.frame.Height() == 2160
                 elif res == "1080p":
-                    assert self.napi.frame.Width() == 1920
-                    assert self.napi.frame.Height() == 1080
+                    assert self.go.frame.Width() == 1920
+                    assert self.go.frame.Height() == 1080
                 elif res == "720p":
-                    assert self.napi.frame.Width() == 1280
-                    assert self.napi.frame.Height() == 720
+                    assert self.go.frame.Width() == 1280
+                    assert self.go.frame.Height() == 720
                 else:
-                    assert self.napi.frame.Width() == 854
-                    assert self.napi.frame.Height() == 480
+                    assert self.go.frame.Width() == 854
+                    assert self.go.frame.Height() == 480
 
     @pytest.mark.skip(reason="")
     def test_status(self):
-        cams = self.napi.api.GetAvailableCameras()
+        cams = self.go.api.GetAvailableCameras()
 
         self.is_api_status_ok()
 
-        cam = AQT.Camera(self.napi.api, cams[0].Name())
+        cam = AQT.Camera(self.go.api, cams[0].Name())
 
         self.is_api_status_ok()
 
@@ -210,7 +234,7 @@ class TestAPI:
 
     @pytest.mark.skip(reason="")
     def test_api_getavailablecameras(self):
-        cams = self.napi.api.GetAvailableCameras()
+        cams = self.go.api.GetAvailableCameras()
 
         self.is_api_status_ok()
 
@@ -218,7 +242,7 @@ class TestAPI:
 
     @pytest.mark.skip(reason="")
     def test_api_getavailablerenderers(self):
-        renderers = self.napi.api.GetAvailableRenderers()
+        renderers = self.go.api.GetAvailableRenderers()
 
         self.is_api_status_ok()
 
@@ -226,7 +250,7 @@ class TestAPI:
 
     @pytest.mark.skip(reason="")
     def test_api_getavailablestorage(self):
-        storages = self.napi.api.GetAvailableStorage()
+        storages = self.go.api.GetAvailableStorage()
 
         self.is_api_status_ok()
 
@@ -234,13 +258,13 @@ class TestAPI:
 
     @pytest.mark.skip(reason="")
     def test_api_getdetailedstatus(self):
-        info = json.loads(self.napi.api.GetDetailedStatus("/aqt/render/" + ""))  # id
+        info = json.loads(self.go.api.GetDetailedStatus("/aqt/render/" + ""))  # id
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_api_getcurrentsystemtime(self):
-        cur_time = self.napi.api.GetCurrentSystemTime()
+        cur_time = self.go.api.GetCurrentSystemTime()
 
         self.is_api_status_ok()
 
@@ -248,19 +272,19 @@ class TestAPI:
 
     @pytest.mark.skip(reason="")
     def test_api_getparameters(self):
-        self.napi.api.GetParameters("entityName")
+        self.go.api.GetParameters("entityName")
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_api_setparameters(self):
-        self.napi.api.SetParameters("entityName", "{}")
+        self.go.api.SetParameters("entityName", "{}")
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_api_createissuereport(self):
-        self.napi.api.CreateIssueReport("test.txt", "summary", "description")
+        self.go.api.CreateIssueReport("test.txt", "summary", "description")
 
         self.is_api_status_ok()
 
@@ -268,7 +292,7 @@ class TestAPI:
 
     @pytest.mark.skip(reason="")
     def test_api_externalntpservername(self):
-        name = self.napi.api.ExternalNTPServerName()
+        name = self.go.api.ExternalNTPServerName()
 
         self.is_api_status_ok()
 
@@ -277,303 +301,372 @@ class TestAPI:
         sid = ""
         data = ""
 
-        self.napi.api.UserData(sid, data)
+        self.go.api.UserData(sid, data)
 
         self.is_api_status_ok()
 
-        udata = self.napi.api.UserData(sid)
+        udata = self.go.api.UserData(sid)
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_pandegrees(self):
-        self.napi.vs.PanDegrees()
+        self.go.vs.PanDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_minpandegrees(self):
-        self.napi.vs.MinPanDegrees()
+        self.go.vs.MinPanDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_maxpandegrees(self):
-        self.napi.vs.MaxPanDegrees()
+        self.go.vs.MaxPanDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_panspeeddegrees(self):
-        self.napi.vs.PanSpeedDegrees()
+        self.go.vs.PanSpeedDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_tiltdegrees(self):
-        self.napi.vs.TiltDegrees()
+        self.go.vs.TiltDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_mintiltdegrees(self):
-        self.napi.vs.MinTiltDegrees()
+        self.go.vs.MinTiltDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_maxtiltdegrees(self):
-        self.napi.vs.MaxTiltDegrees()
+        self.go.vs.MaxTiltDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_tiltspeeddegrees(self):
-        self.napi.vs.TiltSpeedDegrees()
+        self.go.vs.TiltSpeedDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_zoom(self):
-        self.napi.start_stream()
+        self.go.start_stream()
 
-        self.napi.vs.Zoom(0.5)  # random.uniform(0, 1)
+        self.go.vs.Zoom(0.5)  # random.uniform(0, 1)
 
         self.is_api_status_ok()
 
-        assert self.napi.frame.Zoom() == self.napi.vs.Zoom()
+        assert self.go.frame.Zoom() == self.go.vs.Zoom()
 
     @pytest.mark.skip(reason="")
     def test_vs_minzoom(self):
-        self.napi.vs.MinZoom()
+        self.go.vs.MinZoom()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_maxzoom(self):
-        self.napi.vs.MaxZoom()
+        self.go.vs.MaxZoom()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_zoomspeed(self):
-        self.napi.vs.ZoomSpeed()
+        self.go.vs.ZoomSpeed()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_horizontalfovdegrees(self):
-        self.napi.vs.HorizontalFOVDegrees()
+        self.go.vs.HorizontalFOVDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_vs_verticalfovdegrees(self):
-        self.napi.vs.VerticalFOVDegrees()
+        self.go.vs.VerticalFOVDegrees()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ts_playspeed(self):
-        self.napi.ts.PlaySpeed()
+        self.go.ts.PlaySpeed()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ts_time(self):
-        self.napi.ts.Time()
+        self.go.ts.Time()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_iss_minx(self):
-        self.napi.iss.MinX()
+        self.go.iss.MinX()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_iss_maxx(self):
-        self.napi.iss.MaxX()
+        self.go.iss.MaxX()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_iss_miny(self):
-        self.napi.iss.MinY()
+        self.go.iss.MinY()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_iss_maxy(self):
-        self.napi.iss.MaxY()
+        self.go.iss.MaxY()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ps_altitude(self):
-        self.napi.ps.Altitude()
+        self.go.ps.Altitude()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ps_latitude(self):
-        self.napi.ps.Latitude()
+        self.go.ps.Latitude()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ps_longitude(self):
-        self.napi.ps.Longitude()
+        self.go.ps.Longitude()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ps_pitch(self):
-        self.napi.ps.Pitch()
+        self.go.ps.Pitch()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ps_roll(self):
-        self.napi.ps.Roll()
+        self.go.ps.Roll()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_ps_roll(self):
-        self.napi.ps.Yaw()
+        self.go.ps.Yaw()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_canskip(self):
-        self.napi.sp.CanSkip()
+        self.go.sp.CanSkip()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_display(self):
-        self.napi.sp.Display()
+        self.go.sp.Display()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_framerate(self):
-        self.napi.sp.FrameRate()
+        self.go.sp.FrameRate()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_fullscreen(self):
-        self.napi.sp.FullScreen(False)
+        self.go.sp.FullScreen(False)
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_height(self):
-        self.napi.sp.Height(random.randint(0, 10e4))
+        self.go.sp.Height(random.randint(0, 10e4))
 
         self.is_api_status_ok()
 
-        self.napi.start_stream()
+        self.go.start_stream()
 
-        assert self.napi.frame.Height() == self.napi.sp.Height()
+        assert self.go.frame.Height() == self.go.sp.Height()
 
     @pytest.mark.skip(reason="")
     def test_sp_width(self):
-        self.napi.sp.Width(random.randint(0, 10e4))
+        self.go.sp.Width(random.randint(0, 10e4))
 
         self.is_api_status_ok()
 
-        self.napi.start_stream()
+        self.go.start_stream()
 
-        assert self.napi.frame.Width() == self.napi.sp.Width()
+        assert self.go.frame.Width() == self.go.sp.Width()
 
     @pytest.mark.skip(reason="")
     def test_sp_idrinterval(self):
-        self.napi.sp.IDRInterval()
+        self.go.sp.IDRInterval()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_quality(self):
-        self.napi.sp.Quality()
+        self.go.sp.Quality()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_type(self):
-        self.napi.sp.Type()
+        self.go.sp.Type()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_windowx(self):
-        self.napi.sp.WindowX()
+        self.go.sp.WindowX()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
     def test_sp_windowy(self):
-        self.napi.sp.WindowY()
+        self.go.sp.WindowY()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_addcamera(self):
-        self.napi.rapi.AddCamera("cam")
+    def test_api_addcamera(self):
+        self.go.api.AddCamera("cam")
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_boolparameter(self):
-        self.napi.rapi.BoolParameter()
+    def test_api_boolparameter(self):
+        self.go.api.BoolParameter()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_floatparameter(self):
-        self.napi.rapi.FloatParameter()
+    def test_api_floatparameter(self):
+        self.go.api.FloatParameter()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_getfloatparameterrange(self):
-        self.napi.rapi.GetFloatParameterRange()
+    def test_api_getfloatparameterrange(self):
+        self.go.api.GetFloatParameterRange()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_getnextframe(self):
-        self.napi.rapi.GetNextFrame()
+    def test_api_getnextframe(self):
+        self.go.api.GetNextFrame()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_removecamera(self):
-        self.napi.rapi.RemoveCamera("")
+    def test_api_removecamera(self):
+        self.go.api.RemoveCamera("")
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_setstreamingstate(self):
-        self.napi.rapi.SetStreamingState()
+    def test_api_setstreamingstate(self):
+        self.go.api.SetStreamingState()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_setstreamcallback(self):
-        self.napi.rapi.SetStreamCallback()
+    def test_api_setstreamcallback(self):
+        self.go.api.SetStreamCallback()
 
         self.is_api_status_ok()
 
     @pytest.mark.skip(reason="")
-    def test_rapi_softwareupdate(self):
+    def test_api_softwareupdate(self):
         sid = ""
         data = ""
         checksum = ""
 
-        update = AQT.Update(self.napi.api, sid)
+        update = AQT.Update(self.go.api, sid)
         update.Install(data, checksum)
 
         self.is_api_status_ok()
+
+    @pytest.mark.skip(reason="")
+    def test_api_createissuereport(self):
+        path = "/var/tmp/aqueti/test_"
+        summary = "test"
+        description = "test"
+
+        for i in range(0, 10):
+            self.go.api.CreateIssueReport(path + str(1) + '.txt', summary, description)
+
+            self.is_api_status_ok()
+
+    @pytest.mark.skip(reason="")
+    def test_api_refresh(self):
+        aqt_types = [AQT.aqt_STREAM_TYPE_H264, AQT.aqt_STREAM_TYPE_H265]
+
+        for aqt_type in aqt_types:
+            self.go.sp.Type(aqt_type)
+            self.go.start_stream()
+
+            is_i_frame_expected = False
+            for i in range(10):
+                if is_i_frame_expected:
+                    is_i_frame_expected = not is_i_frame_expected
+                    if aqt_types == AQT.aqt_STREAM_TYPE_H264:
+                        assert self.go.frame.Type() == AQT.aqt_H264_I_FRAME
+                    else:
+                        assert self.go.frame.Type() == AQT.aqt_H265_I_FRAME
+
+                self.go.get_next_frame()
+
+                if self.go.frame.Type() in (AQT.aqt_H264_P_FRAME, AQT.aqt_H265_P_FRAME):
+                    self.go.stream.Refresh()
+                    is_i_frame_expected = not is_i_frame_expected
+                    continue
+
+    @pytest.mark.skip(reason="")
+    def test_add_cam(self):
+        env = Environment()
+
+        self.go.create_stream()
+        cams = self.go.api.GetAvailableCameras()
+
+        #for i in range(5):
+        #    self.go.stream.AddCamera(cams[0].Name())
+
+        for cam in cams:
+            self.go.stream.AddCamera(cam.Name())
+
+        time.sleep(5)
+
+        assert env.render.get_status() != ""
+
+    @pytest.mark.skip(reason="")
+    def test_remove_cam(self):
+        self.go.create_stream()
+        cams = self.go.api.GetAvailableCameras()
+        renders = self.go.api.GetAvailableRenderers()
+
+        for cam in cams:
+            self.go.stream.AddCamera(cam.Name())
+
+            c_cam = self.go.get_detailed_status(
+                renders[0].Name() + "/" + self.go.get_detailed_status(renders[0].Name())['render_streams'][0])[
+                'SCOP_list'][0]
+
+            self.go.stream.RemoveCamera(cam.Name())
+
+            assert cam.Name() == "/aqt/camera/" + c_cam
