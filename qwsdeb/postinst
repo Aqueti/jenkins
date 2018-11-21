@@ -11,7 +11,7 @@ image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | h
 sys_name=`cat /etc/aqueti/daemonConfiguration.json | awk '{for(i=1;i<=NF;i++){ if(match($i,/system/)){ if($(i+1)==":") print $(i+2); else print $(i+1) } } }' | sed 's/"//g' | sed 's/,//g'`
 
 #if [ -z "${image_name}" ]; then
-    COMMANDTOSTARTDOCKER="docker run --rm -p 5000:5000 -e AQUETI_SYSTEM_NAME=${sys_name} -v /etc/localtime:/etc/localtime:ro -v /var/tmp/aqueti:/var/tmp/aqueti -v /home/${user_name}/.ssh:/root/.ssh ${image_name}"
+    COMMANDTOSTARTDOCKER="docker run --rm -P -p 5000:5000 -e AQUETI_SYSTEM_NAME=${sys_name} -v /etc/localtime:/etc/localtime:ro -v /var/tmp/aqueti:/var/tmp/aqueti -v /home/${user_name}/.ssh:/root/.ssh ${image_name}"
 
     HOMUNCULUSICON="#!/usr/bin/env xdg-open\n
     [Desktop Entry]\n
