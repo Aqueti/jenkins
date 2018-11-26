@@ -434,6 +434,35 @@ class TestAPIWebApp(BaseTest):
             assert info['framerate'] == framerate
 
     @pytest.mark.skip(reason="")
+    def test_archive(self):
+        def get_rnd_text():
+            ch_arr = [chr(ch) for ch in range(ord('a'), ord('z') + 1)]
+
+            res = [ch_arr[random.randint(1, len(ch_arr))] for i in range(random.randint(1, 32))]
+
+            return ''.join(res)
+
+        avp = AquetiViewerPage(self)
+        avp.navigate_to()
+
+        path = "/var/tmp/aqueti/"
+
+        for i in range(100):
+            alp = avp.click_login_lnk()
+
+            aaps = alp.login()
+
+            arch_name = get_rnd_text()
+            summary = get_rnd_text()
+            description = get_rnd_text()
+            aapi = aaps.click_submit_issue_lnk()
+            avp = aapi.submit_issue(arch_name, summary, description)
+
+            out = self.exec("unzip " + path + arch_name + ".zip")
+
+            assert "error" not in out
+    
+    @pytest.mark.skip(reason="")
     def test_autofocus(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
@@ -460,6 +489,142 @@ class TestAPIWebApp(BaseTest):
             time.sleep(60)
 
             aaps.make_screenshot()
+
+    @pytest.mark.skip(reason="")
+    def test_autofocus1(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page("12")
+
+        for i in range(1, 200): 
+            aapc.settings()
+
+            aapc.focus_tab()
+
+            aapc.ft_mode_btn()
+
+            aapc.ft_coarse_fine_lnk()
+
+            time.sleep(90)
+
+            aapc.advanced_tab()
+
+            aaps = aapc.click_settings_link()
+
+            rnd_sensor_id = [i for i in range(1,19)]
+
+            for sensor_id in rnd_sensor_id:
+                while not aaps.sensor_list.is_displayed():
+                    time.sleep(0.25)
+
+                aaps.select_sensor('120' + str(sensor_id))
+
+                time.sleep(2)
+
+                aaps.make_screenshot()
+
+            aapc = aaps.click_camera_page_lnk()
+
+
+    @pytest.mark.skip(reason="")
+    def test_autofocus2(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page("12")
+
+        aapc.settings()
+
+        aapc.focus_tab()
+
+        for i in range(1, 100):
+
+            aapc.ft_mode_btn()
+
+            aapc.ft_coarse_fine_lnk()
+
+            time.sleep(90)
+
+            aaps.make_screenshot()
+
+
+    @pytest.mark.skip(reason="")
+    def test_autofocus3(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page("12")
+
+        aapc.settings()
+
+        aapc.advanced_tab()
+
+        aaps = aapc.click_settings_link()
+
+        for i in range(1, 2000):             
+
+            rnd_sensor_id = [i for i in range(1,19)]
+
+            for sensor_id in rnd_sensor_id:
+                while not aaps.sensor_list.is_displayed():
+                    time.sleep(0.25)
+
+                aaps.select_sensor('120' + str(sensor_id))
+
+                time.sleep(2)
+
+                #aaps.make_screenshot()
+
+
+    #@pytest.mark.skip(reason="")
+    def test_autofocus4(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page("12")
+
+        aapc.settings()
+
+        aapc.advanced_tab()
+
+        aaps = aapc.click_settings_link() 
+
+        rnd_sensor_id = [i for i in range(1,19)]       
+
+        for i in range(1, 500):
+
+            for sensor_id in rnd_sensor_id:
+                while not aaps.sensor_list.is_displayed():
+                    time.sleep(0.25)
+
+                aaps.select_sensor('120' + str(sensor_id))
+
+                if not aaps.focus_val_input.is_displayed():
+                    aaps.sensor_settings()           
+
+                aapc.ft_mode_btn()
+
+                #aapc.ft_coarse_fine_lnk()
+                aapc.ft_fine_lnk()
+
+            time.sleep(20)
+
+            for sensor_id in rnd_sensor_id:
+                aaps.select_sensor('120' + str(sensor_id))
+
+                time.sleep(2)
+
+                aaps.make_screenshot()
+
 
     @pytest.mark.skip(reason="")
     def test_gennewmodel(self):
@@ -505,20 +670,20 @@ class TestAPIWebApp(BaseTest):
         aapc = aaps.open_cam_page(self.cam_id)
         aapc.settings()
 
-        for i in range(1, 1000):
+        for i in range(1, 300):
             aapc.focus_tab()
 
             aapc.ft_mode_btn()
 
             aapc.ft_coarse_fine_lnk()
 
-            time.sleep(120)
+            time.sleep(90)
 
             aapc.advanced_tab()
 
             aaps = aapc.click_settings_link()
 
-            rnd_sensor_id = [random.randint(1, 18) for i in range(0, random.randint(1, 9))]
+            rnd_sensor_id = [random.randint(1, 18) for i in range(0, random.randint(10, 20))]
 
             for sensor_id in set(rnd_sensor_id):
                 while not aaps.sensor_list.is_displayed():
@@ -543,43 +708,17 @@ class TestAPIWebApp(BaseTest):
 
             aapc.calibrate_btn()
 
-            time.sleep(240)
+            time.sleep(250)
 
-            args = ['mkdir', '/var/tmp/aqueti/modelgen_' + str(i)]
-            subprocess.Popen(args).wait()
-            args = ['cp', '-r', '/var/tmp/aqueti/modelgen/*.*', '/var/tmp/aqueti/modelgen_' + str(i)]
-            subprocess.Popen(args).wait()
+            os.system('rm -rf /var/tmp/aqueti/modelgen/H26X/')           
+            
+            args = ['cp', '-r', '/var/tmp/aqueti/modelgen/', '/var/tmp/aqueti/modelgen_' + str(i)]
+            subprocess.Popen(args)
+            time.sleep(1)
 
-            aaps.make_screenshot()
+            os.system('rm -rf /var/tmp/aqueti/modelgen/')
 
-    @pytest.mark.skip(reason="")
-    def test_archive(self):
-        def get_rnd_text():
-            ch_arr = [chr(ch) for ch in range(ord('a'), ord('z') + 1)]
-
-            res = [ch_arr[random.randint(1, len(ch_arr))] for i in range(random.randint(1, 32))]
-
-            return ''.join(res)
-
-        avp = AquetiViewerPage(self)
-        avp.navigate_to()
-
-        path = "/var/tmp/aqueti/"
-
-        for i in range(100):
-            alp = avp.click_login_lnk()
-
-            aaps = alp.login()
-
-            arch_name = get_rnd_text()
-            summary = get_rnd_text()
-            description = get_rnd_text()
-            aapi = aaps.click_submit_issue_lnk()
-            avp = aapi.submit_issue(arch_name, summary, description)
-
-            out = self.exec("unzip " + path + arch_name + ".zip")
-
-            assert "error" not in out
+            # aaps.make_screenshot()
 
 
 class TestQAdmin(BaseTest):
