@@ -38,8 +38,12 @@ if "--help" in sys.argv:
 
 if "--cam" in sys.argv:
     cam_id = sys.argv[sys.argv.index("--cam") + 1]
-
-    if cam_id == str(4):
+    
+    if cam_id == str(2):
+        cam_ip = '10.1.2.'
+        start_ip = 1
+        num_of_tegras = 10
+    elif cam_id == str(4):
         cam_ip = '10.1.4.'
         start_ip = 1
         num_of_tegras = 10
@@ -47,38 +51,22 @@ if "--cam" in sys.argv:
         cam_ip = '10.1.7.'
         start_ip = 1
         num_of_tegras = 10
-    elif cam_id == str(8):
-        cam_ip = '10.0.8.'
-        start_ip = 1
-        num_of_tegras = 10
     elif cam_id == str(9):
         cam_ip = '10.1.9.'
-        start_ip = 1
-        num_of_tegras = 9
-    elif cam_id == str(11):
-        cam_ip = '10.1.11.'
         start_ip = 1
         num_of_tegras = 9
     elif cam_id == str(12):
         cam_ip = '10.1.12.'
         start_ip = 1
         num_of_tegras = 9
-    elif cam_id == str(14):
-        cam_ip = '10.1.14.'
+    elif cam_id == str(18):
+        cam_ip = '10.1.18.'
         start_ip = 1
         num_of_tegras = 10
-    elif cam_id == str(15):
-        cam_ip = '10.1.4.'
-        start_ip = 1
-        num_of_tegras = 10
-    elif cam_id == str(166):        
+    elif cam_id == str(77):        
         cam_ip = '192.168.10.'
         start_ip = 1       
-        num_of_tegras = 5
-    elif cam_id == str(159):
-        cam_ip = '192.168.10.'
-        start_ip = 6
-        num_of_tegras = 5
+        num_of_tegras = 10
     else:
         cam_ip = ''
 else:
