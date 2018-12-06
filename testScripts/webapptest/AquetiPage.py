@@ -6,7 +6,7 @@ class AquetiPage(BasePage):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = "http://10.0.0.232:5000"
+    base_url = "http://10.0.0.120:5001"
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
@@ -140,7 +140,7 @@ class AquetiAdminPage(AquetiPage):
     def thumbnail_btn(self): return self.find_by(css="button.sidebar-toggle")
 
     @property
-    def submit_issue_lnk(self): return self.find_by(css="#navbarSupportedContent a:contains(Submit Issue)")
+    def submit_issue_lnk(self): return self.find_by(css="a[href='/submit_issue']")
 
     @property
     def logout_lnk(self): return self.find_by(id="logout")
@@ -157,7 +157,13 @@ class AquetiAdminPage(AquetiPage):
     def viewer_chkb(self): return self.find_by(id="viewer_enabled")
 
     @property
-    def viewer_encoding_dd(self): return self.find_by(id="viewer_encoding")
+    def viewer_encoding_dd(self): return self.find_by(css="button[data-id='viewer_encoding']")
+
+    @property
+    def viewer_direct_lnk(self): return self.find_by(xpath="//span[contains(., 'DIRECT')]")
+
+    @property
+    def viewer_webstream_lnk(self): return self.find_by(xpath="//span[contains(., 'WEBSTREAM')]")  
     
     @property
     def viewer_width_field(self): return self.find_by(id="viewer_width")
@@ -190,7 +196,7 @@ class AquetiAdminPage(AquetiPage):
     def viewer_close_btn(self): return self.find_by(css="button:contains(Close)")
 
     @property
-    def viewer_update_btn(self): return self.find_by(css="button:contains(Update)")
+    def viewer_update_btn(self): return self.find_by(id="updateSystemSettings")
 
     def __init__(self, *args):
         AquetiPage.__init__(self, *args)
@@ -201,6 +207,10 @@ class AquetiAdminPage(AquetiPage):
         self.logout_lnk()
 
         return AquetiViewerPage(self.test)
+
+    def click_submit_issue_lnk(self):
+        self.submit_issue_lnk()
+        return AquetiAdminPageIssue(self.test)
 
     def click_links(self):
         self.sidebar_cameras()
