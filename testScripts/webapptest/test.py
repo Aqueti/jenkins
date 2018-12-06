@@ -719,6 +719,30 @@ class TestAPIWebApp(BaseTest):
             os.system('rm -rf /var/tmp/aqueti/modelgen/')
 
             # aaps.make_screenshot()
+    
+    @pytest.mark.skip(reason="")
+    def test_switch_to_fovea(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+
+        aapc = aaps.open_cam_page("7")
+
+        for i in range(200):        
+            aapc.settings_btn()
+
+            aapc.viewer_encoding_dd()
+
+            if i % 2 == 0:
+                aapc.viewer_direct_lnk()
+            else:                
+                aapc.viewer_webstream_lnk()
+
+            aapc.viewer_update_btn()
+
+
+            time.sleep(10)
 
 
 class TestQAdmin(BaseTest):
