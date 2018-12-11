@@ -23,6 +23,9 @@ except ImportError:
 class TD:
     username = "admin"
     password = "1234"
+    
+    file_name = "test"
+    expected_nw_usage = 200   # mb/s
 
 
 class TestWebApp(BaseTest):
@@ -583,7 +586,7 @@ class TestAPIWebApp(BaseTest):
                 #aaps.make_screenshot()
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_autofocus4(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
@@ -748,7 +751,9 @@ class TestAPIWebApp(BaseTest):
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
-    cam_id = '12'
+    env = Environment(render_ip="10.0.0.249", cam_ip="10.1.7.10")
+
+    cam_id = '77'
 
     def find_diff(self, path):
         db_name = "acos"
@@ -1101,6 +1106,39 @@ class TestQAdmin(BaseTest):
             time.sleep(240)
 
             assert self.get_col_obj("acos", "models").count() == (num_of_docs + 1)
+    
+    @pytest.mark.skip(reason="")
+    def test_submit_issue(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.submit_issue_icon()
+        qad.submit_issue(filename=TD.file_name, summary="test", description="test")
+
+        time.sleep(5)
+
+        assert os.path.isfile("/var/tmp/aqueti/" + TD.file_name + ".zip")
+
+    @pytest.mark.skip(reason="")
+    def test_cs_type(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qad.settings_icon()
+
+        types = ['H264', 'LOCALDISPLAY']
+        for type in types:
+            qad.customize_stream_btn()
+            time.sleep(0.25)
+
+            qad.type_dd()
+            qad.get_dd_elem(type)(act="click")
+
+            qad.cs_update_btn()
+
+            time.sleep(30)
+
+            assert math.fabs(1 - self.env.render.get_nw_usage("enp60s0")/TD.expected_nw_usage) <= 0.05
 
 
 class TestState(BaseTest):
