@@ -29,7 +29,7 @@ class GO:
 
     def __init__(self):
         urls = AQT.StringVector()
-        urls.push_back("aqt://Camera2")
+        urls.push_back("aqt://Camera149")
         self.api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
 
         self.vs = AQT.ViewState(self.api)
@@ -670,3 +670,22 @@ class Test_API(BaseTest):
             self.go.stream.RemoveCamera(cam.Name())
 
             assert cam.Name() == "/aqt/camera/" + c_cam
+
+
+   # @pytest.mark.skip(reason="")
+    def test_remove_cam2(self):
+        self.go.create_stream()
+        cams = self.go.api.GetAvailableCameras()
+        renders = self.go.api.GetAvailableRenderers()
+
+        aqt_cam = None
+        for cam in cams:
+            if cam.Name() == '/aqt/camera/9':
+                aqt_cam = AQT.Camera(self.go.api, cam.Name())
+
+        #pprint.pprint(self.go.get_detailed_status(renders[0].Name()))
+
+        ranges = aqt_cam.GetStoredDataRanges()
+
+        for range in ranges:
+            print(range.Start().tv_sec, range.End().tv_sec)
