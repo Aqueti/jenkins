@@ -151,7 +151,33 @@ class QAdminSidebar:
         return QAdminRenderStreams(self.test)
 
 
-class QAdminPage(BasePage, QAdminSidebar):
+class QPage:
+    def get_dd_elem(self, val, is_contain=True):
+        if is_contain:
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a")
+        else:
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
+
+
+class QStreamBox(QPage):
+    @property
+    def video_box(self): return self.find_by(id="playerCanvas")
+
+    @property
+    def cam_select_dd(self): return self.find_by(id="camera_select")
+
+    @property
+    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
+
+    def get_slider(self, val):
+        return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
+
+
+class QViewPage(BasePage, QStreamBox):
+    pass
+
+
+class QAdminPage(BasePage, QPage, QAdminSidebar):
     @property
     def side_icon(self): return self.find_by(css="button.v-toolbar__side-icon.v-btn.v-btn--icon div.v-btn__content")
 
@@ -168,7 +194,54 @@ class QAdminPage(BasePage, QAdminSidebar):
     def ping_time_fld(self): return self.find_by(css="span.v-tooltip.v-tooltip--bottom:nth-child(3n)")
 
     @property
-    def submit_issue_icon(self): return self.find_by(css="div.v-dialog__activator div.v-btn__content")
+    def submit_issue_icon(self): return self.find_by(xpath="//i[contains(., 'report_problem')]")
+
+# Submit Issue
+
+    @property
+    def si_filename_txt(self): return self.find_by(css="input[aria-label='Filename']")
+
+    @property
+    def si_summary_txt(self): return self.find_by(css="textarea[aria-label='Summary']")
+
+    @property
+    def si_description_txt(self): return self.find_by(css="textarea[aria-label='Description']")
+
+    @property
+    def si_submit_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Submit')]")
+
+    @property
+    def si_close_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Close')]")
+
+# Settings
+
+    @property
+    def settings_icon(self): return self.find_by(css="div.v-menu__activator button")
+
+    @property
+    def customize_stream_btn(self): return self.find_by(xpath="//div[@class = 'v-list__tile' and contains(., 'Customize Stream')]//div[@class = 'v-list__tile__action']//i")
+
+    @property
+    def refresh_stream_btn(self): return self.find_by(xpath="//div[@class = 'v-list__tile' and contains(., 'Refresh Stream')]//div[@class = 'v-list__tile__action']//i")
+
+    @property
+    def cs_update_btn(self): return self.find_by(xpath="//button/div[contains(., 'Update')]")
+
+    @property
+    def cs_cancel_btn(self): return self.find_by(xpath="//button/div[contains(., 'Cancel')]")
+
+    @property
+    def type_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Type')]/..")
+
+    @property
+    def display_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Display')]/..")
+
+    @property
+    def framerate_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Framerate')]/..")
+
+    @property
+    def projection_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Projection')]/..")
+
 
     @property
     def locale_dd(self): return self.find_by(css="input[aria-label='Locale']")
@@ -176,7 +249,14 @@ class QAdminPage(BasePage, QAdminSidebar):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = "http://10.0.0.232:5000/#/"
+    base_url = "http://10.0.0.249/admin/#/"
+
+    def submit_issue(self, *args, **kwargs):
+        self.si_filename_txt(value=kwargs["filename"])
+        self.si_summary_txt(value=kwargs["summary"])
+        self.si_description_txt(value=kwargs["description"])
+
+        self.si_submit_btn()
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
@@ -233,11 +313,6 @@ class QAdminDashboard(QAdminPage):
 
     @property
     def render_version(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Render')]/../span)[2]")
-
-    def click_system_lnk(self):
-        self.system_lnk()
-
-        return QAdminSystem(self.test)
 
     def click_camera_lnk(self):
         self.camera_lnk()
@@ -310,27 +385,7 @@ class QAdminCamera(QAdminPage):
         QAdminPage.__init__(self, *args)
 
 
-class QAdminStreamBox:
-    @property
-    def video_box(self): return self.find_by(id="playerCanvas")
-
-    @property
-    def cam_select_dd(self): return self.find_by(id="camera_select")
-
-    @property
-    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
-
-    def get_dd_elem(self, val, is_contains=True):
-        if is_contains:
-            return self.find_by(xpath="//div[contains(@class,'v-list__tile__title') and contains(.,'" + val + "')]")
-        else:
-            return self.find_by(xpath="//div[contains(@class,'v-list__tile__title') and text()='" + val + "']")
-
-    def get_slider(self, val):
-        return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
-
-
-class QAdminCameraReservations(QAdminPage, QAdminStreamBox):
+class QAdminCameraReservations(QAdminPage, QStreamBox):
     @property
     def reserv_panel(self): return self.find_by(xpath="//nav[contains(@class,'v-toolbar grey darken-4')]//button[contains(@class,'v-toolbar__side-icon v-btn v-btn--icon')]")
 
@@ -362,7 +417,7 @@ class QAdminCameraReservations(QAdminPage, QAdminStreamBox):
         QAdminPage.__init__(self, *args)
 
 
-class QAdminCameraSettings(QAdminPage, QAdminStreamBox):
+class QAdminCameraSettings(QAdminPage, QStreamBox):
     @property
     def image_tab(self): return self.find_by(xpath="//nav//a[contains(.,'Image')]")
 
@@ -454,7 +509,7 @@ class QAdminCameraSettings(QAdminPage, QAdminStreamBox):
         QAdminPage.__init__(self, *args)
 
 
-class QAdminCameraMicrocameras(QAdminPage, QAdminStreamBox):
+class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
     @property
     def microcamera_dd(self): return self.find_by(xpath="//input[@id='microcamera_select']/../../div[@class='v-input__append-inner']")
 
