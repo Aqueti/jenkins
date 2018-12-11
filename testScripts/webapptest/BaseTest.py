@@ -109,15 +109,6 @@ class BaseTest(object):
         else:
             return result.stderr.decode('utf-8')
 
-    def get_nw_usage(eth_name, sleep_duration = 1):
-        cmd = "cat /proc/$(pgrep AquetiDaemon)/net/dev | grep " + eth_name + " | awk '{print$2}'"
-
-        start = int(exec(cmd).strip())
-        time.sleep(sleep_duration)
-        stop = int(exec(cmd).strip())
-
-        return (stop - start) * 8 / 1024 ** 2
-
     def get_col_obj(self, db_name, col_name):
         if db_name == "":
             if col_name in ('models', 'reservations', 'scops', 'tracks'):
