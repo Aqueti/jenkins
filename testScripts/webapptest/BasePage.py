@@ -54,7 +54,7 @@ class BasePage:
 
         WebElement.__call__ = call
 
-        self.TIMEOUT = 2
+        self.TIMEOUT = 10
 
         if "Context" in str(type(args[0])):
             self.driver = args[0].test.driver
@@ -144,7 +144,7 @@ class BasePage:
             err_msg = "Element not found: " + str(kwargs) + "\n"
             self.__add_to_log(err_msg)
             if self.test is not None:
-                self.test.fail(err_msg)
+                self.test.failure_exception(err_msg)
 
         return elems
 

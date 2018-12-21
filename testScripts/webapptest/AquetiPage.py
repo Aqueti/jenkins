@@ -6,7 +6,7 @@ class AquetiPage(BasePage):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = "http://10.0.0.120:5001"
+    base_url = "http://10.0.0.232:5001"
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
@@ -113,19 +113,19 @@ class AquetiAdminPage(AquetiPage):
     def sidebar_system_lnk(self): return self.find_by(partial_link_text="System")
 
     @property
-    def sidebar_cameras_lnk(self): return self.find_by(partial_link_text="Cameras")
+    def sidebar_cameras_lnk(self): return self.find_by(xpath="//ul[@id='cameraDropdown']/../a")
 
     @property
     def camera_list(self): return self.find_by(id="cameraDropdown")
 
     @property
-    def sidebar_data_lnk(self): return self.find_by(partial_link_text="Data")
+    def sidebar_data_lnk(self): return self.find_by(xpath="//ul[@id='storageDropdown']/../a")
 
     @property
     def storage_list(self): return self.find_by(id="storageDropdown")
 
     @property
-    def sidebar_render_lnk(self): return self.find_by(partial_link_text="Render")
+    def sidebar_render_lnk(self): return self.find_by(xpath="//ul[@id='renderDropdown']/../a")
 
     @property
     def render_list(self): return self.find_by(id="renderDropdown")
@@ -219,14 +219,56 @@ class AquetiAdminPage(AquetiPage):
         self.sidebar_logs()
         self.sidebar_system()
 
-    def open_cam_page(self, cam_id):
+    def open_cam_page(self, cam_id=""):
         cam_links = [lnk for lnk in self.camera_list.find_elements_by_tag_name('a')]
 
-        for lnk in cam_links:
-            href = lnk.get_attribute("href")
-            if href[href.rindex('/') + 1:] == cam_id:
-                lnk.click()
-                return AquetiAdminPageCamera(self.test)
+        if self.sidebar_cameras_lnk.get_attribute('aria-expanded') == "false":
+            self.sidebar_cameras_lnk()
+            time.sleep(1)
+
+        if cam_id != "":
+            for lnk in cam_links:
+                href = lnk.get_attribute("href")
+                if href[href.rindex('/') + 1:] == cam_id:
+                    lnk.click()
+        else:
+            cam_links[0]()
+
+        return AquetiAdminPageCamera(self.test)
+
+    def open_storage_page(self, data_id=""):
+        st_links = [lnk for lnk in self.storage_list.find_elements_by_tag_name('a')]
+
+        if self.sidebar_data_lnk.get_attribute('aria-expanded') == "false":
+            self.sidebar_data_lnk()
+            time.sleep(1)
+
+        if data_id != "":
+            for lnk in st_links:
+                href = lnk.get_attribute("href")
+                if href[href.rindex('/') + 1:] == data_id:
+                    lnk.click()
+        else:
+            st_links[0]()
+
+        return AquetiAdminPageStorage(self.test)
+
+    def open_render_page(self, render_id=""):
+        rnd_links = [lnk for lnk in self.render_list.find_elements_by_tag_name('a')]
+
+        if self.sidebar_render_lnk.get_attribute('aria-expanded') == "false":
+            self.sidebar_render_lnk()
+            time.sleep(1)
+
+        if render_id != "":
+            for lnk in rnd_links:
+                href = lnk.get_attribute("href")
+                if href[href.rindex('/') + 1:] == render_id:
+                    lnk.click()
+        else:
+            rnd_links[0]()
+
+        return AquetiAdminPageRender(self.test)
 
 
 class AquetiAdminPageSystem(AquetiAdminPage):
@@ -239,7 +281,7 @@ class AquetiAdminPageSystem(AquetiAdminPage):
     @property
     def render_list(self): return self.find_by(id="render")
 
-    page_url = AquetiAdminPage.base_url + "/system"
+    page_url = AquetiPage.base_url + "/system"
 
     def __init__(self, *args):
         AquetiAdminPage.__init__(self, *args)
@@ -483,6 +525,9 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     @property
     def settings(self): return self.find_by(id="headingSettings")
 
+    @property
+    def recording_btn(self): return self.find_by(xpath="//input[@id='recording-toggle']/..")
+
 # Settings
 
     @property
@@ -646,6 +691,72 @@ class AquetiAdminPageStorage(AquetiAdminPage):
 
     @property
     def update_nickname_pic(self): return self.find_by(css="a[data-target='#change_nickname']")
+
+    @property
+    def data_module_settings_tab(self): return self.find_by(id="headingSensor")
+
+    @property
+    def block_size_txt(self): return self.find_by(id="blockSize")
+
+    @property
+    def block_size_plus(self): return self.find_by(xpath="//input[@id='blockSize']/..//button[contains(., '+')]")
+
+    @property
+    def block_size_minus(self): return self.find_by(xpath="//input[@id='blockSize']/..//button[contains(., '-')]")
+
+    @property
+    def blocks_per_cont_txt(self): return self.find_by(id="blocksPerContainer")
+
+    @property
+    def blocks_per_cont_plus(self): return self.find_by(xpath="//input[@id='blocksPerContainer']/..//button[contains(., '+')]")
+
+    @property
+    def blocks_per_cont_minus(self): return self.find_by(xpath="//input[@id='blocksPerContainer']/..//button[contains(., '-')]")
+
+    @property
+    def max_storage_threads_txt(self): return self.find_by(id="maxStorageThreads")
+
+    @property
+    def max_storage_threads_plus(self): return self.find_by(xpath="//input[@id='maxStorageThreads']/..//button[contains(., '+')]")
+
+    @property
+    def max_storage_threads_minus(self): return self.find_by(xpath="//input[@id='maxStorageThreads']/..//button[contains(., '-')]")
+
+    @property
+    def cache_size_txt(self): return self.find_by(id="cacheSize")
+
+    @property
+    def cache_size_plus(self): return self.find_by(xpath="//input[@id='cacheSize']/..//button[contains(., '+')]")
+
+    @property
+    def cache_size_minus(self): return self.find_by(xpath="//input[@id='cacheSize']/..//button[contains(., '-')]")
+
+    @property
+    def gc_threshold_txt(self): return self.find_by(id="garbageCollectionThreshold")
+
+    @property
+    def gc_threshold_plus(self): return self.find_by(xpath="//input[@id='garbageCollectionThreshold']/..//button[contains(., '+')]")
+
+    @property
+    def gc_threshold_minus(self): return self.find_by(xpath="//input[@id='garbageCollectionThreshold']/..//button[contains(., '-')]")
+
+    @property
+    def max_disk_usage_txt(self): return self.find_by(id="maxDiskUsage")
+
+    @property
+    def max_disk_usage_plus(self): return self.find_by(xpath="//input[@id='maxDiskUsage']/..//button[contains(., '+')]")
+
+    @property
+    def max_disk_usage_minus(self): return self.find_by(xpath="//input[@id='maxDiskUsage']/..//button[contains(., '-')]")
+
+    @property
+    def gc_interval_txt(self): return self.find_by(id="garbageCollectionInterval")
+
+    @property
+    def gc_interval_plus(self): return self.find_by(xpath="//input[@id='garbageCollectionInterval']/..//button[contains(., '+')]")
+
+    @property
+    def gc_interval_minus(self): return self.find_by(xpath="//input[@id='garbageCollectionInterval']/..//button[contains(., '-')]")
 
 # Edit Component
 

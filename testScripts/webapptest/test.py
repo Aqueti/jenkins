@@ -232,12 +232,12 @@ class TestWebApp(BaseTest):
 class TestAPIWebApp(BaseTest):
     browser = "chrome"
 
-    cam_id = "12"
+    cam_id = "9"
     cam_path = "/aqt/camera" + cam_id
-    server_path = "http://10.0.0.232:5000/video/video_feed"
+    server_path = "http://10.0.0.232:5001/video/video_feed"
 
     urls = AQT.StringVector()
-    urls.push_back("aqt://Camera12")
+    urls.push_back("aqt://Camera9")
     api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
 
     def vector_to_array(self, c_vector):
@@ -723,6 +723,7 @@ class TestAPIWebApp(BaseTest):
 
             # aaps.make_screenshot()
     
+
     @pytest.mark.skip(reason="")
     def test_switch_to_fovea(self):
         alp = AquetiLoginPage(self)
@@ -732,20 +733,57 @@ class TestAPIWebApp(BaseTest):
 
         aapc = aaps.open_cam_page("7")
 
-        for i in range(200):        
+        for i in range(200):
             aapc.settings_btn()
 
             aapc.viewer_encoding_dd()
 
             if i % 2 == 0:
                 aapc.viewer_direct_lnk()
-            else:                
+            else:
                 aapc.viewer_webstream_lnk()
 
             aapc.viewer_update_btn()
 
 
             time.sleep(10)
+
+
+    # @pytest.mark.skip(reason="")
+    def test_block_per_cont(self):
+        alp = AquetiLoginPage(self)
+        alp.navigate_to()
+
+        aaps = alp.login()
+        aapc = aaps
+
+        cache_size = 10000
+        while True:
+            for i in range(16):
+                aapst = aapc.open_storage_page()
+
+                aapst.data_module_settings_tab(act="click")
+
+                aapst.blocks_per_cont_txt(value=str(i))
+                aapst.blocks_per_cont_plus()
+
+                aapst.max_storage_threads_txt(value=str(i))
+                aapst.max_storage_threads_plus()
+
+                aapc = aapst.open_cam_page("9")
+
+                aapc.recording_btn()
+
+                time.sleep(4*60)
+
+                aapc.recording_btn()
+
+                time.sleep(0.25*60)
+
+            time.sleep(2*60)
+
+            aapst.cache_size_txt(value=str(cache_size + cache_size*(i//2)))
+            aapst.cache_size_plus()
 
 
 class TestQAdmin(BaseTest):
@@ -1146,6 +1184,7 @@ class TestState(BaseTest):
 
     env = Environment(render_ip="127.0.0.1", cam_ip="192.168.10.1")
 
+    @pytest.mark.skip(reason="")
     def clear_state(self, render_path, tegra_path):
         self.env.cam.copy_remote_file(path_to=render_path, path_from=tegra_path, from_tegra=[1])
 
