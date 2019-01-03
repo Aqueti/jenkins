@@ -39,7 +39,7 @@ if "--help" in sys.argv:
 if "--cam" in sys.argv:
     cam_id = sys.argv[sys.argv.index("--cam") + 1]
     
-    if cam_id == str(9) || cam_id == str(12):
+    if cam_id == str(9) or cam_id == str(12):
         cam_ip = '10.1.' + cam_id + '.'
         start_ip = 1
         num_of_tegras = 9
