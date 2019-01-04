@@ -1,0 +1,46 @@
+#!/bin/sh
+
+service asisd stop
+
+docker rm -f $(docker ps -a -f status=exited -q)
+docker rmi $(docker images "asis_*" -q --no-trunc)
+
+# load docker image
+zcat /tmp/asis-image*.tar.gz | docker load
+
+# set up asisd service
+cp /tmp/asisd.service /etc/systemd/system
+cp /tmp/docker-compose.yml /etc/aqueti
+
+systemctl daemon-reload
+systemctl enable asisd.service
+service asisd start
+
+user_name=$SUDO_USER
+image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | head -1`
+sys_name=`cat /etc/aqueti/daemonConfiguration.json | awk '{for(i=1;i<=NF;i++){ if(match($i,/system/)){ if($(i+1)==":") print $(i+2); else print $(i+1) } } }' | sed 's/"//g' | sed 's/,//g'`
+
+#if [ -z "${image_name}" ]; then
+#    COMMANDTOSTARTDOCKER="sudo docker-compose up"
+#    PATHTODOCKERCOMPOSE="/path/to/docker/compose"
+#
+#    HOMUNCULUSICON="#!/usr/bin/env xdg-open\n
+#    [Desktop Entry]\n
+#    Version=1.0\n
+#    Name=QWebServer\n
+#    Exec=$COMMANDTOSTARTDOCKER\n
+#    Path=\n
+#    Icon=/etc/aqueti/icons/AquetiLogo.png\n
+#    Terminal=true\n
+#    Type=Application\n
+#    Categories=Development"
+#    HOMUNCULUSICONPATH="/home/${user_name}/Desktop/QWebServer.desktop"
+#    echo $HOMUNCULUSICON > $HOMUNCULUSICONPATH
+#    chown ${user_name}:${user_name} $HOMUNCULUSICONPATH
+#    chmod +x $HOMUNCULUSICONPATH
+#fi
+
+# delete temporary files
+rm /tmp/asis-image*.tar.gz /tmp/asisd.service /tmp/docker-compose.yml
+
+exit 0

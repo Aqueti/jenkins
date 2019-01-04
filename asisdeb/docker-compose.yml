@@ -1,0 +1,31 @@
+version: "3"
+services:
+  nginx:
+    image: asis_nginx
+      #context: .
+      #dockerfile: ./nginx/Dockerfile
+    ports:
+      - 80:80
+    container_name: nginx_container
+    networks:
+      - aqueti_net
+    restart: on-failure
+  asis:
+    image: asis_asis
+      #context: .
+      #dockerfile: ./Dockerfile
+    container_name: asis_container
+    networks:
+      - aqueti_net
+    restart: on-failure
+  janus:
+    image: asis_janus
+      #context: .
+      #dockerfile: ./janus/Dockerfile
+    container_name: janus_container
+    networks:
+      - aqueti_net
+    restart: on-failure
+networks:
+  aqueti_net:
+    driver: bridge
