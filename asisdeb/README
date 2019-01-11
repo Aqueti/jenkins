@@ -1,3 +1,9 @@
+To build a package:
+run saveAsisImages.sh
+run makeAsisDeb.sh
+
+
+
 Asis dev release installation instructions
 
 docker must be installed
@@ -9,6 +15,6 @@ sudo curl -L "https://github.com/docker/compose/releases/download/1.23.1/docker-
 
 sudo chmod +x /usr/local/bin/docker-compose
 
-Download the .deb package: Asis.deb
+Download and install the .deb package: Asis.deb
 
 sudo dpkg -i Asis.deb
