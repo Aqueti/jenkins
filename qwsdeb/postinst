@@ -1,34 +1,60 @@
 #!/bin/sh
 
+user_name=$SUDO_USER
+image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | head -1`
+sys_name=`cat /etc/aqueti/daemonConfiguration.json | awk '{for(i=1;i<=NF;i++){ if(match($i,/system/)){ if($(i+1)==":") print $(i+2); else print $(i+1) } } }' | sed 's/"//g' | sed 's/,//g'`
+
+service homunculusd stop
+
 docker rm -f $(docker ps -a -f status=exited -q)
 docker rmi $(docker images "aqueti/*" -q --no-trunc)
 
 # load docker image
 zcat /tmp/QWebServer-image*.tar.gz | docker load
 
-user_name=$SUDO_USER
-image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | head -1`
-sys_name=`cat /etc/aqueti/daemonConfiguration.json | awk '{for(i=1;i<=NF;i++){ if(match($i,/system/)){ if($(i+1)==":") print $(i+2); else print $(i+1) } } }' | sed 's/"//g' | sed 's/,//g'`
+cp /tmp/homunculusd.service /etc/systemd/system
+mkdir /etc/aqueti/homunculus
+rm /etc/aqueti/homunculus/docker-compose.yml
+touch /etc/aqueti/homunculus/docker-compose.yml
+echo "version: '3'
+services:
+  homunculus:
+    image: aqueti/dev:2.0.5.5
+    environment:
+      - AQUETI_SYSTEM_NAME=${sys_name}
+    ports:
+      - 5000:5000
+    volumes:
+      - /var/log/aqueti:/var/log/supervisor
+      - /var/tmp/aqueti:/var/tmp/aqueti
+      - /etc/localtime:/etc/localtime
+      - /home/${user_name}/.ssh:/root/.ssh
+    restart: always" > /etc/aqueti/homunculus/docker-compose.yml
 
+systemctl daemon-reload
+systemctl enable homunculusd.service
+service homunculusd start
+
+# old stuff for creating desktop icon
 #if [ -z "${image_name}" ]; then
-    COMMANDTOSTARTDOCKER="docker run --rm -P -p 5000:5000 -e AQUETI_SYSTEM_NAME=${sys_name} -v /etc/localtime:/etc/localtime:ro -v /var/tmp/aqueti:/var/tmp/aqueti -v /home/${user_name}/.ssh:/root/.ssh ${image_name}"
+    # COMMANDTOSTARTDOCKER="docker run --rm -P -p 5000:5000 -e AQUETI_SYSTEM_NAME=${sys_name} -v /etc/localtime:/etc/localtime:ro -v /var/tmp/aqueti:/var/tmp/aqueti -v /home/${user_name}/.ssh:/root/.ssh ${image_name}"
 
-    HOMUNCULUSICON="#!/usr/bin/env xdg-open\n
-    [Desktop Entry]\n
-    Version=1.0\n
-    Name=QWebServer\n
-    Exec=$COMMANDTOSTARTDOCKER\n
-    Icon=/etc/aqueti/icons/AquetiLogo.png\n
-    Terminal=true\n
-    Type=Application\n
-    Categories=Development"
-    HOMUNCULUSICONPATH="/home/${user_name}/Desktop/QWebServer.desktop"
-    echo $HOMUNCULUSICON > $HOMUNCULUSICONPATH
-    chown ${user_name}:${user_name} $HOMUNCULUSICONPATH
-    chmod +x $HOMUNCULUSICONPATH
+    # HOMUNCULUSICON="#!/usr/bin/env xdg-open\n
+    # [Desktop Entry]\n
+    # Version=1.0\n
+    # Name=QWebServer\n
+    # Exec=$COMMANDTOSTARTDOCKER\n
+    # Icon=/etc/aqueti/icons/AquetiLogo.png\n
+    # Terminal=true\n
+    # Type=Application\n
+    # Categories=Development"
+    # HOMUNCULUSICONPATH="/home/${user_name}/Desktop/QWebServer.desktop"
+    # echo $HOMUNCULUSICON > $HOMUNCULUSICONPATH
+    # chown ${user_name}:${user_name} $HOMUNCULUSICONPATH
+    # chmod +x $HOMUNCULUSICONPATH
 #fi
 
-# delete temporary docker image file
-rm /tmp/QWebServer-image*.tar.gz
+# delete temporary files
+rm /tmp/QWebServer-image*.tar.gz /tmp/homunculusd.service
 
 exit 0
