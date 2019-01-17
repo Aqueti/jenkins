@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "prerm starting"
+
+set -e
+
+if [ -e /etc/systemd/system/homunculusd.service ]; then
+    echo "stopping homunculusd service"
+    service homunculusd stop
+fi
+
+echo "prerm finishing"
+
+exit 0

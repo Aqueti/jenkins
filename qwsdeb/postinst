@@ -1,20 +1,19 @@
 #!/bin/sh
 
+echo "postinst starting"
+
 user_name=$SUDO_USER
 image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | head -1`
 sys_name=`cat /etc/aqueti/daemonConfiguration.json | awk '{for(i=1;i<=NF;i++){ if(match($i,/system/)){ if($(i+1)==":") print $(i+2); else print $(i+1) } } }' | sed 's/"//g' | sed 's/,//g'`
 
-service homunculusd stop
-
+docker stop $(docker ps -aq -f "ancestor=aqueti/*")
 docker rm -f $(docker ps -a -f status=exited -q)
 docker rmi $(docker images "aqueti/*" -q --no-trunc)
 
 # load docker image
 zcat /tmp/QWebServer-image*.tar.gz | docker load
 
-cp /tmp/homunculusd.service /etc/systemd/system
 mkdir /etc/aqueti/homunculus
-rm /etc/aqueti/homunculus/docker-compose.yml
 touch /etc/aqueti/homunculus/docker-compose.yml
 echo "version: '3'
 services:
@@ -31,30 +30,31 @@ services:
       - /home/${user_name}/.ssh:/root/.ssh
     restart: always" > /etc/aqueti/homunculus/docker-compose.yml
 
+cp /tmp/homunculusd.service /etc/systemd/system
 systemctl daemon-reload
 systemctl enable homunculusd.service
 service homunculusd start
 
-# old stuff for creating desktop icon
-#if [ -z "${image_name}" ]; then
-    # COMMANDTOSTARTDOCKER="docker run --rm -P -p 5000:5000 -e AQUETI_SYSTEM_NAME=${sys_name} -v /etc/localtime:/etc/localtime:ro -v /var/tmp/aqueti:/var/tmp/aqueti -v /home/${user_name}/.ssh:/root/.ssh ${image_name}"
+cp /tmp/QView-0.1.0-x86_64.AppImage /opt/
 
-    # HOMUNCULUSICON="#!/usr/bin/env xdg-open\n
-    # [Desktop Entry]\n
-    # Version=1.0\n
-    # Name=QWebServer\n
-    # Exec=$COMMANDTOSTARTDOCKER\n
-    # Icon=/etc/aqueti/icons/AquetiLogo.png\n
-    # Terminal=true\n
-    # Type=Application\n
-    # Categories=Development"
-    # HOMUNCULUSICONPATH="/home/${user_name}/Desktop/QWebServer.desktop"
-    # echo $HOMUNCULUSICON > $HOMUNCULUSICONPATH
-    # chown ${user_name}:${user_name} $HOMUNCULUSICONPATH
-    # chmod +x $HOMUNCULUSICONPATH
-#fi
+# old stuff for creating desktop icon
+QVIEWICON="#!/usr/bin/env xdg-open\n
+[Desktop Entry]\n
+Version=1.0\n
+Name=QView\n
+Exec=/opt/QView-0.1.0-x86_64.AppImage\n
+Icon=/etc/aqueti/icons/AquetiLogo.png\n
+Terminal=false\n
+Type=Application\n
+Categories=Development"
+QVIEWICONPATH="/home/${user_name}/Desktop/QView.desktop"
+echo $QVIEWICON > $QVIEWICONPATH
+chown ${user_name}:${user_name} $QVIEWICONPATH
+chmod +x $QVIEWICONPATH
 
 # delete temporary files
-rm /tmp/QWebServer-image*.tar.gz /tmp/homunculusd.service
+rm /tmp/QWebServer-image*.tar.gz /tmp/homunculusd.service /tmp/QView-0.1.0-x86_64.AppImage
+
+echo "postinst finishing"
 
 exit 0

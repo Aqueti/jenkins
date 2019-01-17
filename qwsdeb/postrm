@@ -1,0 +1,31 @@
+#!/bin/sh
+
+echo "postrm starting"
+
+set -e
+
+user_name=$SUDO_USER
+
+if [ -e /home/${user_name}/Desktop/QView.desktop ]; then
+    echo "removing /etc/aqueti/homunculus/"
+    rm -rf /etc/aqueti/homunculus/
+fi
+
+if [ -f /opt/QView-0.1.0-x86_64.AppImage ]; then
+    echo "removing /opt/QView-0.1.0-x86_64.AppImage"
+    rm /opt/QView-0.1.0-x86_64.AppImage
+fi
+
+if [ -e /etc/systemd/system/homunculusd.service ]; then
+    echo "removing homunculusd service"
+    rm /etc/systemd/system/homunculusd.service
+fi
+
+if [ -f /home/${user_name}/Desktop/QView.desktop ]; then
+    echo "removing /home/${user_name}/Desktop/QView.desktop"
+    rm /home/${user_name}/Desktop/QView.desktop
+fi
+
+echo "postrm finishing"
+
+exit 0

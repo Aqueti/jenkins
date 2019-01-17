@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "preinst starting"
+
+set -e
+
+if [ -e /etc/systemd/system/homunculusd.service ]; then
+    echo "stopping homunculusd service"
+    service homunculusd stop
+fi
+
+if [ -f /home/${user_name}/Desktop/QWebServer.desktop ]; then
+    echo "removing /home/${user_name}/Desktop/QWebServer.desktop"
+    rm /home/${user_name}/Desktop/QWebServer.desktop
+fi
+
+echo "preinst finishing"
+
+exit 0
