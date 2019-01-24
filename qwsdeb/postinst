@@ -38,18 +38,18 @@ service homunculusd start
 cp /tmp/QView-0.1.0-x86_64.AppImage /opt/
 
 # old stuff for creating desktop icon
-QVIEWICON="#!/usr/bin/env xdg-open\n
+QADMINICON="#!/usr/bin/env xdg-open\n
 [Desktop Entry]\n
 Version=1.0\n
-Name=Launch QAdmin\n
+Name=Launch_QAdmin\n
 Icon=/etc/aqueti/icons/AquetiLogo.png\n
 Terminal=false\n
 URL=localhost:5000\n
 Type=Link"
-QVIEWICONPATH="/home/${user_name}/Desktop/QView.desktop"
-echo $QVIEWICON > $QVIEWICONPATH
-chown ${user_name}:${user_name} $QVIEWICONPATH
-chmod +x $QVIEWICONPATH
+QADMINICONPATH="/home/${user_name}/Desktop/Launch_QAdmin.desktop"
+echo $QVIEWICON > $QADMINICONPATH
+chown ${user_name}:${user_name} $QADMINICONPATH
+chmod +x $QADMINICONPATH
 
 # delete temporary files
 rm /tmp/QWebServer-image*.tar.gz /tmp/homunculusd.service /tmp/QView-0.1.0-x86_64.AppImage

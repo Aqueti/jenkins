@@ -21,6 +21,11 @@ if [ -e /etc/systemd/system/homunculusd.service ]; then
     rm /etc/systemd/system/homunculusd.service
 fi
 
+if [ -f /home/${user_name}/Desktop/Launch_QAdmin.desktop ]; then
+    echo "removing /home/${user_name}/Desktop/Launch_QAdmin.desktop"
+    rm /home/${user_name}/Desktop/Launch_QAdmin.desktop
+fi
+
 echo "postrm finishing"
 
 exit 0
