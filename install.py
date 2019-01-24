@@ -133,6 +133,8 @@ if cam_ip != '':
         print('*************')
         os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")
         os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon 2>/dev/null'")
+        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon-application 2>/dev/null'")
+        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg --purge aquetidaemon-application 2>/dev/null'")
         os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + " 2>/dev/null'")
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
 
@@ -147,7 +149,7 @@ os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
         
 if type == "release":
-    if 'daemon_x86' in files.keys():        
+    if 'daemon_x86-app' in files.keys():        
         os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
         os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])        
 else:
