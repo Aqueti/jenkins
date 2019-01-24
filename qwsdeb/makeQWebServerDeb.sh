@@ -10,13 +10,12 @@ cp $DOCKERIMAGEPATH QWebServer/tmp/
 cp homunculusd.service QWebServer/tmp/
 cp QView-0.1.0-x86_64.AppImage QWebServer/tmp/
 
-VERSIONSTRING=2.0.5.5
+VERSIONSTRING=2.0.6.0
 DEBCONTROLFILE="Package: QWebServer
 Version: $VERSIONSTRING
 Maintainer: Aqueti
 Architecture: amd64
-Depends: docker-ce
-Recommends: docker-compose (>= 1.23.1)
+Recommends: docker-ce, docker-compose (>= 1.23.1)
 Description: The Aqueti SocketAPI Server"
 echo "$DEBCONTROLFILE" > QWebServer/DEBIAN/control
 

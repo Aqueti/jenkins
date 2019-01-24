@@ -6,8 +6,8 @@ user_name=$SUDO_USER
 image_name=`docker images | grep aqueti | awk '{print$1,$2}' | sed 's# #:#g' | head -1`
 sys_name=`cat /etc/aqueti/daemonConfiguration.json | awk '{for(i=1;i<=NF;i++){ if(match($i,/system/)){ if($(i+1)==":") print $(i+2); else print $(i+1) } } }' | sed 's/"//g' | sed 's/,//g'`
 
-docker stop $(docker ps -aq -f "ancestor=aqueti/*")
-docker rm -f $(docker ps -a -f status=exited -q)
+docker rm $(docker stop $(docker ps -a | awk '{ print $1,$2 }' | grep aqueti | awk '{print $1 }'))
+#docker rm -f $(docker ps -a -f status=exited -q)
 docker rmi $(docker images "aqueti/*" -q --no-trunc)
 
 # load docker image
@@ -18,7 +18,7 @@ touch /etc/aqueti/homunculus/docker-compose.yml
 echo "version: '3'
 services:
   homunculus:
-    image: aqueti/dev:2.0.5.5
+    image: aqueti/beta:2.0.6.0
     environment:
       - AQUETI_SYSTEM_NAME=${sys_name}
     ports:
@@ -41,12 +41,11 @@ cp /tmp/QView-0.1.0-x86_64.AppImage /opt/
 QVIEWICON="#!/usr/bin/env xdg-open\n
 [Desktop Entry]\n
 Version=1.0\n
-Name=QView\n
-Exec=/opt/QView-0.1.0-x86_64.AppImage\n
+Name=Launch QAdmin\n
 Icon=/etc/aqueti/icons/AquetiLogo.png\n
 Terminal=false\n
-Type=Application\n
-Categories=Development"
+URL=localhost:5000\n
+Type=Link"
 QVIEWICONPATH="/home/${user_name}/Desktop/QView.desktop"
 echo $QVIEWICON > $QVIEWICONPATH
 chown ${user_name}:${user_name} $QVIEWICONPATH
