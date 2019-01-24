@@ -40,14 +40,13 @@ cp /tmp/QView-0.1.0-x86_64.AppImage /opt/
 # old stuff for creating desktop icon
 QADMINICON="#!/usr/bin/env xdg-open\n
 [Desktop Entry]\n
-Version=1.0\n
+Encoding=UTF-8\n
 Name=Launch_QAdmin\n
 Icon=/etc/aqueti/icons/AquetiLogo.png\n
-Terminal=false\n
-URL=localhost:5000\n
-Type=Link"
+Type=Link\n
+URL=http://localhost:5000/"
 QADMINICONPATH="/home/${user_name}/Desktop/Launch_QAdmin.desktop"
-echo $QVIEWICON > $QADMINICONPATH
+echo $QADMINICON > $QADMINICONPATH
 chown ${user_name}:${user_name} $QADMINICONPATH
 chmod +x $QADMINICONPATH
 
