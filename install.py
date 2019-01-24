@@ -101,7 +101,10 @@ for e in res:
                 if "debug" in e.text:
                     files["daemon_x86_debug"] = e.text
                 else:
-                    files["daemon_x86"] = e.text
+                    if '-application' in e.text:
+                        files["daemon_x86-app"] = e.text
+                    elif '-daemon' in e.text:
+                        files["daemon_x86-d"] = e.text
             else:
                 files["daemon_aarch64"] = e.text
         elif "ACI" in e.text:
@@ -136,26 +139,28 @@ if cam_ip != '':
         #os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")
         #os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
+
+os.system("sudo dpkg -r aquetidaemon")
+os.system("sudo dpkg -r aquetidaemon-daemon")
+os.system("sudo dpkg -r aquetidaemon-application")
+os.system("sudo dpkg -r aquetiapi")
+os.system("sudo dpkg -r calibrationtools")
+        
 if type == "release":
-    if 'daemon_x86' in files.keys():
-        os.system("sudo dpkg -r aquetidaemon")
-        os.system("sudo dpkg -i " + folder_path + files["daemon_x86"])
+    if 'daemon_x86' in files.keys():        
+        os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
+        os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])        
 else:
     if 'daemon_x86_debug' in files.keys():
-        os.system("sudo dpkg -r aquetidaemon")
+        
         os.system("sudo dpkg -i " + folder_path + files["daemon_x86_debug"])
 
-if 'api' in files.keys():
-    os.system("sudo dpkg -r aquetiapi")
+if 'api' in files.keys():    
     os.system("sudo dpkg -i " + folder_path + files["api"])
-if 'ctools' in files.keys():
-    os.system("sudo dpkg -r calibrationtools")    
+if 'ctools' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["ctools"])
-if 'qviewer' in files.keys():
-    os.system("sudo rm /opt/QView* 2>/dev/null")
-    os.system("sudo cp " + files["qviewer"] + " /opt")
+
 if 'qwebserver' in files.keys():
-    if "dpkg -s docker-ce 1>/dev/null 2>&1" == 0:
-        os.system("zcat " + files["qwebserver"] + " | sudo docker load")
+    pass
 
 print("***** Done *****")
