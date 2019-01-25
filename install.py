@@ -118,6 +118,10 @@ for e in res:
             output.write(file.read())
             print("saved file: " + folder_path + e.text)
 
+if "--noinstall" in sys.argv::
+    print('Files downloaded')
+    exit(0)
+
 if cam_ip != '':
     for i in range(start_ip, num_of_tegras + start_ip):
         tegra_ip = cam_ip + str(i)
