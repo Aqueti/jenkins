@@ -118,7 +118,7 @@ for e in res:
             output.write(file.read())
             print("saved file: " + folder_path + e.text)
 
-if "--noinstall" in sys.argv::
+if "--noinstall" in sys.argv:
     print('Files downloaded')
     exit(0)
 
