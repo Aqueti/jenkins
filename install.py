@@ -28,6 +28,7 @@ def print_help():
     print("--branch\tBranch name")
     print("--build\t\tBuild number")
     print("--type\t\tdebug/release")
+    print("--noinstall")
 
     exit(1)
 
@@ -38,6 +39,7 @@ if "--help" in sys.argv:
 
 if "--cam" in sys.argv:
     cam_id = sys.argv[sys.argv.index("--cam") + 1]
+
     cam_ip = '10.1.' + cam_id + '.'
     start_ip = 1
     
@@ -128,18 +130,19 @@ if cam_ip != '':
         print('*************')
         print(tegra_ip)
         print('*************')
-        os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")
-        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon 2>/dev/null'")
-        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon-application 2>/dev/null'")
-        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg --purge aquetidaemon-application 2>/dev/null'")
-        os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + " 2>/dev/null'")
+
+        if 'daemon_aarch64' in files.keys():
+            os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
+
+        if 'aci' in files.keys():
+            os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetiaci'")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
+
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
 
-        #os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")
-        #os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
-
-
-os.system("sudo dpkg -r aquetidaemon")
 os.system("sudo dpkg -r aquetidaemon-daemon")
 os.system("sudo dpkg -r aquetidaemon-application")
 os.system("sudo dpkg -r aquetiapi")
