@@ -232,13 +232,13 @@ class TestWebApp(BaseTest):
 class TestAPIWebApp(BaseTest):
     browser = "chrome"
 
-    cam_id = "9"
+    cam_id = "77"
     cam_path = "/aqt/camera" + cam_id
-    server_path = "http://10.0.0.232:5001/video/video_feed"
+    server_path = "http://10.0.0.204:5000/video/video_feed"
 
     urls = AQT.StringVector()
-    urls.push_back("aqt://Camera9")
-    api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
+    urls.push_back("aqt://Cam77")
+    #api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
 
     def vector_to_array(self, c_vector):
         return [c_vector[i].Name() for i in range(0, c_vector.size())]
@@ -749,7 +749,7 @@ class TestAPIWebApp(BaseTest):
             time.sleep(10)
 
 
-    # @pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_block_per_cont(self):
         alp = AquetiLoginPage(self)
         alp.navigate_to()
@@ -757,7 +757,7 @@ class TestAPIWebApp(BaseTest):
         aaps = alp.login()
         aapc = aaps
 
-        cache_size = 10000
+        cache_size = 9999
         while True:
             for i in range(16):
                 aapst = aapc.open_storage_page()
@@ -770,7 +770,7 @@ class TestAPIWebApp(BaseTest):
                 aapst.max_storage_threads_txt(value=str(i))
                 aapst.max_storage_threads_plus()
 
-                aapc = aapst.open_cam_page("9")
+                aapc = aapst.open_cam_page(self.cam_id)
 
                 aapc.recording_btn()
 
@@ -782,14 +782,21 @@ class TestAPIWebApp(BaseTest):
 
             time.sleep(2*60)
 
-            aapst.cache_size_txt(value=str(cache_size + cache_size*(i//2)))
-            aapst.cache_size_plus()
+            try:
+                tc_size = cache_size * (i // 2)
+                if tc_size > 99999:
+                    tc_size = cache_size
+
+                aapst.cache_size_txt(value=str(tc_size))
+                aapst.cache_size_plus()
+            except:
+                pass
 
 
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
-    env = Environment(render_ip="10.0.0.249", cam_ip="10.1.7.10")
+    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.7.10")
 
     cam_id = '77'
 
@@ -1182,7 +1189,7 @@ class TestQAdmin(BaseTest):
 class TestState(BaseTest):
     browser = None
 
-    env = Environment(render_ip="127.0.0.1", cam_ip="192.168.10.1")
+    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10")
 
     @pytest.mark.skip(reason="")
     def clear_state(self, render_path, tegra_path):
@@ -1239,3 +1246,4 @@ class TestState(BaseTest):
             assert (sleep_time - math.ceil(currt / 1e6)) < 15 and cumrt_next == cumrt
 
             cumrt_next = cumrt + currt
+

@@ -249,7 +249,7 @@ class QAdminPage(BasePage, QPage, QAdminSidebar):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = "http://10.0.0.249/admin/#/"
+    base_url = ""
 
     def submit_issue(self, *args, **kwargs):
         self.si_filename_txt(value=kwargs["filename"])
@@ -260,6 +260,12 @@ class QAdminPage(BasePage, QPage, QAdminSidebar):
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
+
+        if len(args) > 0:
+            self.base_url = "http://" + args[0].env.render.ip + "/admin/#/"
+
+        print(self.base_url)
+        print()
 
         def __call__(self, text):
             super(BasePage, self).__call__()

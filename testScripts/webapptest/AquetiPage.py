@@ -6,10 +6,13 @@ class AquetiPage(BasePage):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = "http://10.0.0.232:5001"
+    base_url = ""
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
+
+        if len(args) > 0:
+            self.base_url = "http://" + args[0].env.render.ip + ":5000"
 
         def __call__(self, text):
             super(BasePage, self).__call__()
@@ -237,6 +240,7 @@ class AquetiAdminPage(AquetiPage):
         return AquetiAdminPageCamera(self.test)
 
     def open_storage_page(self, data_id=""):
+        time.sleep(1)
         st_links = [lnk for lnk in self.storage_list.find_elements_by_tag_name('a')]
 
         if self.sidebar_data_lnk.get_attribute('aria-expanded') == "false":

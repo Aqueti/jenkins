@@ -124,5 +124,5 @@ class Render(Component):
         cmd = "sh -c 'pgrep AquetiDaemon'"
         return self.exec(cmd)
 
-    def __init__(self, render_ip):
-        self.render_ip = render_ip
+    def __init__(self, ip):
+        self.ip = ip
