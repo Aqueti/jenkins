@@ -10,7 +10,7 @@ cp $DOCKERIMAGEPATH QWebServer/tmp/
 cp homunculusd.service QWebServer/tmp/
 cp QView-0.1.0-x86_64.AppImage QWebServer/tmp/
 
-VERSIONSTRING=2.0.6.0
+VERSIONSTRING=$1
 DEBCONTROLFILE="Package: QWebServer
 Version: $VERSIONSTRING
 Maintainer: Aqueti
