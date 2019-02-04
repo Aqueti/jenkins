@@ -1,38 +1,29 @@
 #!/bin/sh
-### BEGIN INIT INFO
+
 # Provides:          nmon
 # Required-Start:    $network $named $syslog
 # Required-Stop:     $network $named $syslog
 # Should-Start:      nmon
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-### END INIT INFO
-#
-#       /etc/init.d/nmon
-# 
-# From: http://nmonvisualizer.github.io/nmonvisualizer/startup.html
-# Modified for Ubuntu
 
 NAME=nmon
 DESC="nmon daemon"
 
 FILENAME=`hostname`.nmon
-# collect NMON data every INTERVAL seconds
+
 INTERVAL=15
-# assume /etc/logrotate.d/nmon will restart nmon once a day
-# run for 1 day + 1 hour since anacron randomizes when logrotate runs
-COUNT=6000 # $(( (86400 + 3600) / $INTERVAL ))
+
+COUNT=6000
 
 LOGDIR=/var/log/nmon
 PIDFILE="/var/run/${NAME}.pid"
 
 DAEMON=/usr/bin/nmon
 
-# Source function library.
 . /lib/lsb/init-functions
 
-if [ ! -d $LOGDIR/old ]; then
-	# old for logrotated
+if [ ! -d $LOGDIR/old ]; then	
 	mkdir -p $LOGDIR/old
 	chown root:root $LOGDIR
 	chmod -R 755 $LOGDIR
