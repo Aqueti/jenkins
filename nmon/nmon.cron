@@ -1,0 +1,6 @@
+#!/bin/sh
+LOGDIR=/var/log/nmon
+/etc/init.d/nmon stop
+find $LOGDIR -name "*.nmon" -mtime -mmin +10 -exec gzip {} \;
+find $LOGDIR -name "*.nmon.gz" -mtime +90 -exec rm {} \;
+/etc/init.d/nmon start

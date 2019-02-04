@@ -1,0 +1,85 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          nmon
+# Required-Start:    $network $named $syslog
+# Required-Stop:     $network $named $syslog
+# Should-Start:      nmon
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+#
+#       /etc/init.d/nmon
+# 
+# From: http://nmonvisualizer.github.io/nmonvisualizer/startup.html
+# Modified for Ubuntu
+
+NAME=nmon
+DESC="nmon daemon"
+
+FILENAME=`hostname`.nmon
+# collect NMON data every INTERVAL seconds
+INTERVAL=15
+# assume /etc/logrotate.d/nmon will restart nmon once a day
+# run for 1 day + 1 hour since anacron randomizes when logrotate runs
+COUNT=6000 # $(( (86400 + 3600) / $INTERVAL ))
+
+LOGDIR=/var/log/nmon
+PIDFILE="/var/run/${NAME}.pid"
+
+DAEMON=/usr/bin/nmon
+
+# Source function library.
+. /lib/lsb/init-functions
+
+if [ ! -d $LOGDIR/old ]; then
+	# old for logrotated
+	mkdir -p $LOGDIR/old
+	chown root:root $LOGDIR
+	chmod -R 755 $LOGDIR
+fi
+
+if [ ! -e $DAEMON ]; then
+	exit 5
+fi
+
+start() {
+	if [ -f $PIDFILE ]; then
+		return 0;
+	else
+		$DAEMON -f $FILENAME -t -s $INTERVAL -c $COUNT -m $LOGDIR -p > $PIDFILE
+		return 0
+	fi
+}
+
+stop() {
+	start-stop-daemon --stop --quiet --pidfile $PIDFILE \
+		--retry TERM/10/KILL/5 --oknodo
+	rm $PIDFILE
+}
+
+case "$1" in
+	start)
+		log_begin_msg "Starting $DESC"
+		start
+		log_end_msg $?
+	;;
+	stop)
+		log_begin_msg "Stopping $DESC"
+		stop
+		log_end_msg $?
+	;;
+	restart)
+		log_begin_msg "Restarting $DESC"
+		stop
+		start
+		log_end_msg $?
+	;;
+	status)
+		status nmon
+		;;
+	*)
+		echo "Usage: nmon {start|stop|restart|status}"
+		exit 1
+	;;
+esac
+exit $?
