@@ -33,13 +33,24 @@ class Component(object):
     def get_status(self):
         pass
 
+    status = {0: "inactive", 1: "active", 2: "unknown"}
+
+    def is_active(self, cmd):
+        if cmd is not None:
+            if "failed (Result: exit-code)" in cmd:
+                return self.status[0]
+            elif "active (running)" in cmd:
+                return self.status[1]
+            else:
+                return self.status[2]
+
     def get_ssh_str(self, ip, cmd, uname="nvidia"):
         return "ssh " + uname + "@" + ip + " '" + cmd + "'"
 
-    def exec(self, cmd):
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #print(cmd)
-        #return
+    def ex(self, cmd):
+        #result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(cmd)
+        return
 
         if result.stdout.decode('utf-8') != "":
             return result.stdout.decode('utf-8')
@@ -62,67 +73,103 @@ class Camera(Component):
         return ip_list
 
     def start(self, **kwargs):
-        for ip in self.get_ip_list(**kwargs):
+        if "tegra" in kwargs:
+            ip_list = [kwargs['tegra']]
+        else:
+            ip_list = self.get_ip_list(**kwargs)
+
+        for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon start")
-            self.exec(cmd)
+            self.ex(cmd)
 
     def stop(self, **kwargs):
-        for ip in self.get_ip_list(**kwargs):
+        if "tegra" in kwargs:
+            ip_list = [kwargs['tegra']]
+        else:
+            ip_list = self.get_ip_list(**kwargs)
+
+        for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon stop")
-            self.exec(cmd)
+            self.ex(cmd)
 
     def restart(self, **kwargs):
-        for ip in self.get_ip_list(**kwargs):
+        if "tegra" in kwargs:
+            ip_list = [kwargs['tegra']]
+        else:
+            ip_list = self.get_ip_list(**kwargs)
+
+        for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon restart")
-            self.exec(cmd)
+            self.ex(cmd)
 
     def reboot(self, **kwargs):
-        for ip in self.get_ip_list(**kwargs):
-            cmd = self.get_ssh_str(ip, "sudo reboot")
-            self.exec(cmd)
+        if "tegra" in kwargs:
+            ip_list = [kwargs['tegra']]
+        else:
+            ip_list = self.get_ip_list(**kwargs)
 
-    def get_status(self, ip):
-        cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon status | grep Active")
-        self.exec(cmd)
+        for ip in ip_list:
+            cmd = self.get_ssh_str(ip, "sudo reboot")
+            self.ex(cmd)
+
+    def get_status(self, **kwargs):
+        if "tegra" in kwargs:
+            ip_list = [kwargs['tegra']]
+        else:
+            ip_list = self.get_ip_list(**kwargs)
+
+        st = []
+        for ip in ip_list:
+            cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon status | grep Active")
+            rs = self.ex(cmd)
+
+            st.append(self.is_active(rs))
+
+        for key in self.status:
+            if False not in [self.status[key] == si for si in st]:
+                return self.status[key]
+
+        return self.status[2]
 
     def copy_remote_file(self, **kwargs):
-        for ip in self.get_ip_list(**kwargs):
+        if "tegra" in kwargs:
             if "to_tegra" in kwargs:
                 #cmd = "cat " + kwargs["path_from"] + " | " + self.get_ssh_str(ip, 'sudo sh -c "cat >' + kwargs["path_to"] + '"')
-                cmd = "scp " + kwargs["path_from"] + " nvidia@" + ip + ":./; " + self.get_ssh_str(ip, "sudo cp " + kwargs["path_from"][kwargs["path_from"].rfind("/") + 1:] + " " + kwargs["path_to"])
-                self.exec(cmd)
+                cmd = "scp " + kwargs["path_from"] + " nvidia@" + kwargs['tegra'] + ":./; " + self.get_ssh_str(kwargs['tegra'], "sudo cp " + kwargs["path_from"][kwargs["path_from"].rfind("/") + 1:] + " " + kwargs["path_to"])
+                self.ex(cmd)
             elif "from_tegra" in kwargs:
-                cmd = "scp nvidia@" + ip + ":" + kwargs["path_from"] + " " + kwargs["path_to"]
-                self.exec(cmd)
+                cmd = "scp nvidia@" + kwargs['tegra'] + ":" + kwargs["path_from"] + " " + kwargs["path_to"]
+                self.ex(cmd)
 
     def read(self, **kwargs):
-        for ip in self.get_ip_list(**kwargs):
-            cmd = self.get_ssh_str(ip, "cat " + kwargs["f_name"])
-            return self.exec(cmd)
+        if "tegra" in kwargs:
+            cmd = self.get_ssh_str(kwargs['tegra'], "cat " + kwargs["f_name"])
+            return self.ex(cmd)
 
     def __init__(self, cam_ip):
         self.num_of_tegras = int(cam_ip[cam_ip.rfind('.') + 1:])
         self.start_ip = cam_ip[:cam_ip.rfind('.') + 1]
+        self.ip = self.get_ip_list()
 
 
 class Render(Component):
     def start(self):
-        cmd = "sh -c 'AquetiDaemonProcess &'"
-        return self.exec(cmd)
+        cmd = "sh -c 'sudo service Aqueti-Daemon start'"
+        return self.ex(cmd)
 
     def stop(self):
-        cmd = "sh -c 'sudo pkill -2 AquetiDaemon'"
-        return self.exec(cmd)
+        cmd = "sh -c 'sudo service Aqueti-Daemon stop'"
+        return self.ex(cmd)
 
     def restart(self):
-        self.stop()
-        while self.get_status() == '':
-            time.sleep(0.25)
-        self.start()
+        cmd = "sh -c 'sudo service Aqueti-Daemon restart'"
+        return self.ex(cmd)
 
     def get_status(self):
-        cmd = "sh -c 'pgrep AquetiDaemon'"
-        return self.exec(cmd)
+        cmd = "sh -c 'sudo service Aqueti-Daemon status | grep Active'"
+        rs = self.ex(cmd)
+
+        return self.is_active(rs)
 
     def __init__(self, ip):
         self.ip = ip
