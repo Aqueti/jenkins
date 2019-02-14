@@ -1,14 +1,14 @@
 #!/bin/bash
 
-mkdir -p Asis/DEBIAN
+mkdir -p ASIS/DEBIAN
 
 CUR_DIR=`pwd`
 
 DOCKERIMAGEPATH="${CUR_DIR}/asis-image*.tar.gz"
-mkdir -p Asis/tmp
-cp $DOCKERIMAGEPATH Asis/tmp/
-cp asisd.service Asis/tmp/
-cp docker-compose.yml Asis/tmp/
+mkdir -p ASIS/tmp
+cp $DOCKERIMAGEPATH ASIS/tmp/
+cp asisd.service ASIS/tmp/
+cp docker-compose.yml ASIS/tmp/
 
 VERSIONSTRING=3.0dev
 DEBCONTROLFILE="Package: ASIS
@@ -17,10 +17,10 @@ Maintainer: Aqueti
 Architecture: amd64
 Depends: aquetidaemon, docker-ce
 Description: The Aqueti SocketAPI Server"
-echo "$DEBCONTROLFILE" > Asis/DEBIAN/control
+echo "$DEBCONTROLFILE" > ASIS/DEBIAN/control
 
-cp ${CUR_DIR}/postinst Asis/DEBIAN/postinst
+cp ${CUR_DIR}/postinst ASIS/DEBIAN/postinst
 
-dpkg-deb --build Asis
+dpkg-deb --build ASIS
 
-rm -rf Asis/
+rm -rf ASIS/
