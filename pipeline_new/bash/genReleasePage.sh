@@ -15,7 +15,7 @@ echo "<h1>Aqueti ACOS build for branch $BRANCH - $BUILD  Release: ($DATE)</h1>" 
 
 echo "<h2>Packages</h2>" >> index.html
 
-for item in * ; do
+for item in *.deb; do
    echo "<a href=\"./$item\">$item</a><br>" >> index.html
 done
 
