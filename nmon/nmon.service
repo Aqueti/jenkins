@@ -1,11 +1,13 @@
 #!/bin/sh
 
+### BEGIN INIT INFO
 # Provides:          nmon
 # Required-Start:    $network $named $syslog
 # Required-Stop:     $network $named $syslog
 # Should-Start:      nmon
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
+### END INIT INFO
 
 NAME=nmon
 DESC="nmon daemon"
