@@ -10,12 +10,12 @@ cp $DOCKERIMAGEPATH ASIS/tmp/
 cp asisd.service ASIS/tmp/
 cp docker-compose.yml ASIS/tmp/
 
-VERSIONSTRING=3.0dev
+VERSIONSTRING=$1
 DEBCONTROLFILE="Package: ASIS
 Version: $VERSIONSTRING
 Maintainer: Aqueti
 Architecture: amd64
-Depends: aquetidaemon, docker-ce
+Recommends: docker-ce, docker-compose (>= 1.23.1)
 Description: The Aqueti SocketAPI Server"
 echo "$DEBCONTROLFILE" > ASIS/DEBIAN/control
 
