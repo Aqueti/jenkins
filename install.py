@@ -114,6 +114,8 @@ for e in res:
             files["api"] = e.text
         elif "CalibrationTools" in e.text:
             files["ctools"] = e.text
+        elif "ASIS" in e.text:
+            files["asis"] = e.text
 
         file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
         with open(folder_path + e.text, 'wb') as output:
@@ -150,11 +152,12 @@ os.system("sudo dpkg -r calibrationtools")
     
 if 'daemon_x86-app' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])        
-
+    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])
 if 'api' in files.keys():    
     os.system("sudo dpkg -i " + folder_path + files["api"])
 if 'ctools' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["ctools"])
+if 'asis' in files.keys():        
+    os.system("sudo dpkg -i " + folder_path + files["asis"])
 
 print("***** Done *****")
