@@ -11,7 +11,7 @@ cp asisd.service Asis/tmp/
 cp docker-compose.yml Asis/tmp/
 
 VERSIONSTRING=3.0dev
-DEBCONTROLFILE="Package: Asis
+DEBCONTROLFILE="Package: ASIS
 Version: $VERSIONSTRING
 Maintainer: Aqueti
 Architecture: amd64
