@@ -8,7 +8,7 @@ DEV_FILE="$WEBHOME/branches.html"
 S3_DEST="s3://aqueti.operations/repositories"
 BRANCH=$1
 
-if [[ $BRANCH == "master" || $BRANCH == "improvedGarbageCollection" ]]; then
+if [[ $BRANCH == "master" || $BRANCH == "beta" ]]; then
    echo "Removing old documentation at $DOC_HOME"
    rm -r $DOC_HOME/*
    mkdir -p $DOC_HOME
@@ -41,7 +41,6 @@ for directory in */ ; do
    echo "Generating content in $directory"
    cd $directory 
    DEST=index.html
-
 
    echo "Creating $DEST"
    echo "<html>" > $DEST
