@@ -10,7 +10,7 @@ cp $DOCKERIMAGEPATH ASIS/tmp/
 cp asisd.service ASIS/tmp/
 cp docker-compose.yml ASIS/tmp/
 
-VERSIONSTRING="2.0.6.2"
+VERSIONSTRING=3.0dev
 DEBCONTROLFILE="Package: ASIS
 Version: $VERSIONSTRING
 Maintainer: Aqueti
