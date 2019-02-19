@@ -29,6 +29,7 @@ def print_help():
     print("--build\t\tBuild number")
     print("--type\t\tdebug/release")
     print("--noinstall")
+    print("--asis")
 
     exit(1)
 
@@ -115,7 +116,10 @@ for e in res:
         elif "CalibrationTools" in e.text:
             files["ctools"] = e.text
         elif "ASIS" in e.text:
-            files["asis"] = e.text
+            if "--asis" in sys.argv:
+                files["asis"] = e.text
+            else:
+                continue
 
         file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
         with open(folder_path + e.text, 'wb') as output:
