@@ -18,6 +18,8 @@ services:
     volumes:
       - /etc/aqueti/avi:/etc/aqueti/avi
       - /var/log/aqueti:/var/log/aqueti
+      - /etc/localtime:/etc/localtime
+      - /home/$USER/.ssh:/root/.ssh
   janus:
     image: asis_janus
     container_name: janus_container
