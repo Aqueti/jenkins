@@ -143,7 +143,7 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
 
         if 'aci' in files.keys():
-            os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")
+            os.system("scp " + folder_path + files["aci"] + " nvidia@" + tegra_ip + ":./")
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetiaci'")
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
