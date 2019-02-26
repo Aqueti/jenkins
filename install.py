@@ -120,11 +120,12 @@ for e in res:
                 files["asis"] = e.text
             else:
                 continue
-
-        file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
-        with open(folder_path + e.text, 'wb') as output:
-            output.write(file.read())
-            print("saved file: " + folder_path + e.text)
+        
+        if os.path.exists(folder_path + e.text):
+            file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
+            with open(folder_path + e.text, 'wb') as output:
+                output.write(file.read())
+                print("saved file: " + folder_path + e.text)
 
 if "--noinstall" in sys.argv:
     print('Files downloaded')
