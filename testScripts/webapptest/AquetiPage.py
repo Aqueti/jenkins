@@ -6,16 +6,14 @@ class AquetiPage(BasePage):
     @property
     def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-    base_url = ""
-
     def __init__(self, *args):
-        BasePage.__init__(self, *args)
+        super(AquetiPage, self).__init__(*args)
 
         if len(args) > 0:
             self.base_url = "http://" + args[0].env.render.ip + ":5000"
 
         def __call__(self, text):
-            super(BasePage, self).__call__()
+            super(AquetiPage, self).__call__()
 
 
 class AquetiViewerPanel:
@@ -80,11 +78,12 @@ class AquetiViewerPage(AquetiPage, AquetiViewerPanel):
         if self.cur_page_url == (self.base_url + "/login"):
             return AquetiLoginPage(self.test)
 
-    page_url = AquetiPage.base_url
     page_title = "Aqueti View"
 
     def __init__(self, *args):
-        AquetiPage.__init__(self, *args)
+        super(AquetiViewerPage, self).__init__(*args)
+
+        page_url = self.base_url
 
 
 class AquetiLoginPage(AquetiPage):
@@ -101,14 +100,17 @@ class AquetiLoginPage(AquetiPage):
         self.username_field(value=username)
         self.password_field(value=password)
         self.login_btn()
-        if self.driver.current_url == AquetiAdminPageSystem.page_url:
-            return AquetiAdminPageSystem(self.test)
+
+        page = AquetiAdminPageSystem(self.test)
+        if self.driver.current_url == page.page_url:
+            return page
 
     page_title = "Aqueti Admin"
-    page_url = AquetiPage.base_url + "/login"
 
     def __init__(self, *args):
-        AquetiPage.__init__(self, *args)
+        super(AquetiLoginPage, self).__init__(*args)
+
+        self.page_url = self.base_url + "/login"
 
 
 class AquetiAdminPage(AquetiPage):
@@ -201,26 +203,24 @@ class AquetiAdminPage(AquetiPage):
     @property
     def viewer_update_btn(self): return self.find_by(id="updateSystemSettings")
 
-    def __init__(self, *args):
-        AquetiPage.__init__(self, *args)
+    page_title = "Aqueti Admin"
 
-        self.page_title = "Aqueti Admin"
+    def __init__(self, *args):
+        super(AquetiAdminPage, self).__init__(*args)
 
     def logout(self):
         self.logout_lnk()
 
-        return AquetiViewerPage(self.test)
+        page = AquetiViewerPage(self.test)
+        if self.driver.current_url == page.page_url:
+            return page
 
     def click_submit_issue_lnk(self):
         self.submit_issue_lnk()
-        return AquetiAdminPageIssue(self.test)
 
-    def click_links(self):
-        self.sidebar_cameras()
-        self.sidebar_data()
-        self.sidebar_render()
-        self.sidebar_logs()
-        self.sidebar_system()
+        page = AquetiAdminPageIssue(self.test)
+        if self.driver.current_url == page.page_url:
+            return page
 
     def open_cam_page(self, cam_id=""):
         cam_links = [lnk for lnk in self.camera_list.find_elements_by_tag_name('a')]
@@ -237,7 +237,9 @@ class AquetiAdminPage(AquetiPage):
         else:
             cam_links[0]()
 
-        return AquetiAdminPageCamera(self.test)
+        page = AquetiAdminPageCamera(self.test)
+        if self.driver.current_url == page.page_url:
+            return page
 
     def open_storage_page(self, data_id=""):
         time.sleep(1)
@@ -255,7 +257,9 @@ class AquetiAdminPage(AquetiPage):
         else:
             st_links[0]()
 
-        return AquetiAdminPageStorage(self.test)
+        page = AquetiAdminPageStorage(self.test)
+        if self.driver.current_url == page.page_url:
+            return page
 
     def open_render_page(self, render_id=""):
         rnd_links = [lnk for lnk in self.render_list.find_elements_by_tag_name('a')]
@@ -288,7 +292,7 @@ class AquetiAdminPageSystem(AquetiAdminPage):
     page_url = AquetiPage.base_url + "/system"
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageSystem, self).__init__(*args)
 
 
 class AquetiAdminPageConfiguration(AquetiAdminPage):
@@ -305,7 +309,7 @@ class AquetiAdminPageConfiguration(AquetiAdminPage):
     def topbar_render(self): return self.find_by(xpath="//*[@id='topbar']//a[contains(.,'Render')]")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageConfiguration, self).__init__(*args)
 
 
 class AquetiAdminPageMaintenance(AquetiAdminPage):
@@ -430,7 +434,7 @@ class AquetiAdminPageMaintenance(AquetiAdminPage):
     def shi_close_btn(self): return self.find_by(css="div#set_host_ip div.modal-footer button.btn-secondary")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageMaintenance, self).__init__(*args)
 
 
 class AquetiAdminPageRecordings(AquetiAdminPage, AquetiViewerPanel):
@@ -481,7 +485,7 @@ class AquetiAdminPageRecordings(AquetiAdminPage, AquetiViewerPanel):
         self.ec_update_btn()
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageRecordings, self).__init__(*args)
 
         self.page_url += "/system_recordings"
 
@@ -623,6 +627,7 @@ class AquetiAdminPageCamera(AquetiAdminPage):
 
     def click_settings_link(self):
         self.settings_lnk()
+
         return AquetiAdminPageSensors(self.test)
 
 # Edit Component
@@ -640,7 +645,7 @@ class AquetiAdminPageCamera(AquetiAdminPage):
 
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageCamera, self).__init__(*args)
 
 
 class AquetiAdminPageSensors(AquetiAdminPage):
@@ -774,7 +779,7 @@ class AquetiAdminPageStorage(AquetiAdminPage):
     def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageStorage, self).__init__(*args)
 
 
 class AquetiAdminPageRender(AquetiAdminPage):
@@ -808,7 +813,7 @@ class AquetiAdminPageRender(AquetiAdminPage):
     def ec_update_btn(self): return self.find_by(xpath="//button[contains(.,'Update')]")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageRender, self).__init__(*args)
 
 
 class AquetiAdminPageIssue(AquetiAdminPage):
@@ -825,7 +830,7 @@ class AquetiAdminPageIssue(AquetiAdminPage):
     def submit_btn(self): return self.find_by(id="submit")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageIssue, self).__init__(*args)
 
         self.page_url += "/submit_issue"
 
@@ -849,21 +854,21 @@ class AquetiAdminPageStatusCamera(AquetiAdminPageCamera):
     def prop_sensors(self): return self.find_by(id="sensor-svg")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageStatusCamera, self).__init__(*args)
 
         self.page_url += "/scop_status"
 
 
 class AquetiAdminPageStatusStorage(AquetiAdminPageStorage):
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageStatusStorage, self).__init__(*args)
 
         self.page_url += "/storage_status"
 
 
 class AquetiAdminPageStatusRender(AquetiAdminPageRender):
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageStatusRender, self).__init__(*args)
 
         self.page_url += "/render_status"
 
@@ -873,7 +878,7 @@ class AquetiAdminPageConfigurationSystem(AquetiAdminPageConfiguration, AquetiAdm
     def node_graph(self): return self.find_by(id="node-graph")
 
     def __init__(self, *args):
-        AquetiAdminPage.__init__(self, *args)
+        super(AquetiAdminPageConfigurationSystem, self).__init__(*args)
 
         self.page_url += "/pipeline_configuration"
 

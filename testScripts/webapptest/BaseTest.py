@@ -7,6 +7,7 @@ import os
 import subprocess
 import time
 import pymongo
+from collections import OrderedDict
 import json
 
 
@@ -16,7 +17,7 @@ class BaseTest(object):
 
     mongo_client = None
 
-    doc = {}
+    doc = OrderedDict()
 
     log_path = None
     base_dir = "/home/astepenko/Pictures/tests/"
@@ -62,37 +63,36 @@ class BaseTest(object):
         if self.driver is not None:
             self.driver.maximize_window()
 
-        self.doc["start_time"] = datetime.datetime.now()
-        self.doc["start_time_f"] = self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S')
-        self.doc["end_time"] = None
         self.doc["suite_name"] = self.__class__.__name__
         self.doc["test_name"] = method.__name__
+        self.doc["start_time"] = datetime.datetime.now()
+        self.doc["end_time"] = None
+        self.doc["duration"] = None
         self.doc["result"] = "PASSED"
 
-        try:
-            self.mongo_client = pymongo.MongoClient(self.mongo_path)
-        except:
-            pass
+        self.mongo_client = pymongo.MongoClient(self.mongo_path)
 
         if not os.path.exists(self.base_dir):
             os.makedirs(self.base_dir)
 
-        self.log_path = self.base_dir + self.doc["suite_name"] + "_" + self.doc["test_name"] + "_" + self.doc["start_time_f"] + ".txt"
+        self.log_path = self.base_dir + self.doc["suite_name"] + "_" + self.doc["test_name"] + "_" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S') + ".txt"
 
         self.add_to_log("Suite:\t" + self.doc["suite_name"] + "\n" +
                         "Test:\t" + self.doc["test_name"] + "\n" +
-                        "Date:\t" + self.doc["start_time_f"] + "\n\n")
+                        "Date:\t" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S') + "\n\n")
 
     def teardown_method(self, method):
         self.doc["end_time"] = datetime.datetime.now()
+        self.doc["duration"] = int((self.doc["end_time"] - self.doc["start_time"]).total_seconds())
 
-        if self.mongo_client is not None:
+        try:
             self.mongo_client["test_res"]["beta"].insert_one(self.doc)
+        except:
+            pass
 
         self.add_to_log("\n-----------------------------\n" +
                         "Result: " + self.doc["result"] + "\n"
-                        "Exec time: " +
-                        str(datetime.timedelta(seconds=int((self.doc["end_time"] - self.doc["start_time"]).total_seconds()))))
+                        "Exec time: " + str(datetime.timedelta(seconds=self.doc["duration"])))
 
         # self.driver.close()
         if self.driver is not None:
@@ -125,6 +125,4 @@ class BaseTest(object):
             elif col_name in 'files':
                 db_name = "acos_local"
 
-        client = pymongo.MongoClient(self.mongo_path)
-
-        return client[db_name][col_name]
+        return self.mongo_client[db_name][col_name]

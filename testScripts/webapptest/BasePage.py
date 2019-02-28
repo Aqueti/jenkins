@@ -3,6 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.common.keys import Keys
 import hashlib
 import random
 import time
@@ -190,8 +191,16 @@ class BasePage:
                 else:
                     elem.click()
             elif type in ("text", "password"):
-                elem.clear()
-               #elem.send_keys(value, Keys.ARROW_DOWN)
+                if elem.get_attribute('value') != "":
+                    elem.click()
+                    self.exec_js("arguments[0].setAttribute('value','')", elem)
+
+                    while elem.get_attribute('value') != "":
+                        elem.send_keys(Keys.DELETE, Keys.BACKSPACE)
+
+                if elem.text != "":
+                    elem.clear()
+
                 self.__human_type(elem, value)
             elif type in ("radio", "checkbox"):
                 elem.click()

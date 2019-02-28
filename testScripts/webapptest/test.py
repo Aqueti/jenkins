@@ -237,8 +237,10 @@ class TestAPIWebApp(BaseTest):
     server_path = "http://10.0.0.204:5000/video/video_feed"
 
     urls = AQT.StringVector()
-    urls.push_back("aqt://Cam77")
+    urls.push_back("aqt://cam77")
     #api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
+
+    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.149.3")
 
     def vector_to_array(self, c_vector):
         return [c_vector[i].Name() for i in range(0, c_vector.size())]
@@ -796,9 +798,10 @@ class TestAPIWebApp(BaseTest):
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
-    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.7.10")
+    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10")
 
     cam_id = '77'
+    system_name = "cam77"
 
     def find_diff(self, path):
         db_name = "acos"
@@ -1184,6 +1187,13 @@ class TestQAdmin(BaseTest):
             time.sleep(30)
 
             assert math.fabs(1 - self.env.render.get_nw_usage("enp60s0")/TD.expected_nw_usage) <= 0.05
+
+    #@pytest.mark.skip(reason="")
+    def test_login1(self):
+        qvp = QViewPage(self)
+        qvp.navigate_to()
+
+        qvp.login(system=self.system_name)
 
 
 class TestState(BaseTest):

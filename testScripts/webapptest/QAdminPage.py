@@ -2,6 +2,25 @@ from BasePage import *
 from selenium.webdriver.common.action_chains import ActionChains
 
 
+class LoginForm:
+    @property
+    def username_txt(self): return self.find_by(css="input[aria-label='Username'")
+
+    @property
+    def password_txt(self): return self.find_by(css="input[aria-label='Password'")
+
+    @property
+    def system_txt(self): return self.find_by(css="input[aria-label='System'")
+
+    @property
+    def submit_btn(self): return self.find_by(xpath="//button[contains(@class, 'primary--text')]/div[contains(., 'Submit')]/..")
+
+    def login(self, username="user", password="12345678", system=""):
+        self.username_txt(value=username)
+        self.password_txt(value=password)
+        self.system_txt(value=system)
+        self.submit_btn()
+
 class QAdminSidebar:
     @property
     def dashboard_lnk(self): return self.find_by(xpath="(//aside//div[contains(.,'Dashboard')])[last()]")
@@ -173,11 +192,20 @@ class QStreamBox(QPage):
         return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
 
 
-class QViewPage(BasePage, QStreamBox):
-    pass
+class QViewPage(BasePage, QStreamBox, LoginForm):
+    def __init__(self, *args):
+        BasePage.__init__(self, *args)
+
+        if len(args) > 0:
+            self.base_url = "http://" + args[0].env.render.ip
+
+        self.page_url = self.base_url
+
+        def __call__(self, text):
+            BasePage.__call__()
 
 
-class QAdminPage(BasePage, QPage, QAdminSidebar):
+class QAdminPage(BasePage, QPage, QAdminSidebar, LoginForm):
     @property
     def side_icon(self): return self.find_by(css="button.v-toolbar__side-icon.v-btn.v-btn--icon div.v-btn__content")
 
@@ -264,11 +292,8 @@ class QAdminPage(BasePage, QPage, QAdminSidebar):
         if len(args) > 0:
             self.base_url = "http://" + args[0].env.render.ip + "/admin/#/"
 
-        print(self.base_url)
-        print()
-
         def __call__(self, text):
-            super(BasePage, self).__call__()
+            BasePage.__call__()
 
 
 class QAdminDashboard(QAdminPage):
