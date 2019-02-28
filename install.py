@@ -28,8 +28,9 @@ def print_help():
     print("--branch\tBranch name")
     print("--build\t\tBuild number")
     print("--type\t\tdebug/release")
-    print("--noinstall")
-    print("--asis")
+    print("--noinstall\tJust download")
+    print("--asis\t\tInstall gui")
+    print("--reboot\tReboot tegras")
 
     exit(1)
 
@@ -149,7 +150,7 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
-        if type == 'debug':
+        if "--reboot" in sys.argv:
             os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'")
 
 os.system("sudo dpkg -r aquetidaemon-daemon")
