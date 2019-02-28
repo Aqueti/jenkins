@@ -121,7 +121,7 @@ for e in res:
             else:
                 continue
         
-        if os.path.exists(folder_path + e.text):
+        if not os.path.exists(folder_path + e.text):
             file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
             with open(folder_path + e.text, 'wb') as output:
                 output.write(file.read())
@@ -149,6 +149,8 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
+        if type == 'debug':
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'")
 
 os.system("sudo dpkg -r aquetidaemon-daemon")
 os.system("sudo dpkg -r aquetidaemon-application")
