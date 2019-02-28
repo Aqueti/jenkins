@@ -1,8 +1,12 @@
 from BasePage import *
 from selenium.webdriver.common.action_chains import ActionChains
+import time
 
 
 class LoginForm:
+    @property
+    def form(self): return self.find_by(css="div.v-dialog--active")
+
     @property
     def username_txt(self): return self.find_by(css="input[aria-label='Username'")
 
@@ -20,6 +24,109 @@ class LoginForm:
         self.password_txt(value=password)
         self.system_txt(value=system)
         self.submit_btn()
+
+        #while self.form.is_displayed():
+        #    time.sleep(1)
+
+        time.sleep(5)
+
+
+class QPage:
+    @property
+    def main_menu_icon(self): return self.find_by(xpath="(//nav//button[contains(., 'more_vert')])[0]")
+
+    @property
+    def customize_stream(self): return self.find_by(xpath="//i[contains(., 'setting')]")
+
+    @property
+    def refresh_stream(self): return self.find_by(xpath="//i[contains(., 'refresh')]") #2
+
+    @property
+    def stream_keybindings(self): return self.find_by(xpath="//i[contains(., 'help')]")
+
+    @property
+    def submit_issue(self): return self.find_by(xpath="//i[contains(., 'report_problem')]")
+
+
+
+    def get_dd_elem(self, val, is_contain=True):
+        if is_contain:
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a")
+        else:
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
+
+
+class QStreamBox(QPage):
+    @property
+    def video_box(self): return self.find_by(id="playerCanvas")
+
+    @property
+    def cam_select_dd(self): return self.find_by(id="camera_select")
+
+    @property
+    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
+
+    def get_slider(self, val):
+        return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
+
+
+class QViewPage(BasePage, QStreamBox, LoginForm):
+    @property
+    def left_menu_icon(self): return self.find_by(xpath="//nav//button[contains(., 'menu')]")
+
+    @property
+    def export_avi_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Export AVI']/..", param="invisible")
+
+    @property
+    def recording_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Recording']/..", param="invisible")
+
+    @property
+    def avi_tab(self): return self.find_by(css="a[href = '#avi-tab']")
+
+    @property
+    def reservations_tab(self): return self.find_by(css="a[href='#reservation-tab']")
+
+    @property
+    def avi_tbl(self): return self.find_by(xpath="//div[@id='avi-tab']//table/tbody")
+
+    @property
+    def reservations_tbl(self): return self.find_by(xpath="//div[@id='reservation-tab']//table/tbody")
+
+    def get_avi_items(self):
+        items = self.avi_tbl.find_elements_by_tag_name("tr")
+
+        for i in range(len(items)):
+            if 'No data available' in items[i].get_attribute('innerHTML'):
+                del items[i]
+
+        return items
+
+    def get_reservation_items(self):
+        items = self.reservations_tbl.find_elements_by_tag_name("tr")
+
+        return items
+
+    def remove_all_avi_items(self):
+        items = self.get_avi_items()
+
+        for item in items:
+            btn_arr = item.find_elements_by_xpath("//i[contains(., 'delete')]")
+            if len(btn_arr) > 0:
+                btn_arr[0].click()
+
+                time.sleep(2)
+
+    def __init__(self, *args):
+        BasePage.__init__(self, *args)
+
+        if len(args) > 0:
+            self.base_url = "http://" + args[0].env.render.ip
+
+        self.page_url = self.base_url
+
+        def __call__(self, text):
+            BasePage.__call__()
+
 
 class QAdminSidebar:
     @property
@@ -168,41 +275,6 @@ class QAdminSidebar:
         self.render_streams_lnk()
 
         return QAdminRenderStreams(self.test)
-
-
-class QPage:
-    def get_dd_elem(self, val, is_contain=True):
-        if is_contain:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a")
-        else:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
-
-
-class QStreamBox(QPage):
-    @property
-    def video_box(self): return self.find_by(id="playerCanvas")
-
-    @property
-    def cam_select_dd(self): return self.find_by(id="camera_select")
-
-    @property
-    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
-
-    def get_slider(self, val):
-        return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
-
-
-class QViewPage(BasePage, QStreamBox, LoginForm):
-    def __init__(self, *args):
-        BasePage.__init__(self, *args)
-
-        if len(args) > 0:
-            self.base_url = "http://" + args[0].env.render.ip
-
-        self.page_url = self.base_url
-
-        def __call__(self, text):
-            BasePage.__call__()
 
 
 class QAdminPage(BasePage, QPage, QAdminSidebar, LoginForm):

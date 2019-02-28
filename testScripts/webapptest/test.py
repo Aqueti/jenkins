@@ -803,6 +803,19 @@ class TestQAdmin(BaseTest):
     cam_id = '77'
     system_name = "cam77"
 
+    qvp = None
+
+    def setup_method(self, method):
+        super(TestQAdmin, self).setup_method(method)
+
+        self.qvp = QViewPage(self)
+        self.qvp.navigate_to()
+
+        self.qvp.login(system=self.system_name)
+
+    def teardown_method(self, method):
+        super(TestQAdmin, self).teardown_method(method)
+
     def find_diff(self, path):
         db_name = "acos"
         col_name = "files"
@@ -1189,11 +1202,61 @@ class TestQAdmin(BaseTest):
             assert math.fabs(1 - self.env.render.get_nw_usage("enp60s0")/TD.expected_nw_usage) <= 0.05
 
     #@pytest.mark.skip(reason="")
-    def test_login1(self):
-        qvp = QViewPage(self)
-        qvp.navigate_to()
+    def test_export_avi(self):
+        qvp = self.qvp
 
-        qvp.login(system=self.system_name)
+        qvp.left_menu_icon()
+
+        qvp.remove_all_avi_items()
+
+        qvp.export_avi_chkb()
+        time.sleep(5)
+        qvp.export_avi_chkb()
+        time.sleep(5)
+
+        files = os.listdir("/var/tmp/aqueti/avi/")
+
+        assert len(qvp.get_avi_items()) == 1
+
+        assert len(files) == 1
+
+        #assert "/var/tmp/aqueti/avi/" + qvp.get_avi_items()[0].get_attribute('innerText').split()[0].strip() == files[0]
+
+        files = [f for f in os.listdir("/var/tmp/aqueti/avi/") if re.match(r'.*\.avi', f)]
+
+        assert qvp.get_avi_items()[0].get_attribute('innerText').split()[0] == files[0]
+
+    #@pytest.mark.skip(reason="")
+    def test_recording(self):
+        qvp = self.qvp
+
+        qvp.left_menu_icon()
+
+        qvp.remove_all_avi_items()
+
+        qvp.export_avi_chkb()
+        time.sleep(5)
+        qvp.export_avi_chkb()
+        time.sleep(5)
+
+        files = [f for f in os.listdir("/var/tmp/aqueti/avi/") if re.match(r'.*\.avi', f)]
+
+        assert len(qvp.get_avi_items()) == 1
+
+        assert len(files) == 1
+
+        assert qvp.get_avi_items()[0].get_attribute('innerText').split()[0] == files[0]
+
+        #assert "/var/tmp/aqueti/avi/" + qvp.get_avi_items()[0].get_attribute('innerText').split()[0].strip() == files[0]
+
+    #@pytest.mark.skip(reason="")
+    def test_switch_to_fovea(self):
+        qvp = self.qvp
+
+        qvp.main_menu_icon()
+
+
+
 
 
 class TestState(BaseTest):
