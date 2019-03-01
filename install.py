@@ -121,6 +121,8 @@ for e in res:
                 files["asis"] = e.text
             else:
                 continue
+        else:
+            continue
         
         if not os.path.exists(folder_path + e.text):
             file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
@@ -140,13 +142,13 @@ if cam_ip != '':
         print('*************')
 
         if 'daemon_aarch64' in files.keys():
-            os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'")
+            os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")            
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'") 
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
 
         if 'aci' in files.keys():
-            os.system("scp " + folder_path + files["aci"] + " nvidia@" + tegra_ip + ":./")
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetiaci'")
+            os.system("scp " + folder_path + files["aci"] + " nvidia@" + tegra_ip + ":./")            
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aci'")  
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
@@ -157,6 +159,8 @@ os.system("sudo dpkg -r aquetidaemon-daemon")
 os.system("sudo dpkg -r aquetidaemon-application")
 os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
+if "--asis" in sys.argv:
+    os.system("sudo dpkg -r asis")
     
 if 'daemon_x86-app' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
