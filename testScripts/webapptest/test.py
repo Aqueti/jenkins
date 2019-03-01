@@ -803,10 +803,19 @@ class TestQAdmin(BaseTest):
     cam_id = '77'
     system_name = "cam77"
 
+    api = None
     qvp = None
+
+    def get_params(self):
+        time.sleep(7)
+        return json.loads(self.api.GetParameters("/aqt/camera/" + str(self.cam_id)))
 
     def setup_method(self, method):
         super(TestQAdmin, self).setup_method(method)
+
+        urls = AQT.StringVector()
+        urls.push_back("aqt://" + self.system_name)
+        self.api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
 
         self.qvp = QViewPage(self)
         self.qvp.navigate_to()
@@ -1182,26 +1191,25 @@ class TestQAdmin(BaseTest):
 
     @pytest.mark.skip(reason="")
     def test_cs_type(self):
-        qad = QAdminDashboard(self)
-        qad.navigate_to()
+        qvp = self.qvp
 
-        qad.settings_icon()
+        for ctype in ['LOCALDISPLAY', 'H264']:
+            try:
+                qvp.settings_menu_icon()
+            except:
+                pass
 
-        types = ['H264', 'LOCALDISPLAY']
-        for type in types:
-            qad.customize_stream_btn()
-            time.sleep(0.25)
+            qvp.customize_stream_btn()
+            time.sleep(1)
+            qvp.type_dd()
+            qvp.get_dd_elem(ctype)(act="click")
 
-            qad.type_dd()
-            qad.get_dd_elem(type)(act="click")
+            qvp.cs_update_btn()
+            time.sleep(15)
 
-            qad.cs_update_btn()
+            assert True  # make screenshot, pic in web gui
 
-            time.sleep(30)
-
-            assert math.fabs(1 - self.env.render.get_nw_usage("enp60s0")/TD.expected_nw_usage) <= 0.05
-
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_export_avi(self):
         qvp = self.qvp
 
@@ -1214,49 +1222,73 @@ class TestQAdmin(BaseTest):
         qvp.export_avi_chkb()
         time.sleep(5)
 
-        files = os.listdir("/var/tmp/aqueti/avi/")
-
-        assert len(qvp.get_avi_items()) == 1
-
-        assert len(files) == 1
-
-        #assert "/var/tmp/aqueti/avi/" + qvp.get_avi_items()[0].get_attribute('innerText').split()[0].strip() == files[0]
-
-        files = [f for f in os.listdir("/var/tmp/aqueti/avi/") if re.match(r'.*\.avi', f)]
-
-        assert qvp.get_avi_items()[0].get_attribute('innerText').split()[0] == files[0]
-
-    #@pytest.mark.skip(reason="")
-    def test_recording(self):
-        qvp = self.qvp
-
-        qvp.left_menu_icon()
-
-        qvp.remove_all_avi_items()
-
-        qvp.export_avi_chkb()
-        time.sleep(5)
-        qvp.export_avi_chkb()
-        time.sleep(5)
-
         files = [f for f in os.listdir("/var/tmp/aqueti/avi/") if re.match(r'.*\.avi', f)]
 
         assert len(qvp.get_avi_items()) == 1
 
         assert len(files) == 1
 
-        assert qvp.get_avi_items()[0].get_attribute('innerText').split()[0] == files[0]
+        assert qvp.get_avi_items()[0].get_attribute('innerText').split()[0].strip() == files[0]
 
         #assert "/var/tmp/aqueti/avi/" + qvp.get_avi_items()[0].get_attribute('innerText').split()[0].strip() == files[0]
 
+    @pytest.mark.skip(reason="")
+    def test_auto_loop_on(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        if qacs.auto_chkb.is_checked():
+            qacs.auto_chkb()
+            qacs.auto_disable_btn()
+            time.sleep(2)
+
+        qacs.auto_chkb()
+
+        info = self.get_params()
+
+        assert info["system_auto_enabled"] == True
+        assert info["auto_exposure_enabled"] == False
+        assert info["auto_analog_gain_enabled"] == False
+        assert info["auto_digital_gain_enabled"] == False
+
+    @pytest.mark.skip(reason="")
+    def test_auto_loop_off(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        if not qacs.auto_chkb.is_checked():
+            qacs.auto_chkb()
+            time.sleep(2)
+
+        qacs.auto_chkb()
+        qacs.auto_disable_btn()
+
+        info = self.get_params()
+
+        assert info["system_auto_enabled"] == False
+        assert info["auto_exposure_enabled"] == True
+        assert info["auto_analog_gain_enabled"] == False
+        assert info["auto_digital_gain_enabled"] == False
+
     #@pytest.mark.skip(reason="")
-    def test_switch_to_fovea(self):
-        qvp = self.qvp
+    def test_auto_set_exposure(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
 
-        qvp.main_menu_icon()
+        qacs = qad.menu_cam_settings()
 
+        if not qacs.auto_chkb.is_checked():
+            qacs.auto_chkb()
 
+        prev_info = self.get_params()1
 
+        qacs.auto_slider(value="100,5")
+
+        next_info = self.get_params()
 
 
 class TestState(BaseTest):

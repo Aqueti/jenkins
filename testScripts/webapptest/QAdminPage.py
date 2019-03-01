@@ -25,38 +25,13 @@ class LoginForm:
         self.system_txt(value=system)
         self.submit_btn()
 
+        time.sleep(5)
+
         #while self.form.is_displayed():
         #    time.sleep(1)
 
-        time.sleep(5)
 
-
-class QPage:
-    @property
-    def main_menu_icon(self): return self.find_by(xpath="(//nav//button[contains(., 'more_vert')])[0]")
-
-    @property
-    def customize_stream(self): return self.find_by(xpath="//i[contains(., 'setting')]")
-
-    @property
-    def refresh_stream(self): return self.find_by(xpath="//i[contains(., 'refresh')]") #2
-
-    @property
-    def stream_keybindings(self): return self.find_by(xpath="//i[contains(., 'help')]")
-
-    @property
-    def submit_issue(self): return self.find_by(xpath="//i[contains(., 'report_problem')]")
-
-
-
-    def get_dd_elem(self, val, is_contain=True):
-        if is_contain:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a")
-        else:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
-
-
-class QStreamBox(QPage):
+class QStreamBox:
     @property
     def video_box(self): return self.find_by(id="playerCanvas")
 
@@ -68,64 +43,6 @@ class QStreamBox(QPage):
 
     def get_slider(self, val):
         return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
-
-
-class QViewPage(BasePage, QStreamBox, LoginForm):
-    @property
-    def left_menu_icon(self): return self.find_by(xpath="//nav//button[contains(., 'menu')]")
-
-    @property
-    def export_avi_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Export AVI']/..", param="invisible")
-
-    @property
-    def recording_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Recording']/..", param="invisible")
-
-    @property
-    def avi_tab(self): return self.find_by(css="a[href = '#avi-tab']")
-
-    @property
-    def reservations_tab(self): return self.find_by(css="a[href='#reservation-tab']")
-
-    @property
-    def avi_tbl(self): return self.find_by(xpath="//div[@id='avi-tab']//table/tbody")
-
-    @property
-    def reservations_tbl(self): return self.find_by(xpath="//div[@id='reservation-tab']//table/tbody")
-
-    def get_avi_items(self):
-        items = self.avi_tbl.find_elements_by_tag_name("tr")
-
-        for i in range(len(items)):
-            if 'No data available' in items[i].get_attribute('innerHTML'):
-                del items[i]
-
-        return items
-
-    def get_reservation_items(self):
-        items = self.reservations_tbl.find_elements_by_tag_name("tr")
-
-        return items
-
-    def remove_all_avi_items(self):
-        items = self.get_avi_items()
-
-        for item in items:
-            btn_arr = item.find_elements_by_xpath("//i[contains(., 'delete')]")
-            if len(btn_arr) > 0:
-                btn_arr[0].click()
-
-                time.sleep(2)
-
-    def __init__(self, *args):
-        BasePage.__init__(self, *args)
-
-        if len(args) > 0:
-            self.base_url = "http://" + args[0].env.render.ip
-
-        self.page_url = self.base_url
-
-        def __call__(self, text):
-            BasePage.__call__()
 
 
 class QAdminSidebar:
@@ -277,9 +194,9 @@ class QAdminSidebar:
         return QAdminRenderStreams(self.test)
 
 
-class QAdminPage(BasePage, QPage, QAdminSidebar, LoginForm):
+class QPage(BasePage, LoginForm):
     @property
-    def side_icon(self): return self.find_by(css="button.v-toolbar__side-icon.v-btn.v-btn--icon div.v-btn__content")
+    def settings_menu_icon(self): return self.find_by(xpath="//button[contains(., 'menu')]/..//button[contains(., 'more_vert')]")
 
     @property
     def q_lnk(self): return self.find_by(css="a.d-flex.router-link-active")
@@ -294,35 +211,34 @@ class QAdminPage(BasePage, QPage, QAdminSidebar, LoginForm):
     def ping_time_fld(self): return self.find_by(css="span.v-tooltip.v-tooltip--bottom:nth-child(3n)")
 
     @property
-    def submit_issue_icon(self): return self.find_by(xpath="//i[contains(., 'report_problem')]")
+    def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
 
-# Submit Issue
-
-    @property
-    def si_filename_txt(self): return self.find_by(css="input[aria-label='Filename']")
+# Settings menu
 
     @property
-    def si_summary_txt(self): return self.find_by(css="textarea[aria-label='Summary']")
+    def customize_stream_btn(self): return self.find_by(xpath="//button[contains(., 'settings')]")
 
     @property
-    def si_description_txt(self): return self.find_by(css="textarea[aria-label='Description']")
+    def refresh_stream_btn(self): return self.find_by(xpath="(//button[contains(., 'refresh')])[2]")
 
     @property
-    def si_submit_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Submit')]")
+    def stream_keybindings_btn(self): return self.find_by(xpath="//i[contains(., 'help')]")
 
     @property
-    def si_close_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Close')]")
+    def submit_issue_btn(self): return self.find_by(xpath="//i[contains(., 'report_problem')]")
 
-# Settings
+# Customize Stream
+    @property
+    def type_dd(self): return self.find_by(xpath="//label[contains(., 'Type')]/..")
 
     @property
-    def settings_icon(self): return self.find_by(css="div.v-menu__activator button")
+    def display_dd(self): return self.find_by(xpath="//label[contains(., 'Display')]/..//input")
 
     @property
-    def customize_stream_btn(self): return self.find_by(xpath="//div[@class = 'v-list__tile' and contains(., 'Customize Stream')]//div[@class = 'v-list__tile__action']//i")
+    def framerate_dd(self): return self.find_by(xpath="//label[contains(., 'Framerate')]/..//input")
 
     @property
-    def refresh_stream_btn(self): return self.find_by(xpath="//div[@class = 'v-list__tile' and contains(., 'Refresh Stream')]//div[@class = 'v-list__tile__action']//i")
+    def projection_dd(self): return self.find_by(xpath="//label[contains(., 'Projection')]/..//input")
 
     @property
     def cs_update_btn(self): return self.find_by(xpath="//button/div[contains(., 'Update')]")
@@ -330,26 +246,28 @@ class QAdminPage(BasePage, QPage, QAdminSidebar, LoginForm):
     @property
     def cs_cancel_btn(self): return self.find_by(xpath="//button/div[contains(., 'Cancel')]")
 
-    @property
-    def type_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Type')]/..")
+# Submit Issue
 
     @property
-    def display_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Display')]/..")
+    def si_filename_txt(self):
+        return self.find_by(css="input[aria-label='Filename']")
 
     @property
-    def framerate_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Framerate')]/..")
+    def si_summary_txt(self):
+        return self.find_by(css="textarea[aria-label='Summary']")
 
     @property
-    def projection_dd(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//label[contains(., 'Projection')]/..")
-
-
-    @property
-    def locale_dd(self): return self.find_by(css="input[aria-label='Locale']")
+    def si_description_txt(self):
+        return self.find_by(css="textarea[aria-label='Description']")
 
     @property
-    def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
+    def si_submit_btn(self):
+        return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Submit')]")
 
-    base_url = ""
+    @property
+    def si_close_btn(self):
+        return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Close')]")
+
 
     def submit_issue(self, *args, **kwargs):
         self.si_filename_txt(value=kwargs["filename"])
@@ -358,14 +276,89 @@ class QAdminPage(BasePage, QPage, QAdminSidebar, LoginForm):
 
         self.si_submit_btn()
 
+
+    def get_dd_elem(self, val, is_contain=True):
+        if is_contain:
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a")
+        else:
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
+
     def __init__(self, *args):
         BasePage.__init__(self, *args)
 
         if len(args) > 0:
-            self.base_url = "http://" + args[0].env.render.ip + "/admin/#/"
+            self.page_url = "http://" + args[0].env.render.ip + "/admin/#/"
 
         def __call__(self, text):
             BasePage.__call__()
+
+
+class QViewPage(QPage, QStreamBox):
+    @property
+    def left_menu_icon(self): return self.find_by(xpath="//nav//button[contains(., 'menu')]")
+
+    @property
+    def export_avi_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Export AVI']/..", param="invisible")
+
+    @property
+    def recording_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Recording']/..", param="invisible")
+
+    @property
+    def avi_tab(self): return self.find_by(css="a[href = '#avi-tab']")
+
+    @property
+    def reservations_tab(self): return self.find_by(css="a[href='#reservation-tab']")
+
+    @property
+    def avi_tbl(self): return self.find_by(xpath="//div[@id='avi-tab']//table/tbody")
+
+    @property
+    def reservations_tbl(self): return self.find_by(xpath="//div[@id='reservation-tab']//table/tbody")
+
+    def get_avi_items(self):
+        items = self.avi_tbl.find_elements_by_tag_name("tr")
+
+        for i in range(len(items)):
+            if 'No data available' in items[i].get_attribute('innerHTML'):
+                del items[i]
+
+        return items
+
+    def get_reservation_items(self):
+        items = self.reservations_tbl.find_elements_by_tag_name("tr")
+
+        return items
+
+    def remove_all_avi_items(self):
+        items = self.get_avi_items()
+
+        for item in items:
+            btn_arr = item.find_elements_by_xpath("//i[contains(., 'delete')]")
+            if len(btn_arr) > 0:
+                btn_arr[0].click()
+
+                time.sleep(2)
+
+    def __init__(self, *args):
+        QPage.__init__(self, *args)
+
+        if len(args) > 0:
+            self.base_url = "http://" + args[0].env.render.ip
+
+        self.page_url = self.base_url
+
+        def __call__(self, text):
+            QPage.__call__()
+
+class QAdminPage(QPage, QAdminSidebar):
+    def __init__(self, *args):
+        QPage.__init__(self, *args)
+
+        if len(args) > 0:
+            self.page_url = "http://" + args[0].env.render.ip + "/admin/#/"
+
+        def __call__(self, text):
+            QPage.__call__()
 
 
 class QAdminDashboard(QAdminPage):
@@ -432,7 +425,6 @@ class QAdminDashboard(QAdminPage):
 
         return QAdminRender(self.test)
 
-    page_url = QAdminPage.base_url
     page_title = "qadmin"
 
     def __init__(self, *args):
@@ -533,14 +525,23 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     @property
     def focus_tab(self): return self.find_by(xpath="//nav//a[contains(.,'Focus')]")
 
-# Image
+# Capture
+    @property
+    def auto_slider(self): return self.find_by(id="global_slider")
 
     @property
-    def global_chkb(self): return self.find_by(xpath="//input[@id='global_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
+    def auto_chkb(self): return self.find_by(xpath="//input[@id='global_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
 
     @property
-    def global_txt(self): return self.find_by(id="global_text_field")
+    def auto_txt(self): return self.find_by(id="global_text_field")
 
+    #---Popup
+    @property
+    def auto_disable_btn(self): return self.find_by(id="auto_warning_ok")
+
+    @property
+    def auto_cancel_btn(self): return self.find_by(id="auto_warning_cancel")
+    #---
     @property
     def exposure_chkb(self): return self.find_by(xpath="//input[@id='exposure_time_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
 
@@ -557,10 +558,24 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def digital_gain_txt(self): return self.find_by(id="digital_gain_text_field")
 
     @property
-    def sharpening_txt(self): return self.find_by(id="sharpening_text_field")
+    def framerate_dd(self): return self.find_by(xpath="//input[@id='framerate_select']/../../div[@class='v-input__append-inner']")
 
     @property
-    def denoising_txt(self): return self.find_by(id="denoising_text_field")
+    def whitebalance_dd(self): return self.find_by(xpath="//input[@id='whitebalance_select']/../../div[@class='v-input__append-inner']")
+
+# Image
+
+    @property
+    def night_mode_chkb(self): return self.find_by(xpath="//input[@id='night_mode_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
+
+    @property
+    def night_mode_ir_chkb(self): return self.find_by(id="auto_night_mode_ir_switch")
+
+    @property
+    def night_mode_threshold_txt(self): return self.find_by(id="night_mode_threshold_text_field") #2
+
+    @property
+    def sharpening_txt(self): return self.find_by(id="sharpening_text_field")
 
     @property
     def denoising_txt(self): return self.find_by(id="denoising_text_field")
@@ -569,18 +584,29 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def saturation_txt(self): return self.find_by(id="saturation_text_field")
 
     @property
-    def night_mode_chkb(self): return self.find_by(xpath="//input[@id='night_mode_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
-
-    @property
-    def framerate_dd(self): return self.find_by(xpath="//input[@id='framerate_select']/../../div[@class='v-input__append-inner']")
-
-    @property
-    def whitebalance_dd(self): return self.find_by(xpath="//input[@id='whitebalance_select']/../../div[@class='v-input__append-inner']")
+    def ir_filter_switch_chkb(self): return self.find_by(id="ir_filter_switch")
 
 # Compression
 
     @property
     def compression_dd(self): return self.find_by(xpath="//input[@id='quality_select']/../../div[@class='v-input__append-inner']")
+
+# Focus
+
+    @property
+    def ft_coarse_btn(self): return self.find_by(id="focus_coarse_btn")
+
+    @property
+    def ft_fine_btn(self): return self.find_by(id="focus_fine_btn")
+
+    page_title = "qadmin"
+
+    def __init__(self, *args):
+        QAdminPage.__init__(self, *args)
+
+        self.page_url = self.base_url + "camera_settings/none"
+
+'''
 
 # Calibrate
 
@@ -596,20 +622,9 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     @property
     def ct_reset_geom_btn(self): return self.find_by(id="reset_geometry_btn")
 
-# Focus
-
-    @property
-    def ft_coarse_btn(self): return self.find_by(id="focus_coarse_btn")
-
-    @property
-    def ft_fine_btn(self): return self.find_by(id="focus_fine_btn")
+'''
 
 
-    page_url = QAdminPage.base_url + "camera_settings/none"
-    page_title = "qadmin"
-
-    def __init__(self, *args):
-        QAdminPage.__init__(self, *args)
 
 
 class QAdminCameraMicrocameras(QAdminPage, QStreamBox):

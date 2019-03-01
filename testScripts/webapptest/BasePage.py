@@ -53,7 +53,14 @@ class BasePage:
                         # page_obj.driver.execute_script("arguments[0].setAttribute(arguments[1], arguments[2]);", self, "default", "")
                         page_obj._(self)
 
+        def is_checked(self):
+            if "accent--text" in self.get_attribute('class'): # .is_selected()
+                return True
+            else:
+                return False
+
         WebElement.__call__ = call
+        WebElement.is_checked = is_checked
 
         self.TIMEOUT = 10
 
@@ -172,14 +179,14 @@ class BasePage:
             elem.clear()
             elem.send_keys(value)
         elif tag_name == "div":
-            role = elem.get_attribute("role")
+            role = elem.find_elements_by_tag_name('input')[0].get_attribute("role")
             if role is not None:
                 if "slider" in role:
                     move = ActionChains(self.driver)
                     arr = value.split(",")
                     move.click_and_hold(elem).move_by_offset(int(arr[0]) * int(arr[1]), 0).release().perform()
-            else:
-                elem.click()
+
+            elem.click()
         elif tag_name == "iframe":
             pass
         elif tag_name == "input":
