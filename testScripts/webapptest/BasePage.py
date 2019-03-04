@@ -179,14 +179,16 @@ class BasePage:
             elem.clear()
             elem.send_keys(value)
         elif tag_name == "div":
-            role = elem.find_elements_by_tag_name('input')[0].get_attribute("role")
-            if role is not None:
-                if "slider" in role:
-                    move = ActionChains(self.driver)
-                    arr = value.split(",")
-                    move.click_and_hold(elem).move_by_offset(int(arr[0]) * int(arr[1]), 0).release().perform()
+            class_name = elem.get_attribute('class')
+            if class_name is not None:
+                if "v-slider__thumb" in class_name:
+                    arr = value.split(';')
+                    offset = int(float(arr[0]) * float(arr[1]))
 
-            elem.click()
+                    move = ActionChains(self.driver)
+                    move.click_and_hold(elem).move_by_offset(offset, 0).release().perform()
+            else:
+                elem.click()
         elif tag_name == "iframe":
             pass
         elif tag_name == "input":
@@ -263,7 +265,7 @@ class BasePage:
         tag_name = str(elem.get_attribute('tagName')).lower()
 
         if tag_name == "a":
-            out += "Click '" + elem.get_attribute('innerText').strip() + "' link"
+            out += "Click '" + elem.get_attribute('innerText').strip().replace('\n', ' ') + "' link"
         elif tag_name == "select":
             out += "Select '" + value + "' in '" + self.get_label(elem) + "' dropdown"
         elif tag_name == "textarea":
@@ -271,10 +273,9 @@ class BasePage:
         elif tag_name == "button":
             out += "Click '" + elem.get_attribute('innerText').strip() + "' button"
         elif tag_name == "div":
-            role = elem.get_attribute("role")
-            if role is not None:
-                if role in "slider":
-                    out += "Move slider '" + self.get_label(elem) + "' by " + value.split(",")[0].strip()
+            class_name = elem.get_attribute('class')
+            if "v-slider__thumb" in class_name:
+                out += "Move slider '" + self.get_label(elem) + "' by " + value
             else:
                 out += "Click unknown element, tagName=" + elem.tag_name
         elif tag_name == "iframe":

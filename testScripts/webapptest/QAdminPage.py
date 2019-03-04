@@ -527,7 +527,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
 
 # Capture
     @property
-    def auto_slider(self): return self.find_by(id="global_slider")
+    def auto_slider(self): return self.find_by(xpath="//div[@id='global_slider']//div[@class='v-slider__thumb primary']")
 
     @property
     def auto_chkb(self): return self.find_by(xpath="//input[@id='global_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
@@ -543,16 +543,25 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def auto_cancel_btn(self): return self.find_by(id="auto_warning_cancel")
     #---
     @property
+    def exposure_slider(self): return self.find_by(xpath="//div[@id='exposure_time_slider']//div[@class='v-slider__thumb']")
+
+    @property
     def exposure_chkb(self): return self.find_by(xpath="//input[@id='exposure_time_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
 
     @property
     def exposure_txt(self): return self.find_by(id="exposure_time_text_field")
 
     @property
+    def analog_gain_slider(self): return self.find_by(xpath="//div[@id='analog_gain_slider']//div[@class='v-slider__thumb primary']")
+
+    @property
     def analog_gain_chkb(self): return self.find_by(xpath="//input[@id='analog_gain_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
 
     @property
     def analog_gain_txt(self): return self.find_by(id="analog_gain_text_field")
+
+    @property
+    def digital_gain_slider(self): return self.find_by(xpath="//div[@id='digital_gain_slider']//div[@class='v-slider__thumb primary']")
 
     @property
     def digital_gain_txt(self): return self.find_by(id="digital_gain_text_field")

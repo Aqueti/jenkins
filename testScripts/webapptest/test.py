@@ -1274,8 +1274,8 @@ class TestQAdmin(BaseTest):
         assert info["auto_analog_gain_enabled"] == False
         assert info["auto_digital_gain_enabled"] == False
 
-    #@pytest.mark.skip(reason="")
-    def test_auto_set_exposure(self):
+    @pytest.mark.skip(reason="")
+    def test_set_global_loop(self):
         qad = QAdminDashboard(self)
         qad.navigate_to()
 
@@ -1284,11 +1284,37 @@ class TestQAdmin(BaseTest):
         if not qacs.auto_chkb.is_checked():
             qacs.auto_chkb()
 
-        prev_info = self.get_params()1
+        while qacs.auto_txt.get_attribute("value") != "0":
+            qacs.auto_slider(value="-" + qacs.auto_txt.get_attribute("value") + ";0.4")
+            time.sleep(3)
 
-        qacs.auto_slider(value="100,5")
+        info = self.get_params()
 
-        next_info = self.get_params()
+        assert info['system_auto_interval'] == 0
+
+        qacs.make_screenshot()
+
+    #@pytest.mark.skip(reason="")
+    def test_set_exposure_time(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        if qacs.auto_chkb.is_checked():
+            qacs.auto_chkb()
+            qacs.auto_disable_btn()
+            time.sleep(2)
+
+        while qacs.auto_txt.get_attribute("value") != "0":
+            qacs.auto_slider(value="-" + qacs.auto_txt.get_attribute("value") + ";0.4")
+            time.sleep(3)
+
+        info = self.get_params()
+
+        assert info['system_auto_interval'] == 0
+
+        qacs.make_screenshot()
 
 
 class TestState(BaseTest):

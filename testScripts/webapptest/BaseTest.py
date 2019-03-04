@@ -20,13 +20,14 @@ class BaseTest(object):
     doc = OrderedDict()
 
     log_path = None
+    cur_dir = None
     base_dir = "/home/astepenko/Pictures/tests/"
     mongo_path = r"mongodb://10.0.0.176:27017/"
     chrome_path = r'/home/astepenko/Downloads/src/jenkins/testScripts/webapptest/chromedriver'
 
     @property
     def screenshot_path(self):
-        return '{0}/{1}_{2}.png'.format(self.base_dir, self.doc["script_name"], datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+        return '{0}/{1}_{2}.png'.format(self.cur_dir, self.doc["test_name"], datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
 
     @property
     def failure_exception(self):
@@ -72,10 +73,11 @@ class BaseTest(object):
 
         self.mongo_client = pymongo.MongoClient(self.mongo_path)
 
-        if not os.path.exists(self.base_dir):
-            os.makedirs(self.base_dir)
+        self.cur_dir = self.base_dir + "/" + self.doc["suite_name"] + "/" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S')
+        if not os.path.exists(self.cur_dir):
+            os.makedirs(self.cur_dir)
 
-        self.log_path = self.base_dir + self.doc["suite_name"] + "_" + self.doc["test_name"] + "_" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S') + ".txt"
+        self.log_path = self.cur_dir + "/" + self.doc["test_name"] + ".txt"
 
         self.add_to_log("Suite:\t" + self.doc["suite_name"] + "\n" +
                         "Test:\t" + self.doc["test_name"] + "\n" +
@@ -90,9 +92,9 @@ class BaseTest(object):
         except:
             pass
 
-        self.add_to_log("\n-----------------------------\n" +
-                        "Result: " + self.doc["result"] + "\n"
-                        "Exec time: " + str(datetime.timedelta(seconds=self.doc["duration"])))
+        self.add_to_log("\n\nExec time: " + str(datetime.timedelta(seconds=self.doc["duration"])) +
+                        "\n----------------------\n" +
+                        "Result: " + self.doc["result"] + "\n")
 
         # self.driver.close()
         if self.driver is not None:
