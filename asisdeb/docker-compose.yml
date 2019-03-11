@@ -16,10 +16,13 @@ services:
       - aqueti_net
     restart: on-failure
     volumes:
-      - /etc/aqueti/avi:/etc/aqueti/avi
+      - /var/tmp/aqueti/avi:/var/tmp/aqueti/avi
       - /var/log/aqueti:/var/log/aqueti
       - /etc/localtime:/etc/localtime
-      - /home/$USER/.ssh:/root/.ssh
+      - /home/$SUDO_USER/.ssh:/root/.ssh
+      - /usr/lib/python3.5/AQT.py:/usr/local/lib/python3.5/AQT.py
+      - /usr/lib/python3.5/_AQT.so:/usr/local/lib/python3.5/_AQT.so
+      - /usr/lib/libAQT.so:/usr/lib/libAQT.so
   janus:
     image: asis_janus
     container_name: janus_container
