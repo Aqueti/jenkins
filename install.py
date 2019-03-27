@@ -30,7 +30,7 @@ def print_help():
     print("--type\t\tdebug/release")
     print("--noinstall\tJust download")
     print("--asis\t\tInstall gui")
-    print("--reboot\tReboot tegras")
+    print("--restart\tRestart daemon on render/tegras")
 
     exit(1)
 
@@ -65,11 +65,17 @@ if "--branch" in sys.argv:
 else:
     branch_name = 'master'
 
+try:
+    urllib.request.urlopen(base_url)
+except:
+    print("server is unavailable")
+    exit(1)    
+
 if "--build" in sys.argv:
     build = sys.argv[sys.argv.index("--build") + 1]
 else:
     page = urllib.request.urlopen(base_url + '/' + branch_name)
-
+        
     tree = etree.HTML(page.read())
 
     res = tree.xpath('//h2//a')
@@ -152,8 +158,8 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
-        if "--reboot" in sys.argv:
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'")
+        if "--restart" in sys.argv:
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'") #sudo service Aqueti-Daemon restart
 
 os.system("sudo dpkg -r aquetidaemon-daemon")
 os.system("sudo dpkg -r aquetidaemon-application")
@@ -161,15 +167,17 @@ os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
 if "--asis" in sys.argv:
     os.system("sudo dpkg -r asis")
-    
-if 'daemon_x86-app' in files.keys():        
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])
+
 if 'api' in files.keys():    
     os.system("sudo dpkg -i " + folder_path + files["api"])
 if 'ctools' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["ctools"])
 if 'asis' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["asis"])
+if 'daemon_x86-app' in files.keys():        
+    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
+    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])
+    if "--restart" in sys.argv:
+        os.system("sudo service Aqueti-Daemon restart")
 
 print("***** Done *****")
