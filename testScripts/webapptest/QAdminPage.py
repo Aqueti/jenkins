@@ -1,6 +1,7 @@
 from BasePage import *
 from selenium.webdriver.common.action_chains import ActionChains
 import time
+import math
 
 
 class LoginForm:
@@ -527,7 +528,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
 
 # Capture
     @property
-    def auto_slider(self): return self.find_by(xpath="//div[@id='global_slider']//div[@class='v-slider__thumb primary']")
+    def auto_slider(self): return self.find_by(xpath="//div[@id='global_switch']//div[contains(@class,'v-slider__thumb-container')]/div")
 
     @property
     def auto_chkb(self): return self.find_by(xpath="//input[@id='global_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
@@ -543,7 +544,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def auto_cancel_btn(self): return self.find_by(id="auto_warning_cancel")
     #---
     @property
-    def exposure_slider(self): return self.find_by(xpath="//div[@id='exposure_time_slider']//div[@class='v-slider__thumb']")
+    def exposure_slider(self): return self.find_by(xpath="//div[@id='exposure_time_slider']//div[contains(@class,'v-slider__thumb-container')]/div")
 
     @property
     def exposure_chkb(self): return self.find_by(xpath="//input[@id='exposure_time_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
@@ -552,7 +553,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def exposure_txt(self): return self.find_by(id="exposure_time_text_field")
 
     @property
-    def analog_gain_slider(self): return self.find_by(xpath="//div[@id='analog_gain_slider']//div[@class='v-slider__thumb primary']")
+    def analog_gain_slider(self): return self.find_by(xpath="//div[@id='analog_gain_slider']//div[contains(@class,'v-slider__thumb-container')]/div")
 
     @property
     def analog_gain_chkb(self): return self.find_by(xpath="//input[@id='analog_gain_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
@@ -561,7 +562,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def analog_gain_txt(self): return self.find_by(id="analog_gain_text_field")
 
     @property
-    def digital_gain_slider(self): return self.find_by(xpath="//div[@id='digital_gain_slider']//div[@class='v-slider__thumb primary']")
+    def digital_gain_slider(self): return self.find_by(xpath="//div[@id='digital_gain_slider']//div[contains(@class,'v-slider__thumb-container')]/div")
 
     @property
     def digital_gain_txt(self): return self.find_by(id="digital_gain_text_field")
@@ -609,6 +610,16 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def ft_fine_btn(self): return self.find_by(id="focus_fine_btn")
 
     page_title = "qadmin"
+
+    def move_digital_gain_slider(self, value):
+        while True:
+            c_value = float(self.digital_gain_txt.get_attribute("value"))
+            diff = math.fabs(c_value - value)
+            if diff >= 0.1:
+                if c_value - value:
+                    self.digital_gain_slider(value="1;4")
+                else:
+                    self.digital_gain_slider(value="-1;4")
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)

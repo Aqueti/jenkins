@@ -102,8 +102,8 @@ class AquetiLoginPage(AquetiPage):
         self.login_btn()
 
         page = AquetiAdminPageSystem(self.test)
-        if self.driver.current_url == page.page_url:
-            return page
+        #if self.driver.current_url == page.page_url:
+        return page
 
     page_title = "Aqueti Admin"
 
@@ -223,23 +223,25 @@ class AquetiAdminPage(AquetiPage):
             return page
 
     def open_cam_page(self, cam_id=""):
-        cam_links = [lnk for lnk in self.camera_list.find_elements_by_tag_name('a')]
-
         if self.sidebar_cameras_lnk.get_attribute('aria-expanded') == "false":
             self.sidebar_cameras_lnk()
-            time.sleep(1)
+            time.sleep(2)
+
+        cam_links = [lnk for lnk in self.camera_list.find_elements_by_tag_name('a')]
 
         if cam_id != "":
-            for lnk in cam_links:
-                href = lnk.get_attribute("href")
+            for i in range(len(cam_links)):
+                elem = self.camera_list.find_elements_by_tag_name('a')[i]
+                href = elem.get_attribute("href")
                 if href[href.rindex('/') + 1:] == cam_id:
-                    lnk.click()
+                    elem.click()
+                    break
         else:
             cam_links[0]()
 
         page = AquetiAdminPageCamera(self.test)
-        if self.driver.current_url == page.page_url:
-            return page
+        #if self.driver.current_url == page.page_url:
+        return page
 
     def open_storage_page(self, data_id=""):
         time.sleep(1)
@@ -670,8 +672,12 @@ class AquetiAdminPageSensors(AquetiAdminPage):
     @property
     def focus_plus_btn(self): return self.find_by(xpath="//div[contains(@class, 'card-header') and contains(., 'Sensor Settings')]/..//button[contains(.,'+')]")
 
+    @property
+    def focus_minus_btn(self): return self.find_by(xpath="//div[contains(@class, 'card-header') and contains(., 'Sensor Settings')]/..//button[contains(.,'-')]")
+
     def select_sensor(self, sensor_name):
-        self.find_by(xpath="//ul[@id='sensorList']/li[contains(.,'" + str(sensor_name) + "')]")()
+        self.find_by(xpath="//ul[@id='sensorList']/li[.='" + str(sensor_name) + "']")()
+        #self.exec_js("arguments[0].click();", elem)
 
     def click_camera_page_lnk(self):
         self.camera_page_lnk()

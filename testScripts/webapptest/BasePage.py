@@ -158,7 +158,7 @@ class BasePage:
 
     def __human_type(self, elem, text):
         for char in text:
-            time.sleep(random.uniform(0.05, 0.2))
+            time.sleep(random.uniform(0.01, 0.05))
             elem.send_keys(char)
 
     def __perf_action(self, elem, value=""):
@@ -187,8 +187,10 @@ class BasePage:
 
                     move = ActionChains(self.driver)
                     move.click_and_hold(elem).move_by_offset(offset, 0).release().perform()
-            else:
-                elem.click()
+
+                    return
+
+            elem.click()
         elif tag_name == "iframe":
             pass
         elif tag_name == "input":

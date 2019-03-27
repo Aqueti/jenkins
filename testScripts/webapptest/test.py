@@ -11,6 +11,7 @@ import json
 import datetime as dt
 import numpy as np
 import subprocess
+import random
 import math
 import os
 try:
@@ -232,15 +233,15 @@ class TestWebApp(BaseTest):
 class TestAPIWebApp(BaseTest):
     browser = "chrome"
 
-    cam_id = "77"
-    cam_path = "/aqt/camera" + cam_id
-    server_path = "http://10.0.0.204:5000/video/video_feed"
+    cam_id = "9"
+    cam_path = "/aqt/camera/" + cam_id
+    server_path = "http://10.0.0.228:5000/video/video_feed"
 
     urls = AQT.StringVector()
-    urls.push_back("aqt://cam77")
+    urls.push_back("aqt://Camera9")
     #api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
 
-    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.149.3")
+    env = Environment(render_ip="10.0.0.228", cam_ip="10.1.9.9")
 
     def vector_to_array(self, c_vector):
         return [c_vector[i].Name() for i in range(0, c_vector.size())]
@@ -407,28 +408,6 @@ class TestAPIWebApp(BaseTest):
             assert float(info['denoising']) == float(aapc.denoising_slider_value.text)
             assert float(info['saturation']) == float(aapc.saturation_slider_value.text)
 
-        # info['digital_gain']
-        # info['analog_gain']
-        #
-        # info['whitebalance_mode']
-        # info['auto_digtial_gain_enabled']
-        # info['system_auto_interval']
-        # info['operating_mode']
-        # info['quality']
-        # info['auto_whitebalance']
-        # info['ir']
-        # info['auto_model_generation_interval_seconds']
-        # info['auto_exposure_enabled']
-        #
-        # info['auto_whitebalance_interval_seconds']
-        # info['auto_model_generation_enabled']
-        #
-        # info['system_auto_enabled']
-        # info['auto_analog_gain_enabled']
-        # info['data_routing_policy']
-        #
-        # info['exposure_time_milliseconds']
-
         for framerate in [i * 5 for i in range(1, 7)]:
             aapc.framerate_dd(framerate)
 
@@ -474,13 +453,13 @@ class TestAPIWebApp(BaseTest):
 
         aaps = alp.login()
 
-        aapc = aaps.open_cam_page("12")
+        aapc = aaps.open_cam_page(self.cam_id)
         aapc.settings()
 
         aapc.advanced_tab()
         aaps = aapc.adv_settings_btn()
 
-        aaps.select_sensor('1209')
+        aaps.select_sensor(self.cam_id + '0' + str(random.randint(1,19)))
 
         aaps.sensor_settings()
 
@@ -491,7 +470,7 @@ class TestAPIWebApp(BaseTest):
 
             aaps.coarse_fine_focus_lnk()
 
-            time.sleep(60)
+            time.sleep(90)
 
             aaps.make_screenshot()
 
@@ -502,18 +481,20 @@ class TestAPIWebApp(BaseTest):
 
         aaps = alp.login()
 
-        aapc = aaps.open_cam_page("12")
+        aapc = aaps.open_cam_page(str(self.cam_id))
 
-        for i in range(1, 200): 
+        for i in range(1, 10):
             aapc.settings()
 
             aapc.focus_tab()
 
+            time.sleep(0.2)
             aapc.ft_mode_btn()
+            time.sleep(0.2)
 
             aapc.ft_coarse_fine_lnk()
 
-            time.sleep(90)
+            time.sleep(60)
 
             aapc.advanced_tab()
 
@@ -525,11 +506,19 @@ class TestAPIWebApp(BaseTest):
                 while not aaps.sensor_list.is_displayed():
                     time.sleep(0.25)
 
-                aaps.select_sensor('120' + str(sensor_id))
+                aaps.select_sensor(self.cam_id + '0' + str(sensor_id))
 
-                time.sleep(2)
+                time.sleep(3)
 
                 aaps.make_screenshot()
+
+                if not aaps.focus_val_input.is_displayed():
+                    aaps.sensor_settings()
+
+                while aaps.focus_val_input.get_attribute('value') != '0.00':
+                    aaps.focus_val_input(value='0')
+                    aaps.focus_minus_btn()
+                    time.sleep(3)
 
             aapc = aaps.click_camera_page_lnk()
 
@@ -541,7 +530,7 @@ class TestAPIWebApp(BaseTest):
 
         aaps = alp.login()
 
-        aapc = aaps.open_cam_page("12")
+        aapc = aaps.open_cam_page("9")
 
         aapc.settings()
 
@@ -565,7 +554,7 @@ class TestAPIWebApp(BaseTest):
 
         aaps = alp.login()
 
-        aapc = aaps.open_cam_page("12")
+        aapc = aaps.open_cam_page(self.cam_id)
 
         aapc.settings()
 
@@ -581,7 +570,7 @@ class TestAPIWebApp(BaseTest):
                 while not aaps.sensor_list.is_displayed():
                     time.sleep(0.25)
 
-                aaps.select_sensor('120' + str(sensor_id))
+                aaps.select_sensor(self.cam_id + '0' + str(sensor_id))
 
                 time.sleep(2)
 
@@ -595,7 +584,7 @@ class TestAPIWebApp(BaseTest):
 
         aaps = alp.login()
 
-        aapc = aaps.open_cam_page("12")
+        aapc = aaps.open_cam_page(self.cam_id)
 
         aapc.settings()
 
@@ -611,7 +600,7 @@ class TestAPIWebApp(BaseTest):
                 while not aaps.sensor_list.is_displayed():
                     time.sleep(0.25)
 
-                aaps.select_sensor('120' + str(sensor_id))
+                aaps.select_sensor(self.cam_id + '0' + str(sensor_id))
 
                 if not aaps.focus_val_input.is_displayed():
                     aaps.sensor_settings()           
@@ -624,7 +613,7 @@ class TestAPIWebApp(BaseTest):
             time.sleep(20)
 
             for sensor_id in rnd_sensor_id:
-                aaps.select_sensor('120' + str(sensor_id))
+                aaps.select_sensor(self.cam_id + '0' + str(sensor_id))
 
                 time.sleep(2)
 
@@ -694,7 +683,7 @@ class TestAPIWebApp(BaseTest):
                 while not aaps.sensor_list.is_displayed():
                     time.sleep(0.25)
 
-                aaps.select_sensor(str(self.cam_id) + '0' + str(sensor_id))
+                aaps.select_sensor(self.cam_id + '0' + str(sensor_id))
 
                 if not aaps.focus_val_input.is_displayed():
                     aaps.sensor_settings()
@@ -801,6 +790,7 @@ class TestQAdmin(BaseTest):
     env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10")
 
     cam_id = '77'
+    cam_name = '/aqt/camera/' + cam_id
     system_name = "cam77"
 
     api = None
@@ -808,7 +798,49 @@ class TestQAdmin(BaseTest):
 
     def get_params(self):
         time.sleep(7)
-        return json.loads(self.api.GetParameters("/aqt/camera/" + str(self.cam_id)))
+        return json.loads(self.api.GetParameters(self.cam_name))
+
+    def set_params(self, json_str):
+        self.api.SetParameters(self.cam_name, json_str)
+        time.sleep(3)
+
+    def restore_defaults(self):
+        json_str = '''
+        {
+        	"auto_analog_gain_enabled": false,
+        	"auto_night_mode_enabled": true,
+        	"auto_digital_gain_enabled": false,
+        	"auto_whitebalance": true,
+        	"saturation": 0,
+        	"auto_whitebalance_interval_seconds": 300,
+        	"auto_night_mode_enable_threshold": 22,
+        	"whitebalance_mode": "AUTO",
+        	"auto_night_mode_disable_threshold": 1,
+        	"exposure_time_milliseconds": 0,
+        	"auto_exposure_enabled": false,
+        	"denoising": 0.5,
+        	"auto_ir_filter_enabled": true,
+        	"quality": "medium",
+        	"data_routing_policy": "",
+        	"operating_mode": {
+        		"framerate": 30,
+        		"tiling_policy": 2,
+        		"compression": 2
+        	},
+        	"digital_gain": 1,
+        	"system_auto_interval": 300,
+        	"ir_filter": false,
+        	"framerate": 30,
+        	"system_auto_enabled": false,
+        	"auto_model_generation_enabled": false,
+        	"analog_gain": 1,
+        	"auto_model_generation_interval_seconds": 0,
+        	"sharpening": 0.5
+        }
+        '''
+
+        self.set_params(json_str)
+
 
     def setup_method(self, method):
         super(TestQAdmin, self).setup_method(method)
@@ -825,6 +857,8 @@ class TestQAdmin(BaseTest):
     def teardown_method(self, method):
         super(TestQAdmin, self).teardown_method(method)
 
+        self.restore_defaults()
+
     def find_diff(self, path):
         db_name = "acos"
         col_name = "files"
@@ -840,24 +874,6 @@ class TestQAdmin(BaseTest):
                         res.append()
 
         return res
-
-    @pytest.mark.skip(reason="")
-    def test_qadmin(self):
-        qad = QAdminDashboard(self)
-        qad.navigate_to()
-
-        #qad.camera_lnk()
-        time.sleep(1)
-        qad.storage_lnk()
-        time.sleep(1)
-        qad.render_lnk()
-        time.sleep(1)
-        qad.system_lnk()
-        time.sleep(1)
-        qad.logs_lnk()
-        time.sleep(1)
-        qad.dashboard_lnk()
-        time.sleep(1)
 
     @pytest.mark.skip(reason="")
     def test_links_on_dashboard(self):
@@ -905,39 +921,9 @@ class TestQAdmin(BaseTest):
 
         qac.TIMEOUT = 10
 
-        cams = qac.get_mcams_number('12') # 0 - available, 1 - total
+        cams = qac.get_mcams_number('77') # 0 - available, 1 - total
 
-        assert int(cams[0]) == 19 and int(cams[1]) == 19
-
-    @pytest.mark.skip(reason="")
-    def test_mcams_num2(self):
-        qad = QAdminDashboard(self)
-        qad.navigate_to()
-
-        qad.TIMEOUT = 5
-
-        qac = qad.click_camera_lnk()
-
-        qac.TIMEOUT = 10
-
-        cams = qac.get_mcams_number('12') # 0 - available, 1 - total
-
-        assert int(cams[0]) == 19 and int(cams[1]) == 19
-
-    @pytest.mark.skip(reason="")
-    def test_mcams_num3(self):
-        qad = QAdminDashboard(self)
-        qad.navigate_to()
-
-        qad.TIMEOUT = 5
-
-        qac = qad.click_camera_lnk()
-
-        qac.TIMEOUT = 10
-
-        cams = qac.get_mcams_number('12') # 0 - available, 1 - total
-
-        assert int(cams[0]) == 19 and int(cams[1]) == 19
+        assert int(cams[0]) == 20 and int(cams[1]) == 20
 
     @pytest.mark.skip(reason="")
     def test_mcams_recording_status(self):
@@ -1118,13 +1104,13 @@ class TestQAdmin(BaseTest):
 
         qacm.camera_dd()
 
-        qacm.get_dd_elem("/aqt/camera/12")(act="click")
+        qacm.get_dd_elem(self.cam_id)(act="click")
 
         time.sleep(1)
 
         qacm.microcamera_dd()
 
-        qacm.get_dd_elem("1209")(act="click")
+        qacm.get_dd_elem(self.cam_id + '0' + str(random.randint(1,19)))(act="click")
 
         time.sleep(2)
 
@@ -1294,7 +1280,7 @@ class TestQAdmin(BaseTest):
 
         qacs.make_screenshot()
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_set_exposure_time(self):
         qad = QAdminDashboard(self)
         qad.navigate_to()
@@ -1304,17 +1290,92 @@ class TestQAdmin(BaseTest):
         if qacs.auto_chkb.is_checked():
             qacs.auto_chkb()
             qacs.auto_disable_btn()
-            time.sleep(2)
+            time.sleep(7)
 
-        while qacs.auto_txt.get_attribute("value") != "0":
-            qacs.auto_slider(value="-" + qacs.auto_txt.get_attribute("value") + ";0.4")
-            time.sleep(3)
+        if qacs.exposure_chkb.is_checked():
+            qacs.exposure_chkb()
+            time.sleep(7)
+
+        qacs.analog_gain_slider(value="8;9")
+        time.sleep(10)
+
+        qacs.make_screenshot()
+
+        EXPOSURE_MAX = 22 # 33
+
+        while float(qacs.exposure_txt.get_attribute("value")) < EXPOSURE_MAX:
+            qacs.exposure_slider(value="2;5")
 
         info = self.get_params()
 
-        assert info['system_auto_interval'] == 0
+        qacs.make_screenshot()
+
+        assert info['exposure_time_milliseconds'] == EXPOSURE_MAX
+
+
+    @pytest.mark.skip(reason="")
+    def test_set_analog_gain(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        if qacs.auto_chkb.is_checked():
+            qacs.auto_chkb()
+            qacs.auto_disable_btn()
+            time.sleep(7)
+
+        if qacs.exposure_chkb.is_checked():
+            qacs.exposure_chkb()
+            time.sleep(7)
+
+        qacs.exposure_slider(value="8;5")
+        time.sleep(10)
 
         qacs.make_screenshot()
+
+        ANALOG_GAIN_MAX = 22
+
+        while float(qacs.analog_gain_txt.get_attribute("value")) < ANALOG_GAIN_MAX:
+            qacs.analog_gain_slider(value="2;5")
+
+        info = self.get_params()
+
+        qacs.make_screenshot()
+
+        assert info['analog_gain'] == ANALOG_GAIN_MAX
+
+    @pytest.mark.skip(reason="")
+    def test_set_digital_gain(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qacs = qad.menu_cam_settings()
+
+        if qacs.auto_chkb.is_checked():
+            qacs.auto_chkb()
+            qacs.auto_disable_btn()
+            time.sleep(7)
+
+        if qacs.exposure_chkb.is_checked():
+            qacs.exposure_chkb()
+            time.sleep(7)
+
+        qacs.exposure_slider(value="8;5")
+        time.sleep(10)
+
+        qacs.make_screenshot()
+
+        DIGITAL_GAIN_MAX = 10
+
+        qacs.move_digital_gain_slider(10)
+
+        info = self.get_params()
+
+        qacs.make_screenshot()
+
+        assert info['digital_gain'] == DIGITAL_GAIN_MAX
+
 
 
 class TestState(BaseTest):
