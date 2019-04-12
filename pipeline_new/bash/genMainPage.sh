@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOC_HOME="/storage/Web/software/Documentation/acos"
-WEBHOME="/storage/Web/repositories"
+WEBHOME="/storage/Web/repositories/$3/"
 DATE=`date`
 MASTER_FILE="$WEBHOME/index.html"
 DEV_FILE="$WEBHOME/branches.html"
