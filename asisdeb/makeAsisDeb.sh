@@ -4,13 +4,18 @@ mkdir -p ASIS/DEBIAN
 
 CUR_DIR=`pwd`
 
+VERSION="3.0.0"
+if [ -z "$1" ]; then
+  $VERSION = $1
+fi
+
 DOCKERIMAGEPATH="${CUR_DIR}/asis-image*.tar.gz"
 mkdir -p ASIS/tmp
 cp $DOCKERIMAGEPATH ASIS/tmp/
 cp asisd.service ASIS/tmp/
 cp docker-compose.yml ASIS/tmp/
 
-VERSIONSTRING=3.0dev
+VERSIONSTRING=$VERSION
 DEBCONTROLFILE="Package: ASIS
 Version: $VERSIONSTRING
 Maintainer: Aqueti
