@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div id="req_tree">
+</div>
+
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    var tree = {{ requirements|tojson }};
+    var state = {{ state|tojson }};
+
+    restoreState(state);
+    gen_tree(tree, document.getElementById("req_tree"));
+    add_listeners();
+  });
+</script>
+
+{% endblock %}

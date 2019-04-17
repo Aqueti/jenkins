@@ -1,0 +1,75 @@
+body {
+  background-color: #efefef;
+  margin: 10px;
+}
+
+div#req_tree>ul, ul {
+  list-style-type: none;
+  font-weight: bold;
+  font: 16px sans-serif;
+}
+
+div#req_tree>ul {
+  margin: 5px;
+  padding: 0;
+}
+
+.caret {
+  cursor: pointer;
+  user-select: none;
+}
+
+.caret::before {
+  content: "\25B6";
+  font-size: 12px;
+  color: black;
+  display: inline-block;
+  margin-right: 3px;
+}
+
+.caret-down::before {
+  transform: rotate(90deg);
+}
+
+.nested {
+  display: none;
+}
+
+.active {
+  display: block;
+}
+
+.pass {
+    //text-transform: uppercase;
+    background-color: #3cb371;
+}
+
+.fail {
+    background-color: #ff6666;
+}
+
+li.req select {
+    margin-right: 5px;
+}
+
+li.req:hover {
+    background-color: #dfdfdf;
+}
+
+li>div {
+    display: inline-block;
+}
+
+div#top-panel {
+    background-color: #dedede;
+}
+
+div#top-panel div {
+    display: inline-block;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+#submit {
+    visibility: hidden;
+}
