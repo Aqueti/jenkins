@@ -1,34 +1,30 @@
-version: "3"
+version: "3.4"
 services:
   nginx:
     image: asis_nginx
-    ports:
-      - 80:80
-      - 443:443
     container_name: nginx_container
-    networks:
-      - aqueti_net
+    network_mode: "host"
     restart: on-failure
   asis:
     image: asis_asis
     container_name: asis_container
-    networks:
-      - aqueti_net
+    network_mode: "host"
     restart: on-failure
     volumes:
-      - /var/tmp/aqueti/avi:/var/tmp/aqueti/avi
+      - /var/tmp/aqueti:/var/tmp/aqueti
       - /var/log/aqueti:/var/log/aqueti
       - /etc/localtime:/etc/localtime
-      - /home/$SUDO_USER/.ssh:/root/.ssh
+      - /home/$USER/.ssh:/root/.ssh
       - /usr/lib/python3.5/AQT.py:/usr/local/lib/python3.5/AQT.py
       - /usr/lib/python3.5/_AQT.so:/usr/local/lib/python3.5/_AQT.so
       - /usr/lib/libAQT.so:/usr/lib/libAQT.so
   janus:
     image: asis_janus
     container_name: janus_container
-    networks:
-      - aqueti_net
+    network_mode: "host"
     restart: on-failure
-networks:
-  aqueti_net:
-    driver: bridge
+  stuntman:
+    image: asis_stuntman
+    container_name: stuntman_container
+    network_mode: "host"
+    restart: on-failure

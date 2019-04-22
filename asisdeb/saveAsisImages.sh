@@ -1,4 +1,4 @@
 #!/bin/bash
 
-sudo docker save -o asis-image_dev.tar asis_asis asis_janus asis_nginx
+sudo docker save -o asis-image_dev.tar asis_asis asis_janus asis_nginx asis_stuntman
 sudo gzip asis-image_dev.tar
