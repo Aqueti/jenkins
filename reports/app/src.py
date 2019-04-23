@@ -19,7 +19,9 @@ class Tree:
     def get(self):
         return self.tree
 
-    def add(self, branch, req_id=None, result=None):
+    def add(self, **kwargs):
+        branch = kwargs["branch"]
+
         if len(branch) == 0:
             return
 
@@ -29,8 +31,7 @@ class Tree:
                 c_tree.update({node: {}})
             c_tree = c_tree[node]
 
-        c_tree.update({"req_id": req_id})
-        c_tree.update({"result": result})
+        c_tree.update({"req_id": kwargs["req_id"], "result": kwargs["result"], "links": kwargs["links"]})
 
 
 class Struct():

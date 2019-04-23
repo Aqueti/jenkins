@@ -10,6 +10,7 @@
     var tree = {{ requirements|tojson }};
     var state = {{ state|tojson }};
 
+    console.log(tree);
     restoreState(state);
     gen_tree(tree, document.getElementById("req-tree"));
     add_listeners();
