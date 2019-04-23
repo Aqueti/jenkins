@@ -1,45 +1,12 @@
-import json
 from app import app
 from flask import Flask, request, render_template, flash, redirect
-from flask_pymongo import PyMongo
 from app.forms import *
 
-
-DB_SERVER_IP = "127.0.0.1:27017"
-DB_NAME = "qa"
-REQ_COL_NAME = "requirements"
-RES_COL_NAME = ""
-
-app.config["MONGO_URI"] = "mongodb://" + DB_SERVER_IP + "/" + DB_NAME
-mongo = PyMongo(app)
-
-state = {"proj": 0, "branch": 0, "build": 1}
-
-class Tree:
-
-    tree = {}
-
-    def get(self):
-        return self.tree
-
-    def add(self, branch):
-        if len(branch) == 0:
-            return
-
-        c_tree = self.tree
-        for node in branch:
-            if node not in c_tree.keys():
-                c_tree.update({node: {}})
-            c_tree = c_tree[node]
-
-    def to_json(self):
-        #self.tree["root"] = self.tree.pop(None)
-        return json.dumps(self.tree)
 
 @app.route('/')
 def index():
     cmd = [
-        #{"$match": {"req_id": {"$ne": None}}},
+        {"$match": {"req_id": {"$ne": None}}},
         {
              "$graphLookup": {
                  "from": REQ_COL_NAME,
@@ -52,25 +19,47 @@ def index():
     ]
 
     rs = mongo.db.requirements.aggregate(cmd)
+    rs2 = mongo.db.results.find({"req_id": {"$ne": 0}, "project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": int(state.dd.build.value[1])})
+
+    req_arr = [row for row in rs]
+    res_arr = [row for row in rs2]
 
     tree = Tree()
-    for item in rs:
-        tree.add([e["desc"] for e in item["hierarchy"]] + [item["desc"]])
+    for item in req_arr:
+        if "req_id" not in item:
+            tree.add([e["desc"] for e in item["hierarchy"]] + [item["desc"]])
+        else:
+            req_id = int(item["req_id"])
 
-    # rs = mongo.cx["results"].find({"project": state["proj"], "branch": state["branch"], "build": state["build]})
-    # flash('proj: {}, branch: {}, build: {}'.format(state["proj"], state["branch"], state["build"]))
+            res = -1
+            for r_item in res_arr:
+                r_req_id = int(r_item["req_id"])
+                if r_req_id == req_id:
+                    res = int(r_item["result"])
+                    break
 
-    form = PBBForm()
-    if form.validate_on_submit():
-        return redirect('/')
+            tree.add([e["desc"] for e in item["hierarchy"]] + [item["desc"]], req_id, res)
+
+    # flash('proj: {}'.format(state.dd.proj.value))
 
     return render_template("index.html",
-                           requirements=tree.get(), results=None, form=form, state=state)
+                           requirements=tree.get(), form=PBBForm(), state=state.dd.get())
 
-@app.route('/submit', methods=['get' , 'post'])
-def submit():
-    state["proj"] = request.form.get("proj", None)
-    state["branch"] = request.form.get("branch", None)
-    state["build"] = request.form.get("build", None)
+@app.route('/pbb_submit', methods=['get', 'post'])
+def pbb_submit():
+    state.dd.update([request.form.get("proj", None), request.form.get("branch", None), request.form.get("build", None)])
+
+    return redirect('/')
+
+
+@app.route('/req_submit', methods=['get', 'post'])
+def req_submit():
+    doc = {"project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": int(state.dd.build.value[1])}
+    doc.update(request.get_json())
+    doc["result"] = int(doc["result"])
+    q_doc = dict((k,doc[k]) for k in doc.keys() if k not in ("result", "links"))
+
+    if request.method == "POST":
+        mongo.db.results.update_one(q_doc, {"$set": doc}, upsert=True)
 
     return redirect('/')

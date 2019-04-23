@@ -10,7 +10,7 @@
 <body>
     <div id="cont">
       <div id="top-panel">
-      <form id="pbb" action="/submit" method="post" novalidate>
+      <form id="pbb" action="/pbb_submit" method="post" novalidate>
         <div>
           {{ form.proj.label }}
           {{ form.proj }}
@@ -24,7 +24,7 @@
           {{ form.build }}
         </div>
         {{ form.hidden_tag() }}
-        <input type="submit" value="submit" id="submit">
+        <input type="submit" value="submit" id="pbb_submit">
       </form>
       </div>
     {% block content %}

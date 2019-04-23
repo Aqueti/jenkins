@@ -1,17 +1,26 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
 body {
   background-color: #efefef;
   margin: 10px;
 }
 
-div#req_tree>ul, ul {
+#req-tree>ul, ul {
   list-style-type: none;
   font-weight: bold;
   font: 16px sans-serif;
 }
 
-div#req_tree>ul {
+#req-tree>ul {
   margin: 5px;
   padding: 0;
+}
+
+ul {
+    margin-left: 14px;
 }
 
 .caret {
@@ -57,19 +66,56 @@ li.req:hover {
 }
 
 li>div {
-    display: inline-block;
+    display: block;
 }
 
-div#top-panel {
+#top-panel {
     background-color: #dedede;
 }
 
-div#top-panel div {
+#top-panel div {
     display: inline-block;
     margin-left: 10px;
     font-weight: bold;
 }
 
-#submit {
+#pbb_submit {
     visibility: hidden;
+}
+
+.github {
+    //border:1px solid red;
+    background-color: #efefef;
+}
+
+form.req-submit {
+    display: inline-block;
+}
+
+form.req-submit input[type="submit"] {
+    width: 0;
+}
+
+div.github {
+    padding-left: 55px;
+}
+
+div.github ul {
+    margin: 0;
+    padding: 0;
+    font-size: 80%;
+}
+
+.add-link {
+    font-size: 90%;
+    color: grey;
+    cursor: pointer;
+}
+
+.add-link:hover {
+    color: lightblue;
+}
+
+a:link {
+  text-decoration: none;
 }

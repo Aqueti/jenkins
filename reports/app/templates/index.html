@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<div id="req_tree">
+<div id="req-tree">
 </div>
 
 <script type="text/javascript">
@@ -11,7 +11,7 @@
     var state = {{ state|tojson }};
 
     restoreState(state);
-    gen_tree(tree, document.getElementById("req_tree"));
+    gen_tree(tree, document.getElementById("req-tree"));
     add_listeners();
   });
 </script>

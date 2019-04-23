@@ -1,8 +1,15 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired
+from app.src import *
 
 class PBBForm(FlaskForm):
-    proj = SelectField('project', choices=[(0,'ACOS')])
-    branch = SelectField('branch', choices=[(0,'master'), (1,'beta'), (2,'dev')])
-    build = SelectField('build', choices=[(1,1), (2,2), (3,3)])
+    proj = SelectField('project', validators=[DataRequired()])
+    branch = SelectField('branch', validators=[DataRequired()])
+    build = SelectField('build', validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(PBBForm, self).__init__(*args, **kwargs)
+        self.proj.choices = state.dd.proj.choices
+        self.branch.choices = state.dd.branch.choices
+        self.build.choices = state.dd.build.choices
