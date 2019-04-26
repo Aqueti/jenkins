@@ -1,9 +1,37 @@
-from app import app
-from flask import Flask, request, render_template, flash, redirect
 from app.forms import *
+from flask import Flask, request, render_template, flash, redirect
+from flask_login import current_user, login_user, logout_user, login_required
+from werkzeug.urls import url_parse
+from app.src import *
+
+
+@app.route('/login', methods=['get', 'post'])
+def login():
+    if current_user.is_authenticated:
+        return redirect('/index')
+
+    login_form = LoginForm()
+    if login_form.validate_on_submit():
+        user = User(username=login_form.username.data, password=login_form.password.data)
+        if not user.exist():
+            return redirect('/login')
+        remember = request.form.get("remember", "no") == "yes"
+        login_user(user, remember=remember)
+        return redirect('/index')
+
+    return render_template('login.html', form=login_form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
 
 
 @app.route('/')
+@app.route('/index')
+@login_required
 def index():
     cmd = [
         {"$match": {"req_id": {"$ne": None}}},
@@ -49,13 +77,15 @@ def index():
                            requirements=tree.get(), form=PBBForm(), state=state.dd.get())
 
 @app.route('/pbb_submit', methods=['get', 'post'])
+@login_required
 def pbb_submit():
     state.dd.update([request.form.get("proj", None), request.form.get("branch", None), request.form.get("build", None)])
 
-    return redirect('/')
+    return redirect('/index')
 
 
 @app.route('/req_submit', methods=['get', 'post'])
+@login_required
 def req_submit():
     doc = {"project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": state.dd.build.value[1]}
     doc.update(request.get_json())
@@ -65,4 +95,4 @@ def req_submit():
     if request.method == "POST":
         mongo.db.results.update_one(q_doc, {"$set": doc}, upsert=True)
 
-    return redirect('/')
+    return redirect('/index')

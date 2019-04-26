@@ -1,6 +1,9 @@
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 from flask import flash
 from flask_pymongo import PyMongo
 from app import app
+from app import login
 import json
 
 
@@ -32,6 +35,37 @@ class Tree:
             c_tree = c_tree[node]
 
         c_tree.update({"req_id": kwargs["req_id"], "result": kwargs["result"], "links": kwargs["links"]})
+
+
+class User(UserMixin):
+    def __init__(self, **kwargs):
+        if "username" in kwargs:
+            self.username = kwargs["username"]
+        if "password" in kwargs:
+            self.password = kwargs["password"]
+        if "password_hash" in kwargs:
+            self.password_hash = kwargs["password_hash"]
+
+        self.id = 1
+
+        self.active = True
+
+    def query_db(self, query):
+        rs = mongo.db.users.find(query)
+        for row in rs:
+            return row
+
+        return None
+
+    def gen_hash(self, password):
+        self.password_hash = generate_password_hash(password)
+        return self.password_hash
+
+    def exist(self):
+        rs = self.query_db({"username": self.username})
+
+        if rs is not None:
+            return rs["password"] == self.password
 
 
 class Struct():
@@ -125,3 +159,10 @@ class State():
 
 
 state = State()
+
+@login.user_loader
+def load_user(id):
+    rs = mongo.db.users.find({"id": id})
+
+    for row in rs:
+        return User(id=row["id"], username=row["username"], password=row["password"])

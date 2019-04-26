@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField
+from wtforms import StringField, SubmitField, SelectField, PasswordField, BooleanField
 from wtforms.validators import DataRequired
 from app.src import *
 
@@ -13,3 +13,9 @@ class PBBForm(FlaskForm):
         self.proj.choices = state.dd.proj.choices
         self.branch.choices = state.dd.branch.choices
         self.build.choices = state.dd.build.choices
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
+    submit = SubmitField('Sign In')

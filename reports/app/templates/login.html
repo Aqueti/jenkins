@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <h2>Sign In</h2>
+    <p>login: test, password: test</p>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.username.label }}<br>
+            {{ form.username(placeholder="username") }}<br>
+            {% for error in form.username.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password(placeholder="password") }}<br>
+            {% for error in form.password.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        <p>{{ form.submit() }}</p>
+    </form>
+</body>
+</html>
