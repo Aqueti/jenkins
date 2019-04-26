@@ -34,7 +34,7 @@ def print_help():
 
     exit(1)
 
-base_url = "http://10.0.0.10/repositories/acos/"
+base_url = "http://10.0.0.10/repositories/acos"
 
 if "--help" in sys.argv:
     print_help()
