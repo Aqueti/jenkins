@@ -162,7 +162,7 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'") #sudo service Aqueti-Daemon restart
 
 os.system("sudo dpkg -r aquetidaemon-daemon")
-os.system("sudo dpkg -r aquetidaemon-application")
+os.system("sudo pkill -9 Aqueti; sudo dpkg -r aquetidaemon-application")
 os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
 if "--asis" in sys.argv:
