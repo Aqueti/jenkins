@@ -119,8 +119,22 @@ for e in res:
         elif "ACI" in e.text:
             files["aci"] = e.text
         elif "API" in e.text:
+            if type == 'debug':
+                if 'debug' not in e.text:
+                    continue
+            else:
+                if 'debug' in e.text:
+                    continue
+
             files["api"] = e.text
         elif "CalibrationTools" in e.text:
+            if type == 'debug':
+                if 'debug' not in e.text:
+                    continue
+            else:
+                if 'debug' in e.text:
+                    continue
+
             files["ctools"] = e.text
         elif "ASIS" in e.text:
             if "--asis" in sys.argv:
