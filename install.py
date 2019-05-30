@@ -101,15 +101,15 @@ os.system("mkdir -p " + folder_path)
 files = dict()
 for e in res:
     if ".deb" in e.text:
+        if type == 'debug':
+            if 'debug' not in e.text:
+                continue
+        else:
+            if 'debug' in e.text:
+                continue
+        
         if "Daemon" in e.text:
             if "x86_64" in e.text:
-                if type == 'debug':
-                    if 'debug' not in e.text:
-                        continue
-                else:
-                    if 'debug' in e.text:
-                        continue
-                
                 if '-application' in e.text:
                     files["daemon_x86-app"] = e.text
                 elif '-daemon' in e.text:
@@ -119,22 +119,8 @@ for e in res:
         elif "ACI" in e.text:
             files["aci"] = e.text
         elif "API" in e.text:
-            if type == 'debug':
-                if 'debug' not in e.text:
-                    continue
-            else:
-                if 'debug' in e.text:
-                    continue
-
             files["api"] = e.text
         elif "CalibrationTools" in e.text:
-            if type == 'debug':
-                if 'debug' not in e.text:
-                    continue
-            else:
-                if 'debug' in e.text:
-                    continue
-
             files["ctools"] = e.text
         elif "ASIS" in e.text:
             if "--asis" in sys.argv:
