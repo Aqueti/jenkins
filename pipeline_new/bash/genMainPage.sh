@@ -14,7 +14,7 @@ if [[ $BRANCH == "master" || $BRANCH == "beta" ]]; then
    mkdir -p $DOC_HOME
    echo "Copying Documentation from `pwd` to $DOC_HOME"
    cp -r Documentation/* $DOC_HOME
-   #rm -rf Documentation
+   rm -rf Documentation 2>/dev/null
 else 
    echo "Not master branch. Branch is $BRANCH"
 fi
@@ -56,7 +56,7 @@ for directory in */ ; do
 	 dirname=${d%/}
 
 	 #echo "adding $dirname to $DEST"
-	 #echo "<a href=\"$dirname/index.html\">$dirname</a><br>" >> $DEST
+	 echo "<a href=\"$dirname/index.html\">$dirname</a><br>" >> $DEST
 	 last=$d
    done
 
