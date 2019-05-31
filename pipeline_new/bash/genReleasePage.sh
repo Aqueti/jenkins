@@ -3,6 +3,7 @@
 BRANCH=$1
 BUILD=$2
 
+sh "sed -e 's/$/<br>/' -i release_notes.txt"
 RELEASE_NOTES=`cat release_notes.txt`
 
 echo "Building index.html for branch $BRANCH at `pwd`"
