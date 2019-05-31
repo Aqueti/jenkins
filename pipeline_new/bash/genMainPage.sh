@@ -1,11 +1,11 @@
 #!/bin/bash
 
-DOC_HOME="/storage/Web/software/Documentation/acos"
+DOC_HOME="/storage/Web/software/Documentation/$3"
 WEBHOME="/storage/Web/repositories/$3/"
 DATE=`date`
 MASTER_FILE="$WEBHOME/index.html"
 DEV_FILE="$WEBHOME/branches.html"
-S3_DEST="s3://aqueti.operations/repositories"
+
 BRANCH=$1
 
 if [[ $BRANCH == "master" || $BRANCH == "beta" ]]; then
@@ -21,7 +21,11 @@ fi
 
 echo "Copying all files to $WEBHOME"
 mkdir -p $WEBHOME/$1/$2
-cp -r * $WEBHOME/$1/$2
+cp -r *.* $WEBHOME/$1/$2
+
+rm -rf $WEBHOME/$1/latest 2>/dev/null
+mkdir -p $WEBHOME/$1/latest
+cp -r *.* $WEBHOME/$1/latest
 
 echo "Working in $WEBHOME"
 cd $WEBHOME
@@ -36,8 +40,6 @@ echo "<h3>Branches</h3>" >> $MASTER_FILE
 cat $MASTER_FILE > $DEV_FILE
 
 for directory in */ ; do
-   rm latest
-
    echo "Generating content in $directory"
    cd $directory 
    DEST=index.html
@@ -51,23 +53,18 @@ for directory in */ ; do
    echo "<h2>Date: $DATE<h2>" >> $DEST
 
    for d in */ ; do
-      if [[ $d == *"@"* ]];
-      then
-         rm -rf $d
-      else 
-         dirname=${d%/}
- 
-         echo "adding $dirname to $DEST"
-         echo "<a href=\"$dirname/index.html\">$dirname</a><br>" >> $DEST
-         last=$d
-      fi
+	 dirname=${d%/}
+
+	 #echo "adding $dirname to $DEST"
+	 #echo "<a href=\"$dirname/index.html\">$dirname</a><br>" >> $DEST
+	 last=$d
    done
 
    dirname=${directory%/}
    lastname=${last%/}
 
-   rm -rf latest
-   cp -r $lastname latest
+   #rm -rf latest
+   #cp -r $lastname latest
 
    echo "<a href=\"latest/index.html\">latest</a><br>" >> $DEST
   
@@ -79,7 +76,7 @@ for directory in */ ; do
 
    echo "<a href=\"$dirname/index.html\">$directory</a><br>" >> $DEV_FILE
 
-   if [[ $dirname == "master" || $dirname == "alpha" || $dirname == "beta" || $dirname == "release" ]]; 
+   if [[ $dirname == "master" || $dirname == "beta" || $dirname == "dev" ]]; 
    then 
       echo "<a href=\"$dirname/index.html\">$directory</a><br>" >> $MASTER_FILE
    fi
