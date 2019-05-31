@@ -51,6 +51,8 @@ for directory in */ ; do
 
    echo "<h1>Aqueti Testbed Releases for branch $directory</h1>" >> $DEST
    echo "<h2>Date: $DATE<h2>" >> $DEST
+   
+   echo "<a href=\"latest/index.html\">latest</a><br>" >> $DEST
 
    for d in */ ; do
 	 dirname=${d%/}
@@ -64,10 +66,7 @@ for directory in */ ; do
    lastname=${last%/}
 
    #rm -rf latest
-   #cp -r $lastname latest
-
-   echo "<a href=\"latest/index.html\">latest</a><br>" >> $DEST
-  
+   #cp -r $lastname latest  
 
    echo "</body>" >> $DEST
    echo "</html>" >> $DEST
