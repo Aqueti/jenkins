@@ -3,8 +3,10 @@
 BRANCH=$1
 BUILD=$2
 
-sh "sudo sed -e 's/$/<br>/' -i release_notes.txt"
-RELEASE_NOTES=`cat release_notes.txt`
+sh "sudo head -5 release_notes.txt > release_notes.out"
+sh "sudo sed -e 's/$/<br>/' -i release_notes.out"
+RELEASE_NOTES=`cat release_notes.out`
+sh "sudo rm release_notes.out"
 
 echo "Building index.html for branch $BRANCH at `pwd`"
 
