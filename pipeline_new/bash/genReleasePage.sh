@@ -2,8 +2,9 @@
 
 BRANCH=$1
 BUILD=$2
+DOC_HOME="/storage/Web/software/Documentation/$3"
 
-sh "head -5 release_notes.txt > release_notes.out"
+sh "head -5 $DOC_HOME/$BRANCH/$BUILD/release_notes.txt > release_notes.out"
 sh "sed -e 's/$/<br>/' -i release_notes.out"
 RELEASE_NOTES=`cat release_notes.out`
 sh "rm release_notes.out"
