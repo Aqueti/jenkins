@@ -39,7 +39,7 @@ def index():
         }
     ]
 
-    rs = mongo.db.requirements.aggregate(cmd)
+    rs = mongo.db[REQ_COL_NAME].aggregate(cmd)
     rs2 = mongo.db.results.find({"req_id": {"$ne": 0}, "project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": state.dd.build.value[1]})
 
     req_arr = [row for row in rs]
