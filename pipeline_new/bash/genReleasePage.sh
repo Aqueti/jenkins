@@ -3,11 +3,6 @@
 BRANCH=$1
 BUILD=$2
 
-sh 'pwd'
-sh 'ls -la'
-
-# sh "head -5 release_notes.txt > release_notes.out"
-# sh "sed -e 's/$/<br>/' -i release_notes.out"
 RELEASE_NOTES=`head -5 release_notes.txt`
 
 echo "Building index.html for branch $BRANCH at `pwd`"
