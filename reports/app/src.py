@@ -9,7 +9,7 @@ import json
 
 DB_SERVER_IP = "127.0.0.1:27017"
 DB_NAME = "qa"
-REQ_COL_NAME = "requirements"
+REQ_COL_NAME = "req"
 RES_COL_NAME = "results"
 
 app.config["MONGO_URI"] = "mongodb://" + DB_SERVER_IP + "/" + DB_NAME
@@ -34,7 +34,7 @@ class Tree:
                 c_tree.update({node: {}})
             c_tree = c_tree[node]
 
-        c_tree.update({"req_id": kwargs["req_id"], "result": kwargs["result"], "links": kwargs["links"]})
+        c_tree.update({"req_id": kwargs["req_id"], "result": kwargs["result"], "links": kwargs["links"], "user": kwargs["user"], "timestamp": kwargs["timestamp"]})
 
 
 class User(UserMixin):
@@ -61,11 +61,14 @@ class User(UserMixin):
         self.password_hash = generate_password_hash(password)
         return self.password_hash
 
+    def verify_passwd(self, password):
+        return check_password_hash(password, self.password)
+
     def exist(self):
         rs = self.query_db({"username": self.username})
 
         if rs is not None:
-            return rs["password"] == self.password
+            return self.verify_passwd(rs["password"])
 
 
 class Struct():
@@ -98,6 +101,18 @@ class DD():
 
         if len(self.build.choices) > 0:
             self.build.value = self.build.choices[-1]
+
+    def equals(self, **kwargs):
+        res = True
+
+        if "proj" in kwargs:
+            res &= self.proj.value[1] == kwargs["proj"]
+        if "branch" in kwargs:
+            res &= self.branch.value[1] == kwargs["branch"]
+        if "build" in kwargs:
+            res &= int(self.build.value[1]) == int(kwargs["build"])
+
+        return res
 
     def get(self):
         return {"proj": self.proj.value, "branch": self.branch.value, "build": self.build.value}

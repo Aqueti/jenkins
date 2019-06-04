@@ -9,9 +9,13 @@
   window.addEventListener("load", function() {
     var tree = {{ requirements|tojson }};
     var state = {{ state|tojson }};
+    var session = {{ session|tojson }};
 
+    console.log(session);
     console.log(tree);
+
     restoreState(state);
+    set_vars(session);
     gen_tree(tree, document.getElementById("req-tree"));
     add_listeners();
   });

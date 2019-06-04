@@ -65,6 +65,10 @@ li.req:hover {
     background-color: #dfdfdf;
 }
 
+li.req:hover div.user-info{
+    color: #2c2c2c;
+}
+
 li>div {
     display: block;
 }
@@ -132,5 +136,12 @@ a:link {
 }
 
 #logout-div {
+    float: right;
+}
+
+.user-info {
+    font-size: 60%;
+    color: white;
+    position: relative;
     float: right;
 }

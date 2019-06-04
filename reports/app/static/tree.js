@@ -10,6 +10,12 @@ $(document).ready(function() {
     });
 });
 
+var session;
+
+function set_vars(s) {
+    session = s;
+}
+
 function gen_tree(tree, parent) {
   if (JSON.stringify(tree) === JSON.stringify({}) || typeof(tree["req_id"]) != "undefined") {
     return;
@@ -28,6 +34,19 @@ function gen_tree(tree, parent) {
       }
 
       if (typeof(tree[key]["req_id"]) !== "undefined") {
+        var ui_div = document.createElement("div");
+        ui_div.className = "user-info";
+        var ui_span = document.createElement("span");
+        ui_span.innerText = "";
+
+        if (typeof(tree[key]["timestamp"]) !== "undefined") {
+          if (tree[key]["timestamp"] !== null) {
+            ui_span.innerText = "last modified by " + tree[key]["user"] + " " + (new Date(tree[key]["timestamp"])).toLocaleString("en-US");
+          }
+        }
+
+        ui_div.appendChild(ui_span);
+
         var select = document.createElement("select");
         select.className = "result";
 
@@ -45,6 +64,7 @@ function gen_tree(tree, parent) {
 
         li.setAttribute("req_id", tree[key]["req_id"]);
         li.className = "req";
+        li.appendChild(ui_div);
         li.appendChild(select);
       }
 
@@ -115,14 +135,16 @@ function add_listeners() {
     }
 
     $(".result").each(function(i,e) {
-        $(e).on("change", function() {
+        $(e).on("change", function(k) {
             var v = $(e).val();
             if (v == 1) {
                 $(e).closest(".req").removeClass("fail");
                 $(e).closest(".req").toggleClass("pass");
                 $(e).closest(".req").find("div.github").remove();
 
-                submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array()});
+                if (k.originalEvent) {
+                    submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
+                }
             } else if (v == 0) {
                 $(e).closest(".req").removeClass("pass");
                 $(e).closest(".req").toggleClass("fail");
@@ -147,19 +169,29 @@ function add_listeners() {
                                     linksArr.push($(this).attr("href"));
                                 });
 
-                                submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: linksArr});
+                                //if (k.originalEvent) {
+                                submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: linksArr, user: session.username, timestamp: Date.now()});
+                                //}
                             }
                         });
                     }
                 });
 
-                submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val()});
+                if (k.originalEvent) {
+                    submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
+                }
             } else {
                 $(e).closest(".req").removeClass("pass");
                 $(e).closest(".req").removeClass("fail");
                 $(e).closest(".req").find("div.github").remove();
 
-                submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array()});
+                if (k.originalEvent) {
+                    submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
+                }
+            }
+
+            if (k.originalEvent) {
+                $(e).parent().find("div.user-info").find("span").text("last modified by " + session.username + " " + (new Date()).toLocaleString("en-US"));
             }
         });
     });
