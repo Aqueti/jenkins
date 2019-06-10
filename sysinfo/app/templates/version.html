@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    var info = {{ info|tojson }};
+
+    gen_info(info, document.querySelector("div.sysinfo"));
+  });
+</script>
+
+<div class="container">
+	<h3>Version</h3>
+</div>
+
+<br>
+
+<div class="sysinfo">
+</div>
+
+{% endblock %}
