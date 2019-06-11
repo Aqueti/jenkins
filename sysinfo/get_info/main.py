@@ -6,9 +6,9 @@ import pymongo
 import time
 import datetime as dt
 
-UPDATE_INTERVAL = 300  # seconds
-SCRIPT_PATH = "get_info.py"
 
+UPDATE_INTERVAL = 300  #seconds
+SCRIPT_PATH = "get_info.py"
 
 class DB:
     server_ip = "10.0.0.176"
@@ -20,8 +20,14 @@ class DB:
         self.mc = pymongo.MongoClient("mongodb://" + self.server_ip + ":" + self.port)
 
     def store(self, doc):
-        self.mc[self.db_name][self.col_name].insert(doc)
+        self.mc[self.db_name]["sysinfo"].insert(doc)
 
+    def get_ip(self, arch):
+        rs = self.mc[self.db_name]["nodes"].find({"arch": arch})
+        if arch == "aarch64":
+            return [(row["ip"] + "." + str(row["tegras_num"])) for row in rs]
+        else:
+            return [row["ip"] for row in rs]
 
 def get_username(ip):
     subnet = "10.1."
@@ -34,6 +40,8 @@ def get_username(ip):
 
     if ip in ("10.1.1.177", "10.1.1.232"):
         return "aqueti"
+    elif ip in ("10.1.1.204"):
+        return "jenkins"
     else:
         return "mosaic"
 
@@ -57,11 +65,9 @@ def is_available(ip):
     else:
         return False
 
-
 def copy_to(ip):
-    cmd = "scp " + SCRIPT_PATH + " " + get_username(ip) + "@" + ip + ":./"
+    cmd = "scp " + SCRIPT_PATH + " " + get_username(ip)  + "@" + ip + ":./"
     exec_cmd(cmd)
-
 
 def get_info(ip):
     copy_to(ip)
@@ -74,11 +80,14 @@ def get_info(ip):
 
 db = DB()
 
-servers = ["10.1.1.177", "10.1.1.232", "10.1.1.189", "10.1.1.101", "10.1.1.100"]
-cameras = ["10.1.2.10", "10.1.4.9", "10.1.7.10", "10.1.9.9", "10.1.11.9", "10.1.12.9"]
-
 while True:
     s_time = dt.datetime.now()
+
+    print(s_time, ": gathering info")
+
+    servers = db.get_ip("x86_64")
+    cameras = db.get_ip("aarch64")
+
     for ip in servers:
         if not is_available(ip):
             continue
