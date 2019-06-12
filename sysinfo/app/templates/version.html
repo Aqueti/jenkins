@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+
 <script type="text/javascript">
   window.addEventListener("load", function() {
     var info = {{ info|tojson }};
 
-    gen_info(info, document.querySelector("div.sysinfo"));
+    gen_info(info, document.querySelector("body"));
   });
 </script>
 
@@ -14,8 +15,5 @@
 </div>
 
 <br>
-
-<div class="sysinfo">
-</div>
 
 {% endblock %}

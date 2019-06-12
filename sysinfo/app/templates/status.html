@@ -1,127 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<script type="text/javascript">
+  window.addEventListener("load", function() {
+    var info = {{ info|tojson }};
+
+    gen_status_info(info, document.querySelector("body"));
+  });
+</script>
+
 <div class="container">
-	<h3>Status - DEVELOPMENT IS IN PROGRESS</h3>
+	<h3>Status</h3>
 </div>
 
 <br>
-
-<div class="container">
-	<p>system: Camera12</p>
-
-<div class="container">
-  <table class="table table-striped">
-    <thead>
-      <tr>
-		<th>arch</th>
-		<th>ip</th>
-        <th>date</th>
-        <th>daemon status</th>
-        <th>daemon uptime</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>x86_64</td>
-        <td>10.1.1.101</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>1hr 12min</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="container">
-  <table class="table table-striped">
-    <thead>
-      <tr>
-		<th>arch</th>
-		<th>ip</th>
-        <th>date</th>
-        <th>daemon status</th>
-        <th>daemon uptime</th>
-		<th>compression</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>aarch64</td>
-        <td>10.1.12.1</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.2</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.3</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.4</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.5</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.6</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.7</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.8</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-	  <tr>
-        <td>aarch64</td>
-        <td>10.1.12.9</td>
-		<td>06/05/19 17:51</td>
-		<td>active</td>
-		<td>13hr</td>
-		<td>H264</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-</div>
 
 {% endblock %}
