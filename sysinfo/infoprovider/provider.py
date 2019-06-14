@@ -20,7 +20,17 @@ class DB:
         self.mc = pymongo.MongoClient("mongodb://" + self.server_ip + ":" + self.port)
 
     def store(self, doc):
-        self.mc[self.db_name]["sysinfo"].insert(doc)
+        q_doc = doc.copy()
+        try:
+            del q_doc["timestamp"]
+            del q_doc["daemon"]["uptime"]
+            del q_doc["daemon"]["status"]
+            del q_doc["asis"]["uptime"]
+            del q_doc["asis"]["status"]
+        except:
+            pass
+
+        self.mc[self.db_name]["sysinfo"].replace_one(q_doc, doc, upsert=True)
 
     def get_ip(self, arch):
         rs = self.mc[self.db_name]["nodes"].find({"arch": arch})
