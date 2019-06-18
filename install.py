@@ -147,15 +147,15 @@ if cam_ip != '':
         print(tegra_ip)
         print('*************')
 
-        if 'daemon_aarch64' in files.keys():
-            os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")            
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'") 
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
-
         if 'aci' in files.keys():
             os.system("scp " + folder_path + files["aci"] + " nvidia@" + tegra_ip + ":./")            
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aci'")  
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
+        
+        if 'daemon_aarch64' in files.keys():
+            os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")            
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'") 
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
         if "--restart" in sys.argv:
