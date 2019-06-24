@@ -30,7 +30,7 @@ def print_help():
     print("--type\t\tdebug/release")
     print("--noinstall\tJust download")
     print("--asis\t\tInstall gui")
-    print("--restart\tRestart daemon on render/tegras")
+    print("--norestart\tno daemon restart on render/tegras")
 
     exit(1)
 
@@ -45,9 +45,9 @@ if "--cam" in sys.argv:
     cam_ip = '10.1.' + cam_id + '.'
     start_ip = 1
     
-    if cam_id == str(9) or cam_id == str(12):
+    if cam_id in [str(id) for id in (4, 9, 12)]:
         num_of_tegras = 9
-    elif cam_id == str(149):
+    elif cam_id in [str(id) for id in (100, 101, 102, 103)]:
         num_of_tegras = 3
     else:   
         num_of_tegras = 10
@@ -158,11 +158,12 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
-        if "--restart" in sys.argv:
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo reboot'") #sudo service Aqueti-Daemon restart
+        if "--norestart" not in sys.argv:
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo service Aqueti-Daemon restart &'")
 
+os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
 os.system("sudo dpkg -r aquetidaemon-daemon")
-os.system("sudo pkill -9 Aqueti; sudo dpkg -r aquetidaemon-application")
+os.system("sudo dpkg -r aquetidaemon-application")
 os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
 if "--asis" in sys.argv:
@@ -177,7 +178,7 @@ if 'asis' in files.keys():
 if 'daemon_x86-app' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])
-    if "--restart" in sys.argv:
-        os.system("sudo service Aqueti-Daemon restart")
+    if "--norestart" not in sys.argv:
+        os.system("sudo service Aqueti-Daemon restart &")
 
 print("***** Done *****")
