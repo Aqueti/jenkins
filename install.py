@@ -163,8 +163,6 @@ if "--noinstall" in sys.argv:
     print('Files downloaded')
     exit(0)
 
-exit(0)
-
 if cam_ip != '':
     for i in range(start_ip, num_of_tegras + start_ip):
         tegra_ip = cam_ip + str(i)
@@ -194,19 +192,19 @@ os.system("sudo dpkg -r aquetidaemon-application")
 os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
 
-if "--asis" in sys.argv:
+if 'asis' in files.keys():
     os.system("sudo dpkg -r asis")
 
 if 'api' in files.keys():    
     os.system("sudo dpkg -i " + folder_path + files["api"])
 if 'ctools' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["ctools"])
-if 'asis' in files.keys():        
-    os.system("sudo dpkg -i " + folder_path + files["asis"])
 if 'daemon_x86-app' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])
     if "--norestart" not in sys.argv:
         os.system("sudo service Aqueti-Daemon restart &")
+if 'asis' in files.keys():        
+    os.system("sudo dpkg -i " + folder_path + files["asis"])
 
 print("***** Done *****")
