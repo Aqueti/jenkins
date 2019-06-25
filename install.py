@@ -32,44 +32,45 @@ def print_help():
     print("--asis\t\tInstall gui")
     print("--norestart\tno daemon restart on render/tegras")
 
-    exit(1)
-
 base_url = "http://10.0.0.10/repositories/acos"
 
 if "--help" in sys.argv:
     print_help()
+    exit(0)
+
+if "--asis" in sys.argv:
+    pass
 
 if "--cam" in sys.argv:
     cam_id = sys.argv[sys.argv.index("--cam") + 1]
 
     cam_ip = '10.1.' + cam_id + '.'
     start_ip = 1
-    
+
     if cam_id in [str(id) for id in (4, 9, 12)]:
         num_of_tegras = 9
     elif cam_id in [str(id) for id in (100, 101, 102, 103)]:
         num_of_tegras = 3
-    else:   
+    else:
         num_of_tegras = 10
 else:
     print("cam isn't specified\n")
     cam_ip = ''
 
+type = 'release'
 if "--type" in sys.argv:
     type = sys.argv[sys.argv.index("--type") + 1]
-else:
-    type = 'release'
 
+    
+branch_name = 'dev'
 if "--branch" in sys.argv:
     branch_name = sys.argv[sys.argv.index("--branch") + 1]
-else:
-    branch_name = 'master'
 
 try:
     urllib.request.urlopen(base_url)
 except:
     print("server is unavailable")
-    exit(1)    
+    exit(1)
 
 if "--build" in sys.argv:
     build = sys.argv[sys.argv.index("--build") + 1]
@@ -122,19 +123,18 @@ for e in res:
             files["api"] = e.text
         elif "CalibrationTools" in e.text:
             files["ctools"] = e.text
-        elif "ASIS" in e.text:
-            if "--asis" in sys.argv:
-                files["asis"] = e.text
-            else:
-                continue
         else:
             continue
         
-        if not os.path.exists(folder_path + e.text):
+        if not os.path.isfile(folder_path + e.text):
             file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
             with open(folder_path + e.text, 'wb') as output:
                 output.write(file.read())
                 print("saved file: " + folder_path + e.text)
+
+if len(files.keys()) == 0:
+    print('No files available')
+    exit(0)
 
 if "--noinstall" in sys.argv:
     print('Files downloaded')
@@ -158,14 +158,17 @@ if cam_ip != '':
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
-        if "--norestart" not in sys.argv:
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo service Aqueti-Daemon restart &'")
+
+    if "--norestart" not in sys.argv:
+        for i in range(start_ip, num_of_tegras + start_ip):
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo service Aqueti-Daemon restart' &")
 
 os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
 os.system("sudo dpkg -r aquetidaemon-daemon")
 os.system("sudo dpkg -r aquetidaemon-application")
 os.system("sudo dpkg -r aquetiapi")
 os.system("sudo dpkg -r calibrationtools")
+
 if "--asis" in sys.argv:
     os.system("sudo dpkg -r asis")
 
