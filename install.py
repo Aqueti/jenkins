@@ -24,12 +24,14 @@ def get_max(res):
     return max
 
 def print_help():
-    print("--cam\t\tCamera id")
-    print("--acos\\asis\tBranch_name/Build_number")
+    print("--cam\t\tcamera id")
+    print("--acos\t\tbranch_name/build_number")
+    print("--asis\t\tbranch_name/build_number")
     print("--type\t\tdebug/release")
-    print("--noinstall\tJust download")
-    print("--asis\t\tInstall gui")
+    print("--noinstall\tjust download")
     print("--norestart\tno daemon restart on render/tegras")
+    print()
+    print("example: ./install.py --cam 7 --acos dev/65 --asis master/95 --noinstall")
 
 if "--help" in sys.argv:
     print_help()
@@ -182,9 +184,6 @@ if cam_ip != '':
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
 
-    if "--norestart" not in sys.argv:
-        for i in range(start_ip, num_of_tegras + start_ip):
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo pkill -9 Aqueti; sudo service Aqueti-Daemon restart' &")
 
 os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
 os.system("sudo dpkg -r aquetidaemon-daemon")
@@ -201,10 +200,22 @@ if 'ctools' in files.keys():
     os.system("sudo dpkg -i " + folder_path + files["ctools"])
 if 'daemon_x86-app' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])
-    if "--norestart" not in sys.argv:
-        os.system("sudo service Aqueti-Daemon restart &")
+    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])    
 if 'asis' in files.keys():        
     os.system("sudo dpkg -i " + folder_path + files["asis"])
+
+
+if "--norestart" not in sys.argv:
+    print("\nRestarting service\n")
+
+    if 'daemon_x86-app' in files.keys():
+        os.system("sudo pkill -9 AquetiDaemon")
+
+    if cam_ip != '':
+        for i in range(start_ip, num_of_tegras + start_ip):
+            os.system("ssh nvidia@" + cam_ip + str(i) + " 'sudo pkill -9 AquetiDaemon'")
+
+    if 'asis' in files.keys():
+        os.system("sudo service asisd restart")
 
 print("***** Done *****")
