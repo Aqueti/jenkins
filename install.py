@@ -25,21 +25,15 @@ def get_max(res):
 
 def print_help():
     print("--cam\t\tCamera id")
-    print("--branch\tBranch name")
-    print("--build\t\tBuild number")
+    print("--acos\\asis\tBranch_name/Build_number")
     print("--type\t\tdebug/release")
     print("--noinstall\tJust download")
     print("--asis\t\tInstall gui")
     print("--norestart\tno daemon restart on render/tegras")
 
-base_url = "http://10.0.0.10/repositories/acos"
-
 if "--help" in sys.argv:
     print_help()
     exit(0)
-
-if "--asis" in sys.argv:
-    pass
 
 if "--cam" in sys.argv:
     cam_id = sys.argv[sys.argv.index("--cam") + 1]
@@ -61,76 +55,105 @@ type = 'release'
 if "--type" in sys.argv:
     type = sys.argv[sys.argv.index("--type") + 1]
 
-    
-branch_name = 'dev'
-if "--branch" in sys.argv:
-    branch_name = sys.argv[sys.argv.index("--branch") + 1]
 
-try:
-    urllib.request.urlopen(base_url)
-except:
-    print("server is unavailable")
-    exit(1)
+res = []
+projs = ["acos"] + (["asis"] if "--asis" in sys.argv else [])
 
-if "--build" in sys.argv:
-    build = sys.argv[sys.argv.index("--build") + 1]
-else:
-    page = urllib.request.urlopen(base_url + '/' + branch_name)
+for proj in projs:    
+
+    base_url = "http://10.0.0.10/repositories/" + proj
         
+    branch_name = 'dev'
+    build = ""
+    if ("--" + proj) in sys.argv:
+        if len(sys.argv) > sys.argv.index("--" + proj) + 1:
+            if "--" not in sys.argv[sys.argv.index("--" + proj) + 1]:
+                arr = sys.argv[sys.argv.index("--" + proj) + 1].split("/")
+                branch_name = arr[0]
+                build = arr[1] if len(arr) > 1 else ""
+
+                if build != "":
+                    try:
+                        build = str(int(build))
+                    except:
+                        print("build should be integer")
+                        exit(0)
+
+    try:
+        urllib.request.urlopen(base_url)
+    except:
+        print("server is unavailable")
+        exit(0)
+
+    try:
+        urllib.request.urlopen(base_url + '/' + branch_name)
+    except:
+        print("branch not found")
+        exit(0)
+
+
+    if build == "":
+
+        page = urllib.request.urlopen(base_url + '/' + branch_name)
+            
+        tree = etree.HTML(page.read())
+
+        bres = tree.xpath('//h2//a')
+
+        build = get_max(bres)
+
+    try:
+        page = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build))
+    except Exception:
+        print("build not found")
+        exit(0)
+
     tree = etree.HTML(page.read())
 
-    res = tree.xpath('//h2//a')
+    folder_path = "builds/" + branch_name + '/' + str(build) + '/'
+    os.system("mkdir -p " + folder_path)
 
-    build = get_max(res)
+    files = dict()
+    for e in tree.xpath('//a'):
+        if ".deb" in e.text:
+            if type == 'debug':
+                if 'debug' not in e.text:
+                    continue
+            else:
+                if 'debug' in e.text:
+                    continue
+            
+            if "Daemon" in e.text:
+                if "x86_64" in e.text:
+                    if '-application' in e.text:
+                        files["daemon_x86-app"] = e.text
+                    elif '-daemon' in e.text:
+                        files["daemon_x86-d"] = e.text
+                else:
+                    files["daemon_aarch64"] = e.text
+            elif "ACI" in e.text:
+                files["aci"] = e.text
+            elif "API" in e.text:
+                files["api"] = e.text
+            elif "CalibrationTools" in e.text:
+                files["ctools"] = e.text
+            elif "ASIS" in e.text:
+                files["asis"] = e.text
+            else:
+                continue
+            
+            if not os.path.isfile(folder_path + e.text):
+                print("saving file: " + folder_path + e.text)
+                file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)                
+                with open(folder_path + e.text, 'wb') as output:
+                    output.write(file.read())                    
 
-try:
-    page = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build))
-except Exception:
-    print("build not found")
-    exit(1)
+    res += tree.xpath('//a')
 
-tree = etree.HTML(page.read())
-res = tree.xpath('//a')
 
 if len(res) == 0:
     print('no deb packages found')
-    exit(1)
-
-folder_path = "builds/" + branch_name + '/' + str(build) + '/'
-os.system("mkdir -p " + folder_path)
-
-files = dict()
-for e in res:
-    if ".deb" in e.text:
-        if type == 'debug':
-            if 'debug' not in e.text:
-                continue
-        else:
-            if 'debug' in e.text:
-                continue
-        
-        if "Daemon" in e.text:
-            if "x86_64" in e.text:
-                if '-application' in e.text:
-                    files["daemon_x86-app"] = e.text
-                elif '-daemon' in e.text:
-                    files["daemon_x86-d"] = e.text
-            else:
-                files["daemon_aarch64"] = e.text
-        elif "ACI" in e.text:
-            files["aci"] = e.text
-        elif "API" in e.text:
-            files["api"] = e.text
-        elif "CalibrationTools" in e.text:
-            files["ctools"] = e.text
-        else:
-            continue
-        
-        if not os.path.isfile(folder_path + e.text):
-            file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)
-            with open(folder_path + e.text, 'wb') as output:
-                output.write(file.read())
-                print("saved file: " + folder_path + e.text)
+    exit(0)
 
 if len(files.keys()) == 0:
     print('No files available')
@@ -139,6 +162,8 @@ if len(files.keys()) == 0:
 if "--noinstall" in sys.argv:
     print('Files downloaded')
     exit(0)
+
+exit(0)
 
 if cam_ip != '':
     for i in range(start_ip, num_of_tegras + start_ip):
@@ -161,7 +186,7 @@ if cam_ip != '':
 
     if "--norestart" not in sys.argv:
         for i in range(start_ip, num_of_tegras + start_ip):
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo service Aqueti-Daemon restart' &")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo pkill -9 Aqueti; sudo service Aqueti-Daemon restart' &")
 
 os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
 os.system("sudo dpkg -r aquetidaemon-daemon")
