@@ -57,8 +57,8 @@ type = 'release'
 if "--type" in sys.argv:
     type = sys.argv[sys.argv.index("--type") + 1]
 
-
 res = []
+files = {}
 projs = ["acos"] + (["asis"] if "--asis" in sys.argv else [])
 
 for proj in projs:    
@@ -93,7 +93,6 @@ for proj in projs:
         print("branch not found")
         exit(0)
 
-
     if build == "":
 
         page = urllib.request.urlopen(base_url + '/' + branch_name)
@@ -114,8 +113,7 @@ for proj in projs:
 
     folder_path = "builds/" + branch_name + '/' + str(build) + '/'
     os.system("mkdir -p " + folder_path)
-
-    files = dict()
+    
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
             if type == 'debug':
@@ -128,22 +126,22 @@ for proj in projs:
             if "Daemon" in e.text:
                 if "x86_64" in e.text:
                     if '-application' in e.text:
-                        files["daemon_x86-app"] = e.text
+                        files["daemon_x86-app"] = folder_path + e.text
                     elif '-daemon' in e.text:
-                        files["daemon_x86-d"] = e.text
+                        files["daemon_x86-d"] = folder_path + e.text
                 else:
-                    files["daemon_aarch64"] = e.text
+                    files["daemon_aarch64"] = folder_path + e.text
             elif "ACI" in e.text:
-                files["aci"] = e.text
+                files["aci"] = folder_path + e.text
             elif "API" in e.text:
-                files["api"] = e.text
+                files["api"] = folder_path + e.text
             elif "CalibrationTools" in e.text:
-                files["ctools"] = e.text
+                files["ctools"] = folder_path + e.text
             elif "ASIS" in e.text:
-                files["asis"] = e.text
+                files["asis"] = folder_path + e.text
             else:
                 continue
-            
+
             if not os.path.isfile(folder_path + e.text):
                 print("saving file: " + folder_path + e.text)
                 file = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build) + '/' + e.text)                
@@ -151,7 +149,6 @@ for proj in projs:
                     output.write(file.read())                    
 
     res += tree.xpath('//a')
-
 
 if len(res) == 0:
     print('no deb packages found')
@@ -168,22 +165,22 @@ if "--noinstall" in sys.argv:
 if cam_ip != '':
     for i in range(start_ip, num_of_tegras + start_ip):
         tegra_ip = cam_ip + str(i)
+
         print('*************')
         print(tegra_ip)
         print('*************')
 
         if 'aci' in files.keys():
-            os.system("scp " + folder_path + files["aci"] + " nvidia@" + tegra_ip + ":./")            
+            os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")            
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aci'")  
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"] + "'")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"][files["aci"].rindex('/') + 1:] + "'")
         
         if 'daemon_aarch64' in files.keys():
-            os.system("scp " + folder_path + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")            
+            os.system("scp " + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")            
             os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'") 
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"] + "'")
+            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"][files["daemon_aarch64"].rindex('/') + 1:] + "'")
 
         os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
-
 
 os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
 os.system("sudo dpkg -r aquetidaemon-daemon")
@@ -195,15 +192,14 @@ if 'asis' in files.keys():
     os.system("sudo dpkg -r asis")
 
 if 'api' in files.keys():    
-    os.system("sudo dpkg -i " + folder_path + files["api"])
+    os.system("sudo dpkg -i " + files["api"])
 if 'ctools' in files.keys():        
-    os.system("sudo dpkg -i " + folder_path + files["ctools"])
+    os.system("sudo dpkg -i " + files["ctools"])
 if 'daemon_x86-app' in files.keys():        
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-app"])
-    os.system("sudo dpkg -i " + folder_path + files["daemon_x86-d"])    
+    os.system("sudo dpkg -i " + files["daemon_x86-app"])
+    os.system("sudo dpkg -i " + files["daemon_x86-d"])    
 if 'asis' in files.keys():        
-    os.system("sudo dpkg -i " + folder_path + files["asis"])
-
+    os.system("sudo dpkg -i " + files["asis"])
 
 if "--norestart" not in sys.argv:
     print("\nRestarting service\n")
