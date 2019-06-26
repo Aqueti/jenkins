@@ -1,18 +1,16 @@
 s = """
 [Unit]
 Description=SysInfo Service
-After=multi-user.target
 
 [Service]
-Type=idle
-WorkingDirectory=/opt/infoprovider
+Type=Simple
+WorkingDirectory=/opt/get_info
 ExecStart=/usr/bin/python3 /opt/infoprovider/provider.py
 Restart=always
-StandardOutput=syslog
-StandardError=syslog
+RestartSec=30
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sysinit.target
 """
 
 with open("/etc/systemd/system", "w") as file:
