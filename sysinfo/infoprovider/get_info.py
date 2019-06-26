@@ -104,7 +104,8 @@ class Info:
             var_rs = self.exec_cmd(cmd)
             if var_rs != "":
                 t = var_rs.split()
-                var = t[1][1:] + "_" + t[-1]
+                c_t = t[1][1:].split("_")
+                var = c_t[0] + "/" + c_t[1] + "/" + t[-1]
 
                 return var
 
