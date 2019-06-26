@@ -59,8 +59,12 @@ class BasePage:
             else:
                 return False
 
+        def is_focused(self):
+            pass
+
         WebElement.__call__ = call
         WebElement.is_checked = is_checked
+        WebElement.is_focused = is_focused
 
         self.TIMEOUT = 10
 
@@ -202,12 +206,16 @@ class BasePage:
                 else:
                     elem.click()
             elif type in ("text", "password"):
+
                 if elem.get_attribute('value') != "":
                     elem.click()
+
                     self.exec_js("arguments[0].setAttribute('value','')", elem)
 
                     while elem.get_attribute('value') != "":
                         elem.send_keys(Keys.DELETE, Keys.BACKSPACE)
+
+                    elem.click()
 
                 if elem.text != "":
                     elem.clear()

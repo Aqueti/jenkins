@@ -787,11 +787,11 @@ class TestAPIWebApp(BaseTest):
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
-    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10")
+    env = Environment(render_ip="10.0.0.228", cam_ip="10.1.9.9")
 
-    cam_id = '77'
+    cam_id = '9'
     cam_name = '/aqt/camera/' + cam_id
-    system_name = "cam77"
+    system_name = "Camera9"
 
     api = None
     qvp = None
@@ -1376,6 +1376,34 @@ class TestQAdmin(BaseTest):
 
         assert info['digital_gain'] == DIGITAL_GAIN_MAX
 
+    def test_focus_after_tegras_reboot(self):
+        qad = QAdminDashboard(self)
+        qad.navigate_to()
+
+        qadcc = qad.menu_cam_microcameras()
+
+        while True:
+            while self.env.cam.get_status() != "active":                
+                time.sleep(5)
+
+            # qadcc.camera_dd()
+            # qadcc.get_dd_elem(self.cam_id)(act="click")
+
+            for i in range(1, 19): #self.env.cam.num_of_tegras
+                qadcc.microcamera_dd()
+                time.sleep(0.5)
+                qadcc.get_dd_elem(self.cam_id + '0' + str(i))(act="click")
+                time.sleep(3)
+                qadcc.make_screenshot()
+            
+            self.env.cam.reboot()
+
+            #time.sleep(150)
+
+            while self.env.cam.get_status() == "active":
+                time.sleep(5)
+
+        time.sleep(5)
 
 
 class TestState(BaseTest):
@@ -1438,4 +1466,3 @@ class TestState(BaseTest):
             assert (sleep_time - math.ceil(currt / 1e6)) < 15 and cumrt_next == cumrt
 
             cumrt_next = cumrt + currt
-

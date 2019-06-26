@@ -48,10 +48,9 @@ class Component(object):
         return "ssh " + uname + "@" + ip + " '" + cmd + "'"
 
     def ex(self, cmd):
-        #result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(cmd)
-        return
-
+        
         if result.stdout.decode('utf-8') != "":
             return result.stdout.decode('utf-8')
         else:
@@ -130,6 +129,7 @@ class Camera(Component):
                 return self.status[key]
 
         return self.status[2]
+
 
     def copy_remote_file(self, **kwargs):
         if "tegra" in kwargs:

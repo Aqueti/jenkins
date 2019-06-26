@@ -9,16 +9,16 @@ class LoginForm:
     def form(self): return self.find_by(css="div.v-dialog--active")
 
     @property
-    def username_txt(self): return self.find_by(css="input[aria-label='Username'")
+    def username_txt(self): return self.find_by(css="input[aria-label='Username']", param="invisible")
 
     @property
-    def password_txt(self): return self.find_by(css="input[aria-label='Password'")
+    def password_txt(self): return self.find_by(css="input[aria-label='Password']", param="invisible")
 
     @property
-    def system_txt(self): return self.find_by(css="input[aria-label='System'")
+    def system_txt(self): return self.find_by(css="input[aria-label='System']", param="invisible")
 
     @property
-    def submit_btn(self): return self.find_by(xpath="//button[contains(@class, 'primary--text')]/div[contains(., 'Submit')]/..")
+    def submit_btn(self): return self.find_by(xpath="(//div[contains(., 'Login')]//button[contains(., 'Submit')])[1]", param="invisible")
 
     def login(self, username="user", password="12345678", system=""):
         self.username_txt(value=username)
@@ -280,7 +280,7 @@ class QPage(BasePage, LoginForm):
 
     def get_dd_elem(self, val, is_contain=True):
         if is_contain:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a")
+            return self.find_by(xpath="(//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a)[1]")
         else:
             return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
 
@@ -648,6 +648,9 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
 
 
 class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
+    @property
+    def camera_dd(self): return self.find_by(xpath="//input[@id='camera_select']/../../div[@class='v-input__append-inner']")
+
     @property
     def microcamera_dd(self): return self.find_by(xpath="//input[@id='microcamera_select']/../../div[@class='v-input__append-inner']")
 

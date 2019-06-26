@@ -21,9 +21,9 @@ class BaseTest(object):
 
     log_path = None
     cur_dir = None
-    base_dir = "/home/astepenko/Pictures/tests/"
+    base_dir = "/home/aqueti/Pictures/tests/"
     mongo_path = r"mongodb://10.0.0.176:27017/"
-    chrome_path = r'/home/astepenko/Downloads/src/jenkins/testScripts/webapptest/chromedriver'
+    chrome_path = r'/home/aqueti/Downloads/src/jenkins/testScripts/webapptest/chromedriver'
 
     @property
     def screenshot_path(self):
@@ -52,9 +52,10 @@ class BaseTest(object):
         if self.browser == "chrome":
             opts = ChromeOptions()
             opts.add_experimental_option("detach", True)
+            opts.add_experimental_option("w3c", False)
             caps = DesiredCapabilities.CHROME
             caps["pageLoadStrategy"] = "normal"  # none
-            self.driver = webdriver.Chrome(desired_capabilities=caps,  executable_path=self.chrome_path)  # chrome_options=opts
+            self.driver = webdriver.Chrome(options=opts, desired_capabilities=caps,  executable_path=self.chrome_path)  # chrome_options=opts
         elif self.browser == "ff":
             caps = DesiredCapabilities.FIREFOX
             self.driver = webdriver.Firefox()
