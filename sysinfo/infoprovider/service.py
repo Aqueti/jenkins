@@ -13,5 +13,5 @@ RestartSec=30
 WantedBy=sysinit.target
 """
 
-with open("/etc/systemd/system", "w") as file:
+with open("/etc/systemd/system/sysinfo.service", "w") as file:
     file.write(s)
