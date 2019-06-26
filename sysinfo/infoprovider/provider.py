@@ -5,32 +5,51 @@ import json
 import pymongo
 import time
 import datetime as dt
+import copy
 
-
-UPDATE_INTERVAL = 300  #seconds
+UPDATE_INTERVAL = 300  # seconds
 SCRIPT_PATH = "get_info.py"
+
 
 class DB:
     server_ip = "10.0.0.176"
     port = "27017"
     db_name = "qa"
-    col_name = "sysinfo"
+    col_sysinfo = "sysinfo"
 
     def __init__(self):
         self.mc = pymongo.MongoClient("mongodb://" + self.server_ip + ":" + self.port)
 
-    def store(self, doc):
-        q_doc = doc.copy()
-        try:
-            del q_doc["timestamp"]
-            del q_doc["daemon"]["uptime"]
-            del q_doc["daemon"]["status"]
-            del q_doc["asis"]["uptime"]
-            del q_doc["asis"]["status"]
-        except:
-            pass
+    def query(self, col_name, query):
+        rs = self.mc[self.db_name][col_name].find(query)
 
-        self.mc[self.db_name]["sysinfo"].replace_one(q_doc, doc, upsert=True)
+        return [row for row in rs]
+
+    def to_mongo_query(self, d, mongo_d={}, p_key=None):
+        for key in d.keys():
+            if isinstance(d[key], dict):
+                return self.to_mongo_query(d[key], mongo_d, key)
+
+            if p_key is not None:
+                k = p_key + "." + key
+                mongo_d[k] = d[key]
+            else:
+                mongo_d[key] = d[key]
+
+        return mongo_d
+
+    def store(self, doc):
+        q_doc = copy.deepcopy(doc)
+
+        q_doc.pop("timestamp", None)
+        q_doc["daemon"].pop("status", None)
+        q_doc["daemon"].pop("uptime", None)
+
+        if "asis" in q_doc.keys():
+            q_doc["asis"].pop("status", None)
+            q_doc["asis"].pop("uptime", None)
+
+        self.mc[self.db_name][self.col_sysinfo].replace_one(self.to_mongo_query(q_doc), doc, upsert=True)
 
     def get_ip(self, arch):
         rs = self.mc[self.db_name]["nodes"].find({"arch": arch})
@@ -39,80 +58,106 @@ class DB:
         else:
             return [row["ip"] for row in rs]
 
-def get_username(ip):
-    subnet = "10.1."
-    tegras = [2, 4, 7, 9, 11, 12, 77, 149]
 
-    ip_arr = [subnet + str(id) for id in tegras]
+class Nodes:
+    ips = {}
+    servers = []
+    cameras = []
 
-    if ip[:ip.rindex('.')] in ip_arr:
-        return "nvidia"
+    def __init__(self):
+        self.db = DB()
 
-    if ip in ("10.1.1.177", "10.1.1.232"):
-        return "aqueti"
-    elif ip in ("10.1.1.204"):
-        return "jenkins"
-    else:
-        return "mosaic"
+    def update(self):
+        nodes = self.db.query("nodes", {})
 
+        for node in nodes:
+            if node["arch"] == "x86_64":
+                self.servers.append(node["ip"])
+            else:
+                self.cameras.append(node["ip"] + '.' + str(node["tegras_num"]))
 
-def exec_cmd(cmd):
-    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # self.nodes.setdefault(node["arch"],[]).append(node["ip"])
 
-    return result.stdout.decode('utf-8')
-
-
-def get_ssh(cmd, ip):
-    return "ssh " + get_username(ip) + "@" + ip + " '" + cmd + "'"
+        self.ips = {node["ip"]: node["user"] for node in nodes if node["arch"] == "x86_64"}
 
 
-def is_available(ip):
-    cmd = "ping -c 1 -W 1 " + ip
-    rs = exec_cmd(cmd)
+    def get_username(self, ip):
+        if ip in self.ips.keys():
+            return self.ips[ip]
+        else:
+            return "nvidia"
 
-    if "1 received" in rs:
-        return True
-    else:
+
+    def exec_cmd(self, cmd):
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        return result.stdout.decode('utf-8')
+
+
+    def is_online(self, ip):
+        cmd = "ping -c 1 -W 1 " + ip
+        rs = self.exec_cmd(cmd)
+
+        if "1 received" in rs:
+            cmd = "ssh " + self.get_username(ip) + "@" + ip + " -o 'BatchMode=yes' -o 'ConnectionAttempts=1' true"
+            rs = self.exec_cmd(cmd)
+
+            if rs == "":  #Permission denied
+                return True
+
         return False
 
-def copy_to(ip):
-    cmd = "scp " + SCRIPT_PATH + " " + get_username(ip)  + "@" + ip + ":./"
-    exec_cmd(cmd)
 
-def get_info(ip):
-    copy_to(ip)
-
-    cmd = "python3 " + SCRIPT_PATH
-    res = exec_cmd(get_ssh(cmd, ip))
-
-    return res
+    def copy_to(self, ip):
+        cmd = "scp " + SCRIPT_PATH + " " + self.get_username(ip) + "@" + ip + ":./"
+        self.exec_cmd(cmd)
 
 
-db = DB()
+    def get_ssh(self, cmd, ip):
+        return "ssh " + self.get_username(ip) + "@" + ip + " '" + cmd + "'"
+
+
+    def get_info(self, ip):
+        self.copy_to(ip)
+
+        cmd = "python3 " + SCRIPT_PATH
+        res = self.exec_cmd(self.get_ssh(cmd, ip))
+
+        return res
+
+
+nodes = Nodes()
 
 while True:
+    nodes.update()
+
     s_time = dt.datetime.now()
 
     print(s_time, ": gathering info")
 
-    servers = db.get_ip("x86_64")
-    cameras = db.get_ip("aarch64")
-
-    for ip in servers:
-        if not is_available(ip):
+    for ip in nodes.servers:
+        if not nodes.is_online(ip):
             continue
-        doc = json.loads(get_info(ip))
-        db.store(doc)
 
-    for cam in cameras:
+        try:
+            doc = json.loads(nodes.get_info(ip))
+            nodes.db.store(doc)
+        except:
+            print("failed to get info from " + ip)
+
+    for cam in nodes.cameras:
         cam_ip = cam[:cam.rindex(".") + 1]
         v_ip = int(cam[cam.rindex(".") + 1:])
 
         for ip in [cam_ip + str(i) for i in range(1, v_ip + 1)]:
-            if not is_available(ip):
+            if not nodes.is_online(ip):
                 continue
-            doc = json.loads(get_info(ip))
-            db.store(doc)
+
+            try:
+                doc = json.loads(nodes.get_info(ip))
+                nodes.db.store(doc)
+            except:
+                print("failed to get info from " + ip)
 
     e_time = dt.datetime.now()
     delta = e_time - s_time
