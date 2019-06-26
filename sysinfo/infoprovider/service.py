@@ -4,7 +4,7 @@ Description=SysInfo Service
 
 [Service]
 Type=Simple
-WorkingDirectory=/opt/get_info
+WorkingDirectory=/opt/infoprovider
 ExecStart=/usr/bin/python3 /opt/infoprovider/provider.py
 Restart=always
 RestartSec=30
