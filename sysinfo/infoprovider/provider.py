@@ -8,7 +8,8 @@ import datetime as dt
 import copy
 
 UPDATE_INTERVAL = 300  # seconds
-SCRIPT_PATH = "get_info.py"
+SCRIPT_NAME = "get_info.py"
+SCRIPT_PATH = os.getcwd() + "/" + SCRIPT_NAME
 
 
 class DB:
@@ -120,7 +121,7 @@ class Nodes:
     def get_info(self, ip):
         self.copy_to(ip)
 
-        cmd = "python3 " + SCRIPT_PATH
+        cmd = "python3 " + SCRIPT_NAME
         res = self.exec_cmd(self.get_ssh(cmd, ip))
 
         return res
