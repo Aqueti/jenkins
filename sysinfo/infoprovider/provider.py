@@ -26,19 +26,22 @@ class DB:
 
         return [row for row in rs]
 
-    def to_mongo_query(self, d, mongo_d={}, p_key=None):
+    def to_mongo_query_rec(self, d, mongo_d, p_key):
         for key in d.keys():
             if isinstance(d[key], dict):
-                return self.to_mongo_query(d[key], mongo_d, key)
-
-            if p_key is not None:
-                k = p_key + "." + key
-                mongo_d[k] = d[key]
+                self.to_mongo_query_rec(d[key], mongo_d, key)
             else:
-                mongo_d[key] = d[key]
+                if p_key is not None:
+                    k = p_key + "." + key
+                    mongo_d[k] = d[key]
+                else:
+                    mongo_d[key] = d[key]
 
         return mongo_d
 
+    def to_mongo_query(self, d):
+        return self.to_mongo_query_rec(d, {}, None)
+    
     def store(self, doc):
         q_doc = copy.deepcopy(doc)
 
