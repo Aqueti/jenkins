@@ -95,7 +95,7 @@ class DD():
 
         if self.branch.value is None:
             if len(self.branch.choices) > 0:
-                self.branch.value = next(choice for choice in self.branch.choices if choice[1] == "beta")
+                self.branch.value = next(choice for choice in self.branch.choices if choice[1] == "dev")
 
         self.build.choices = self.get_list("build")
 

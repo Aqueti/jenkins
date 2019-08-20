@@ -74,13 +74,18 @@ li>div {
 }
 
 #top-panel {
-    background-color: #dedede;
+    //background-color: #616161;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    border-bottom: 1px solid #616161
 }
 
 #top-panel div {
+    margin-left: 0px !important;
     display: inline-block;
-    margin-left: 10px;
     font-weight: bold;
+    margin-bottom: 2px;
 }
 
 #pbb_submit {
