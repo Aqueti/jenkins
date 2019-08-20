@@ -1,10 +1,16 @@
 from flask import Flask
-from app.config import Config
 from flask_login import LoginManager
+from flask_mail import Mail
+from app.config import *
 
 app = Flask(__name__)
+
+app.config.update(mail_config)
+
 login = LoginManager(app)
 login.login_view = 'login'
+
+mail = Mail(app)
 
 from app import views
 
