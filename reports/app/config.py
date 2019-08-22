@@ -11,6 +11,6 @@ mail_config = dict(
     MAIL_USE_TLS = True,
     MAIL_USE_SSL = False,
     MAIL_USERNAME = 'aqueti.test@gmail.com',
-    MAIL_PASSWORD = '')
+    MAIL_PASSWORD = 'DARPAaware')
 
 RLIST= ['astepenko@aqueti.com']

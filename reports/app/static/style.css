@@ -8,13 +8,13 @@ body {
   margin: 10px;
 }
 
-#req-tree>ul, ul {
+#case-tree>ul, ul {
   list-style-type: none;
   font-weight: bold;
   font: 16px sans-serif;
 }
 
-#req-tree>ul {
+#case-tree>ul {
   margin: 5px;
   padding: 0;
 }
@@ -57,20 +57,21 @@ ul {
     background-color: #ff6666;
 }
 
-li.req select {
-    margin-right: 5px;
-}
-
-li.req:hover {
+li.case:hover {
     background-color: #dfdfdf;
 }
 
-li.req:hover div.user-info{
+li.case:hover div.user-info{
     color: #2c2c2c;
 }
 
 li>div {
     display: block;
+}
+
+li {
+    margin-top: 1px;
+    margin-bottom: 1px;
 }
 
 #top-panel {
@@ -97,11 +98,11 @@ li>div {
     background-color: #efefef;
 }
 
-form.req-submit {
+form.case-submit {
     display: inline-block;
 }
 
-form.req-submit input[type="submit"] {
+form.case-submit input[type="submit"] {
     width: 0;
 }
 
@@ -144,9 +145,19 @@ a:link {
     float: right;
 }
 
-.user-info {
+div.result {
+    float: right;
+}
+
+div.user-info {
     font-size: 60%;
     color: white;
-    position: relative;
     float: right;
+
+}
+
+div#user-info {
+    font-weight: normal;
+    float: right;
+    margin-right: 20px;
 }

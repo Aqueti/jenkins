@@ -1,3 +1,5 @@
+var session;
+
 $(document).ready(function() {
     $(".caret").each(function(i, e) { $(e).on( "click", function() {
         $( this ).parent().children( ".nested" ).toggleClass( "active" );
@@ -5,19 +7,19 @@ $(document).ready(function() {
         return;
     }); });
 
-    $(".result").each(function(i,e) {
+    $(".result").find("select").each(function(i,e) {
         $(e).trigger("change");
     });
-});
 
-var session;
+    document.getElementById("username").innerText = session.username;
+});
 
 function set_vars(s) {
     session = s;
 }
 
 function gen_tree(tree, parent) {
-  if (JSON.stringify(tree) === JSON.stringify({}) || typeof(tree["req_id"]) != "undefined") {
+  if (JSON.stringify(tree) === JSON.stringify({}) || typeof(tree["case_id"]) != "undefined") {
     return;
   }
 
@@ -26,6 +28,7 @@ function gen_tree(tree, parent) {
 
       var li = document.createElement("li");
       var span = document.createElement("span");
+
       span.innerText = key;
 
       if (parent.tagName.toLowerCase() != 'div') {
@@ -33,22 +36,13 @@ function gen_tree(tree, parent) {
         parent.getElementsByTagName('span')[0].setAttribute("class", "caret caret-down");
       }
 
-      if (typeof(tree[key]["req_id"]) !== "undefined") {
-        var ui_div = document.createElement("div");
-        ui_div.className = "user-info";
-        var ui_span = document.createElement("span");
-        ui_span.innerText = "";
+      li.appendChild(span);
 
-        if (typeof(tree[key]["timestamp"]) !== "undefined") {
-          if (tree[key]["timestamp"] !== null) {
-            ui_span.innerText = "last modified by " + tree[key]["user"] + " " + (new Date(tree[key]["timestamp"])).toLocaleString("en-US");
-          }
-        }
-
-        ui_div.appendChild(ui_span);
+      if (typeof(tree[key]["case_id"]) !== "undefined") {
+        var s_div = document.createElement("div");
+        s_div.className = "result";
 
         var select = document.createElement("select");
-        select.className = "result";
 
         var results = [[-1,"N/A"],[0,"FAIL"],[1,"PASS"]];
         for (var i = 0; i < results.length; i++) {
@@ -62,13 +56,31 @@ function gen_tree(tree, parent) {
             }
         }
 
-        li.setAttribute("req_id", tree[key]["req_id"]);
-        li.className = "req";
-        li.appendChild(ui_div);
-        li.appendChild(select);
+        s_div.appendChild(select);
+        li.appendChild(s_div);
       }
 
-      li.appendChild(span);
+      if (typeof(tree[key]["case_id"]) !== "undefined") {
+        //span.innerText = tree[key].case_id + '. ' + span.innerText
+
+        var ui_div = document.createElement("div");
+        ui_div.className = "user-info";
+        var ui_span = document.createElement("span");
+        ui_span.innerText = "";
+
+        if (typeof(tree[key]["timestamp"]) !== "undefined") {
+          if (tree[key]["timestamp"] !== null) {
+            ui_span.innerText = "last modified by " + tree[key]["user"] + " " + (new Date(tree[key]["timestamp"])).toLocaleString("en-US");
+          }
+        }
+
+        ui_div.appendChild(ui_span);
+
+        li.setAttribute("case_id", tree[key]["case_id"]);
+        li.className = "case";
+
+        li.appendChild(ui_div);
+      }
 
       if (typeof(tree[key]["links"]) !== "undefined") {
         if (tree[key]["links"]) {
@@ -134,26 +146,26 @@ function add_listeners() {
       });
     }
 
-    $(".result").each(function(i,e) {
+    $(".result").find("select").each(function(i,e) {
         $(e).on("change", function(k) {
             var v = $(e).val();
             if (v == 1) {
-                $(e).closest(".req").removeClass("fail");
-                $(e).closest(".req").toggleClass("pass");
-                $(e).closest(".req").find("div.github").remove();
+                $(e).closest(".case").removeClass("fail");
+                $(e).closest(".case").toggleClass("pass");
+                $(e).closest(".case").find("div.github").remove();
 
                 if (k.originalEvent) {
-                    submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
+                    submit_json("/case_submit", {case_id: $(e).closest("li").attr("case_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
                 }
             } else if (v == 0) {
-                $(e).closest(".req").removeClass("pass");
-                $(e).closest(".req").toggleClass("fail");
+                $(e).closest(".case").removeClass("pass");
+                $(e).closest(".case").toggleClass("fail");
 
-                if ($(e).closest(".req").find(".github").length == 0) {
-                    $(e).closest(".req").append("<div class='github'><ul><li class='add-link'>add github link</li></ul></div>");
+                if ($(e).closest(".case").find(".github").length == 0) {
+                    $(e).closest(".case").append("<div class='github'><ul><li class='add-link'>add github link</li></ul></div>");
                 }
 
-                $(e).closest(".req").find("li.add-link").on("click", function() {
+                $(e).closest(".case").find("li.add-link").on("click", function() {
                     var div = $(this).closest("div.github");
                     if (div.find(".gt-text").length == 0) {
                         div.append("<input type='text' class='gt-text' placeholder='put a link here'/>");
@@ -170,7 +182,7 @@ function add_listeners() {
                                 });
 
                                 //if (k.originalEvent) {
-                                submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: linksArr, user: session.username, timestamp: Date.now()});
+                                submit_json("/case_submit", {case_id: $(e).closest("li").attr("case_id"), result: $(e).find(":selected").val(), links: linksArr, user: session.username, timestamp: Date.now()});
                                 //}
                             }
                         });
@@ -178,15 +190,15 @@ function add_listeners() {
                 });
 
                 if (k.originalEvent) {
-                    submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
+                    submit_json("/case_submit", {case_id: $(e).closest("li").attr("case_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
                 }
             } else {
-                $(e).closest(".req").removeClass("pass");
-                $(e).closest(".req").removeClass("fail");
-                $(e).closest(".req").find("div.github").remove();
+                $(e).closest(".case").removeClass("pass");
+                $(e).closest(".case").removeClass("fail");
+                $(e).closest(".case").find("div.github").remove();
 
                 if (k.originalEvent) {
-                    submit_json("/req_submit", {req_id: $(e).parent().attr("req_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
+                    submit_json("/case_submit", {case_id: $(e).closest("li").attr("case_id"), result: $(e).find(":selected").val(), links: Array(), user: session.username, timestamp: Date.now()});
                 }
             }
 

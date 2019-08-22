@@ -4,20 +4,21 @@ from flask import flash
 from flask_pymongo import PyMongo
 from app import app
 from app import login
+from collections import OrderedDict
 import json
 
 
 DB_SERVER_IP = "127.0.0.1:27017"
 DB_NAME = "qa"
-REQ_COL_NAME = "req"
-RES_COL_NAME = "results"
+CASES_COL_NAME = "cases"
+RESULTS_COL_NAME = "results"
 
 app.config["MONGO_URI"] = "mongodb://" + DB_SERVER_IP + "/" + DB_NAME
 mongo = PyMongo(app)
 
 
 class Tree:
-    tree = {}
+    tree = dict()
 
     def get(self):
         return self.tree
@@ -31,10 +32,12 @@ class Tree:
         c_tree = self.tree
         for node in branch:
             if node not in c_tree.keys():
+                if node == branch[-1]:
+                    node = str(kwargs["case_id"]) + '. ' + node
                 c_tree.update({node: {}})
             c_tree = c_tree[node]
 
-        c_tree.update({"req_id": kwargs["req_id"], "result": kwargs["result"], "links": kwargs["links"], "user": kwargs["user"], "timestamp": kwargs["timestamp"]})
+        c_tree.update({"req_id": kwargs["req_id"], "case_id": kwargs["case_id"], "result": kwargs["result"], "links": kwargs["links"], "user": kwargs["user"], "timestamp": kwargs["timestamp"]})
 
 
 class User(UserMixin):

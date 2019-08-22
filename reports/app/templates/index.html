@@ -2,12 +2,12 @@
 
 {% block content %}
 
-<div id="req-tree">
+<div id="case-tree">
 </div>
 
 <script type="text/javascript">
   window.addEventListener("load", function() {
-    var tree = {{ requirements|tojson }};
+    var tree = {{ cases|tojson }};
     var state = {{ state|tojson }};
     var session = {{ session|tojson }};
 
@@ -16,7 +16,7 @@
 
     restoreState(state);
     set_vars(session);
-    gen_tree(tree, document.getElementById("req-tree"));
+    gen_tree(tree, document.getElementById("case-tree"));
     add_listeners();
   });
 </script>

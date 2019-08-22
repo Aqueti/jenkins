@@ -26,15 +26,16 @@ def login():
     return render_template('login.html', form=login_form)
 
 
+
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
     cmd = [
-        {"$match": {"req_id": {"$ne": None}}},
+        {"$match": {"case_id": {"$ne": None}}},
         {
              "$graphLookup": {
-                 "from": REQ_COL_NAME,
+                 "from": CASES_COL_NAME,
                  "startWith": "$parent",
                  "connectFromField": "parent",
                  "connectToField": "desc",
@@ -43,15 +44,16 @@ def index():
         }
     ]
 
-    rs = mongo.db[REQ_COL_NAME].aggregate(cmd)
-    # rs2 = mongo.db.results.find({"req_id": {"$ne": 0}, "project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": state.dd.build.value[1]})
+    rs = mongo.db[CASES_COL_NAME].aggregate(cmd)
+    # rs2 = mongo.db.results.find({"case_id": {"$ne": 0}, "project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": state.dd.build.value[1]})
 
     cmd = [
         {"$match": {"timestamp": {"$ne": None}}},
-        {"$sort": {"timestamp": -1, "req_id": -1, "project": -1, "branch": -1, "build": -1}},
-        {"$group" : {"_id" : {"req_id" : "$req_id", "project" : "$project", "branch" : "$branch", "build" : "$build"}, "data" : {"$first" : "$$ROOT"}}},
+        {"$sort": {"timestamp": -1, "case_id": -1, "project": -1, "branch": -1, "build": -1}},
+        {"$group" : {"_id" : {"case_id" : "$case_id", "project" : "$project", "branch" : "$branch", "build" : "$build"}, "data" : {"$first" : "$$ROOT"}}},
         {"$project" : {
             "req_id": "$data.req_id",
+            "case_id": "$data.case_id",
             "project" : "$data.project",
             "branch" : "$data.branch",
             "build" : "$data.build",
@@ -62,25 +64,26 @@ def index():
             }
         }
     ]
-    rs2 = mongo.db[RES_COL_NAME].aggregate(cmd)
+    rs2 = mongo.db[RESULTS_COL_NAME].aggregate(cmd)
 
-    req_arr = [row for row in rs]
+    case_arr = [row for row in rs]
     res_arr = [row for row in rs2]
 
     tree = Tree()
-    for item in req_arr:
-        if "req_id" not in item.keys():
+    for item in case_arr:
+        if "case_id" not in item.keys():
             tree.add([e["desc"] for e in item["hierarchy"]] + [item["desc"]])
         else:
             req_id = int(item["req_id"])
+            case_id = int(item["case_id"])
 
             result = -1
             timestamp = None
             user = None
             links = None
             for r_item in res_arr:
-                r_req_id = int(r_item["req_id"])
-                if r_req_id == req_id and state.dd.equals(proj=r_item["project"], branch=r_item["branch"], build=r_item["build"]):
+                r_case_id = int(r_item["case_id"])
+                if r_case_id == case_id and state.dd.equals(proj=r_item["project"], branch=r_item["branch"], build=r_item["build"]):
                     if "links" in r_item.keys():
                         links = r_item["links"]
 
@@ -91,33 +94,33 @@ def index():
 
                     break
 
-            tree.add(branch=[e["desc"] for e in item["hierarchy"]] + [item["desc"]], req_id=req_id, result=result,
+            tree.add(branch=[e["desc"] for e in item["hierarchy"]] + [item["desc"]], req_id=req_id, case_id=case_id, result=result,
                              links=links, user=user, timestamp=timestamp)
 
     # flash('proj: {}'.format(state.dd.proj.value))
 
     return render_template("index.html",
-                           requirements=tree.get(), form=PBBForm(), state=state.dd.get())
+                           cases=tree.get(), form=PBBForm(), state=state.dd.get())
 
 
-@app.route('/logout')
 @login_required
+@app.route('/logout')
 def logout():
     logout_user()
     return redirect('/login')
 
 
-@app.route('/pbb_submit', methods=['get', 'post'])
 @login_required
+@app.route('/pbb_submit', methods=['get', 'post'])
 def pbb_submit():
     state.dd.update([request.form.get("proj", None), request.form.get("branch", None), request.form.get("build", None)])
 
     return redirect('/index')
 
 
-@app.route('/req_submit', methods=['get', 'post'])
 @login_required
-def req_submit():
+@app.route('/case_submit', methods=['get', 'post'])
+def case_submit():
     doc = {"project": state.dd.proj.value[1], "branch": state.dd.branch.value[1], "build": state.dd.build.value[1]}
     doc.update(request.get_json())
     doc["result"] = int(doc["result"])
@@ -129,6 +132,13 @@ def req_submit():
         mongo.db.results.insert_one(doc)
 
     return redirect('/index')
+
+
+@login_required
+@app.route('/acc_details', methods=['get', 'post'])
+def acc_details():
+    return render_template("acc_details.html")
+
 
 @login_required
 @app.route('/set/')

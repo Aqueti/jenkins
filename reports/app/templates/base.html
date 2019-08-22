@@ -10,29 +10,36 @@
 <body>
     <div id="cont">
       <div id="top-panel">
-      <div id="pbb-div">
-      <form id="pbb" action="/pbb_submit" method="post" novalidate>
-        <div>
-          <!-- {{ form.proj.label }} -->
-          {{ form.proj }}
-        </div>
-        <div>
-          <!-- {{ form.branch.label }} -->
-          {{ form.branch }}
-        </div>
-        <div>
-          <!-- {{ form.build.label }} -->
-          {{ form.build }}
-        </div>
-        {{ form.hidden_tag() }}
-        <input type="submit" value="submit" id="pbb_submit">
-      </form>
-      </div>
-      <div id="logout-div">
-      <form id="logout-form" action="/logout">
-        <input type="submit" value="logout" id="logout">
-      </form>
-      </div>
+
+          <div id="pbb-div">
+          <form id="pbb" action="/pbb_submit" method="post" novalidate>
+            <div>
+              <!-- {{ form.proj.label }} -->
+              {{ form.proj }}
+            </div>
+            <div>
+              <!-- {{ form.branch.label }} -->
+              {{ form.branch }}
+            </div>
+            <div>
+              <!-- {{ form.build.label }} -->
+              {{ form.build }}
+            </div>
+            {{ form.hidden_tag() }}
+            <input type="submit" value="submit" id="pbb_submit">
+          </form>
+          </div>
+
+          <div id="logout-div">
+          <form id="logout-form" action="/logout">
+            <input type="submit" value="logout" id="logout">
+          </form>
+          </div>
+
+          <div id="user-info">
+            <label for="username">user: </label><a href="acc_details"><span id="username"></span></a>
+          </div>
+
       </div>
     {% block content %}
     {% endblock %}
