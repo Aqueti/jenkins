@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from BaseTest import BaseTest
 from BaseEnv import *
+from decorators import *
 import pytest
 import pprint
 import random
@@ -10,6 +11,8 @@ import os
 import sys
 import ctypes
 import AQT
+import copy
+import datetime as dt
 
 
 class GO:
@@ -50,6 +53,13 @@ class GO:
 
             if self.stream.GetStatus() == AQT.aqt_STATUS_OKAY:
                 break
+    
+    @async
+    def get_frames(self, delay=0.03):
+        while True:
+            self.get_next_frame()
+
+        time.sleep(delay)
 
     def set_resolution(self, tp="1080p"):
         if tp == "4k":
@@ -124,6 +134,18 @@ class GO:
             self.sp.Type(AQT.aqt_STREAM_TYPE_LOCALDISPLAY)
         elif self.sp.Type() == AQT.aqt_STREAM_TYPE_LOCALDISPLAY:
             self.sp.Type(AQT.aqt_JPEG_IMAGE)
+    
+    def save_frame(self):
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
+
+        if self.frame.Data() is not None:
+            print(self.frame.Data())
+            carr = ctypes.cast(int(self.frame.Data()), ctypes.POINTER(ctypes.c_char * self.frame.Size()))[0]
+            arr = bytearray(carr)
+
+            with open(self.path + 'img_' + dt.datetime.now().strftime('%m-%d%-y_%H-%M-%S') + '.jpeg', 'wb') as file:
+                file.write(arr)
 
 
 class Test_API(BaseTest):
