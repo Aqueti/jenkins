@@ -1,7 +1,7 @@
 import pytest
 from BaseTest import BaseTest
 from AquetiPage import *
-from QAdminPage import *
+from QPage import *
 from BaseEnv import *
 from pprint import pprint
 import time
@@ -442,7 +442,7 @@ class TestAPIWebApp(BaseTest):
             aapi = aaps.click_submit_issue_lnk()
             avp = aapi.submit_issue(arch_name, summary, description)
 
-            out = self.exec("unzip " + path + arch_name + ".zip")
+            out = self.exec_cmd("unzip " + path + arch_name + ".zip")
 
             assert "error" not in out
     
@@ -787,13 +787,14 @@ class TestAPIWebApp(BaseTest):
 class TestQAdmin(BaseTest):
     browser = "chrome"
 
-    env = Environment(render_ip="10.0.0.228", cam_ip="10.1.9.9")
+    env = Environment(render_ip="10.0.0.189", cam_ip="10.1.11.10")
 
-    cam_id = '9'
+    cam_id = '11'
     cam_name = '/aqt/camera/' + cam_id
-    system_name = "Camera9"
+    system_name = "camera11"
 
     api = None
+    cam = None
     qvp = None
 
     def get_params(self):
@@ -845,19 +846,29 @@ class TestQAdmin(BaseTest):
     def setup_method(self, method):
         super(TestQAdmin, self).setup_method(method)
 
-        urls = AQT.StringVector()
-        urls.push_back("aqt://" + self.system_name)
-        self.api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
-
         self.qvp = QViewPage(self)
         self.qvp.navigate_to()
-
-        self.qvp.login(system=self.system_name)
 
     def teardown_method(self, method):
         super(TestQAdmin, self).teardown_method(method)
 
+    @pytest.fixture()
+    def login(self):
+        self.qvp.login(system=self.system_name)
+
+    @pytest.fixture()
+    def api(self):
+        self.api = AQT.AquetiAPI("test_api", AQT.U8Vector(), AQT.StringVector(["aqt://" + self.system_name]))
+        self.cam = AQT.Camera(self.api, self.cam_name)
+
+        yield
+
         self.restore_defaults()
+
+    @pytest.fixture()
+    def db(self):
+        pass
+
 
     def find_diff(self, path):
         db_name = "acos"
@@ -1376,6 +1387,7 @@ class TestQAdmin(BaseTest):
 
         assert info['digital_gain'] == DIGITAL_GAIN_MAX
 
+    @pytest.mark.skip(reason="")
     def test_focus_after_tegras_reboot(self):
         qad = QAdminDashboard(self)
         qad.navigate_to()
@@ -1398,18 +1410,126 @@ class TestQAdmin(BaseTest):
             
             self.env.cam.reboot()
 
-            #time.sleep(150)
+            time.sleep(150)
 
             while self.env.cam.get_status() == "active":
                 time.sleep(5)
 
         time.sleep(5)
 
+#QView
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login", "db")
+    @result
+    def test_case_111(self):
+        scops = self.db.query({"type": "mantis"})
+
+        for scop in scops:
+            assert self.qvp.get_lside_scop(scop['id']) is not None
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login", "api")
+    @result
+    def test_case_112(self):
+        self.qvp.get_lside_scop()(act='click')
+
+        if not self.cam.IsRecording():
+            self.qvp.get_lside_recording_btn()(act='click')
+            time.sleep(1)
+            assert self.cam.IsRecording()
+
+        if self.cam.IsRecording():
+            self.qvp.get_lside_recording_btn()(act='click')
+            time.sleep(1)
+            assert not self.cam.IsRecording()
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login", "api")
+    @result
+    def test_case_113(self):
+        self.qvp.get_lside_scop()(act='click')
+        # self.api.SetParameters(self.cam_name, json.dumps({"fineAutofocus": True}))
+
+        status_arr = []
+        s_time = dt.datetime.now()
+        while (dt.datetime.now() - s_time).total_seconds() < 3:
+            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
+            status_arr.append(status["focus_status"])
+
+            time.sleep(0.25)
+
+        assert "BUSY" not in status_arr
+
+        self.qvp.get_lside_fine_focus_btn()(act='click')
+
+        status_arr = []
+        s_time = dt.datetime.now()
+        while (dt.datetime.now() - s_time).total_seconds() < 3:
+            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
+            status_arr.append(status["focus_status"])
+
+            time.sleep(0.25)
+
+        assert "BUSY" in status_arr
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login", "api")
+    @result
+    def test_case_114(self):
+        self.qvp.get_lside_scop()(act='click')
+
+        status_arr = []
+        s_time = dt.datetime.now()
+        while (dt.datetime.now() - s_time).total_seconds() < 3:
+            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
+            status_arr.append(status["focus_status"])
+
+            time.sleep(0.25)
+
+        assert "BUSY" not in status_arr
+
+        self.qvp.get_lside_coarse_focus_btn()(act='click')
+
+        status_arr = []
+        s_time = dt.datetime.now()
+        while (dt.datetime.now() - s_time).total_seconds() < 3:
+            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
+            status_arr.append(status["focus_status"])
+
+            time.sleep(0.25)
+
+        assert "BUSY" in status_arr
+
+    #@pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_115(self):
+        scop_name = self.qvp.get_lside_scop_txt().get_attribute('innerText')
+        self.qvp.get_lside_scop()(act='click')
+
+        time.sleep(0.5)
+
+        self.qvp.get_lside_advanced_btn()(act='click')
+
+        time.sleep(2)
+
+        assert len(self.driver.window_handles) == 2
+
+        self.driver.switch_to_window(self.driver.window_handles[1])
+
+        qacm = QAdminCameraMicrocameras(self)
+
+        scop_name2 = qacm.cam_select_div.get_attribute('innerText')
+
+        assert scop_name == scop_name2
+
+
 
 class TestState(BaseTest):
     browser = None
 
-    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10")
+    env = Environment(render_ip="10.0.0.176", cam_ip="10.1.2.10")
 
     @pytest.mark.skip(reason="")
     def clear_state(self, render_path, tegra_path):
@@ -1462,7 +1582,7 @@ class TestState(BaseTest):
             print('cumulative_run_time: %s' % cumrt)
             print('current_run_time: %s' % currt)
 
-
             assert (sleep_time - math.ceil(currt / 1e6)) < 15 and cumrt_next == cumrt
 
             cumrt_next = cumrt + currt
+
