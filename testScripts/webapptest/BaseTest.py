@@ -1,6 +1,7 @@
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver import ChromeOptions
 from selenium import webdriver
+import unittest
 import pytest
 import datetime
 import os
@@ -8,22 +9,49 @@ import subprocess
 import time
 import pymongo
 from collections import OrderedDict
+from decorators import *
+from os.path import expanduser
+import logging
 import json
+import sys
+from contextlib import suppress
 
 
-class BaseTest(object):
+class DB:
+    server_ip = "10.0.0.189"
+    server2_ip = "10.0.0.176"
+
+    dbs = ["acos", "acos_local"]
+    col_names = ["scops", "models", "reservations", "tracks", "render_parameters", "files"]
+
+    def __init__(self, server_ip=""):
+        if server_ip == "":
+            server_ip = self.server_ip
+
+        self.mc = pymongo.MongoClient("mongodb://" + server_ip + ":27017")
+
+    def query(self, query, db="acos", col="scops"):
+        return list(self.mc[db][col].find(query))
+
+class BaseTest(): # unittest.TestCase
     driver = None
     browser = None
 
-    mongo_client = None
+    db = None
 
     doc = OrderedDict()
 
     log_path = None
     cur_dir = None
-    base_dir = "/home/aqueti/Pictures/tests/"
-    mongo_path = r"mongodb://10.0.0.176:27017/"
-    chrome_path = r'/home/aqueti/Downloads/src/jenkins/testScripts/webapptest/chromedriver'
+    home_dir = expanduser("~")
+    base_dir = home_dir + "/Pictures/tests/"
+
+    chrome_path = home_dir + "/Downloads/src/jenkins/testScripts/webapptest/chromedriver"
+
+    logger = None
+
+    def raises(self):
+        pass
 
     @property
     def screenshot_path(self):
@@ -35,11 +63,8 @@ class BaseTest(object):
             def __init__(self, *args, **kwargs):
                 return super(BaseTestFailureException, self).__init__(*args, **kwargs)
 
-            self.doc["result"] = "FAILED"
-        try:
-            self.driver.save_screenshot(self.screenshot_path)
-        except Exception as e:
-            pass
+            def __call__(self, *args, **kwargs):
+                with suppress(Exception): self.driver.save_screenshot(self.screenshot_path)
 
         BaseTestFailureException.__name__ = AssertionError.__name__
 
@@ -47,6 +72,24 @@ class BaseTest(object):
 
     def __call__(self, *args, **kwargs):
         super(BaseTest, self).__call__(*args, **kwargs)
+
+    @classmethod
+    def setup_class(self):
+        self.db = DB()
+        self.logger = logging.getLogger(__name__)
+
+    @classmethod
+    def teardown_class(self):
+        pass
+
+    def error_processing(func):
+        def wrapper(*args, **kwargs):
+            try:
+                func(*args, **kwargs)
+            except AssertionError:
+                raise
+
+        return wrapper
 
     def setup_method(self, method):
         if self.browser == "chrome":
@@ -67,12 +110,18 @@ class BaseTest(object):
 
         self.doc["suite_name"] = self.__class__.__name__
         self.doc["test_name"] = method.__name__
+        self.doc["case_id"] = 0 if "test_case" not in method.__name__ else int(method.__name__[method.__name__.rindex('_') + 1:])
         self.doc["start_time"] = datetime.datetime.now()
         self.doc["end_time"] = None
-        self.doc["duration"] = None
-        self.doc["result"] = "PASSED"
+        self.doc["result"] = -1
 
-        self.mongo_client = pymongo.MongoClient(self.mongo_path)
+        self.doc["user"] = "script"
+        self.doc["project"] = ""
+        self.doc["branch"] = ""
+        self.doc["build"] = ""
+        self.doc["req_id"] = ""
+        self.doc["log"] = ""
+        self.doc["timestamp"] = int(self.doc["start_time"].timestamp())
 
         self.cur_dir = self.base_dir + "/" + self.doc["suite_name"] + "/" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S')
         if not os.path.exists(self.cur_dir):
@@ -88,18 +137,21 @@ class BaseTest(object):
         self.doc["end_time"] = datetime.datetime.now()
         self.doc["duration"] = int((self.doc["end_time"] - self.doc["start_time"]).total_seconds())
 
-        try:
-            self.mongo_client["test_res"]["beta"].insert_one(self.doc)
-        except:
-            pass
+        if self.doc["result"] == 1:
+            result = "PASSED"
+        else:
+            result = "FAILED" if self.doc["result"] == 0 else "ERROR"
+            with suppress(Exception): self.driver.save_screenshot(self.screenshot_path)
 
         self.add_to_log("\n\nExec time: " + str(datetime.timedelta(seconds=self.doc["duration"])) +
                         "\n----------------------\n" +
-                        "Result: " + self.doc["result"] + "\n")
+                        "Result: " + result + "\n")
 
-        # self.driver.close()
+        with suppress(Exception): DB(DB.server2_ip).mc["qa"]["auto"].insert_one(self.doc)
+
         if self.driver is not None:
             self.driver.quit()
+            # self.driver.close()
 
     def navigate_to(self, url=""):
         if url == "back":
@@ -113,7 +165,7 @@ class BaseTest(object):
         with open(self.log_path, "a") as log:
             log.write(text)
 
-    def exec(self, cmd):
+    def exec_cmd(self, cmd):
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if result.stdout.decode('utf-8') != "":
@@ -128,4 +180,22 @@ class BaseTest(object):
             elif col_name in 'files':
                 db_name = "acos_local"
 
-        return self.mongo_client[db_name][col_name]
+        return self.db.mc[db_name][col_name]
+
+    def get_rx(self, ni, delay=1):
+        cmd = 'cat /sys/class/net/' + ni + '/statistics/rx_bytes'
+        s_rx = int(self.exec_cmd(cmd))
+
+        time.sleep(delay)
+
+        e_rx = int(self.exec_cmd(cmd))
+
+        return (e_rx - s_rx) * 8 / (1e6 * delay)
+
+    @async
+    def get_logs(self, log_path, s_index, e_index):
+        # /var/log/syslog   /var/log/aqueti/asis.log    /var/log/aqueti/asis-docker.log
+        # cmd = 'wc -l ' + log_path
+        cmd = "sed -n '" + s_index + ", " + e_index + " p' " + log_path
+
+        return self.exec_cmd(cmd)
