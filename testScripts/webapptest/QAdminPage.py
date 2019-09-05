@@ -23,27 +23,39 @@ class LoginForm:
     def login(self, username="user", password="12345678", system=""):
         self.username_txt(value=username)
         self.password_txt(value=password)
-        self.system_txt(value=system)
+        self.system_txt(value=system + Keys.ESCAPE)
         self.submit_btn()
 
-        time.sleep(5)
-
-        #while self.form.is_displayed():
-        #    time.sleep(1)
+        cnt = 5
+        while isinstance(self.form, WebElement) and cnt > 0:
+            time.sleep(1)
+            cnt -= 1
 
 
 class QStreamBox:
     @property
-    def video_box(self): return self.find_by(id="playerCanvas")
+    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]")
+
+    @property
+    def video_controls_panel(self): return self.find_by(xpath="//div[contains(@class , 'ptz-wrapper')]")
+
+    @property
+    def gen_new_geometry_btn(self): return self.video_controls_panel.find_by(xpath="//i[contains(., 'blur_')]/ancestor::button")
+
+    @property
+    def video_box(self): return self.find_by(xpath="//body")
 
     @property
     def cam_select_dd(self): return self.find_by(id="camera_select")
 
     @property
+    def cam_select_div(self): return self.find_by(xpath="//*[@id='camera_select']/parent::div")
+
+    @property
     def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
 
     def get_slider(self, val):
-        return self.find_by("//input[@aria-label='" + val + "']/../../../../..//input[@role='slider']/../div[contains(@class,'v-slider__thumb-container')]")
+        return self.find_by("//input[@aria-label='" + val + "']//ancestor::input[@role='slider']/parent::div[contains(@class,'v-slider__thumb-container')]")
 
 
 class QAdminSidebar:
@@ -76,6 +88,9 @@ class QAdminSidebar:
 
     @property
     def render_streams_lnk(self): return self.find_by(id="render_streams_page")
+
+    @property
+    def system_lnk(self): return self.find_by(id="system_page")
 
     @property
     def device_lnk(self): return self.find_by(id="device_page")
@@ -197,24 +212,63 @@ class QAdminSidebar:
 
 class QPage(BasePage, LoginForm):
     @property
-    def settings_menu_icon(self): return self.find_by(xpath="//button[contains(., 'menu')]/..//button[contains(., 'more_vert')]")
+    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]")
 
     @property
-    def q_lnk(self): return self.find_by(css="a.d-flex.router-link-active")
+    def left_sidebar(self): return self.find_by(xpath="(//aside)[1]")
 
     @property
-    def version_fld(self): return self.find_by(css="span.v-chip__content")
+    def right_sidebar(self): return self.find_by(xpath="(//aside)[last()]")
 
     @property
-    def toggle_sidebar_icon(self): return self.find_by(css="span.v-tooltip.v-tooltip--bottom:nth-child(2n)")
+    def active_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]")
 
     @property
-    def ping_time_fld(self): return self.find_by(css="span.v-tooltip.v-tooltip--bottom:nth-child(3n)")
+    def top_toolbar(self): return self.find_by(xpath="//img[@id='logo']/parent::div")
 
     @property
-    def aqueti_lnk(self): return self.find_by(css="a[href='http://www.aqueti.com']")
+    def left_sidebar_btn(self): return self.find_by(xpath="(//img[@id='logo']/parent::div//button[contains(., 'menu')])[1]")
 
-# Settings menu
+    @property
+    def dots_icon(self): return self.find_by(xpath="//img[@id='logo']/parent::div//button[contains(., 'more_vert')]")
+
+    @property
+    def right_sidebar_btn(self): return self.find_by(xpath="(//img[@id='logo']/parent::div//button[contains(., 'menu')])[2]")
+
+    @property
+    def versions_icon(self): return self.find_by(xpath="//img[@id='logo']/parent::div//span[contains(@class, 'v-chip__content')]")
+
+    @property
+    def ping_time_fld(self): return self.find_by(xpath="//img[@id='logo']/parent::div//span[contains(@class, 'v-tooltip')]")
+
+    @property
+    def user_icon(self): return self.find_by(xpath="//img[@id='logo']/parent::div//i[contains(., 'account_circle')]")
+
+# User icon
+
+    @property
+    def change_password_btn(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]//i[contains(., 'autorenew')]//ancestor::button")
+
+    @property
+    def user_settings_btn(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]//i[contains(., 'settings')]//ancestor::button")
+
+    @property
+    def logout_btn(self): return self.active_panel.find_by(xpath="//i[contains(., 'input')]//ancestor::button")
+
+    @property
+    def dialog_close_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Close')]")
+
+    @property
+    def dialog_logout_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Logout')]")
+
+
+# Dots icon
+
+
+
+
+
+# Right-click menu
 
     @property
     def customize_stream_btn(self): return self.find_by(xpath="//button[contains(., 'settings')]")
@@ -277,12 +331,17 @@ class QPage(BasePage, LoginForm):
 
         self.si_submit_btn()
 
+    def logout(self):
+        self.user_icon()
+        self.logout_btn()
+
+        self.dialog_logout_btn()
 
     def get_dd_elem(self, val, is_contain=True):
         if is_contain:
-            return self.find_by(xpath="(//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//parent::a)[1]")
+            return self.find_by(xpath="(//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//ancestor::a)[1]")
         else:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//parent::a")
+            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//ancestor::a")
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
@@ -316,6 +375,9 @@ class QViewPage(QPage, QStreamBox):
     @property
     def reservations_tbl(self): return self.find_by(xpath="//div[@id='reservation-tab']//table/tbody")
 
+    @property
+    def lside_panel(self): return self.find_by(xpath="//aside//div[@role='list']/parent::aside")
+
     def get_avi_items(self):
         items = self.avi_tbl.find_elements_by_tag_name("tr")
 
@@ -325,10 +387,53 @@ class QViewPage(QPage, QStreamBox):
 
         return items
 
-    def get_reservation_items(self):
-        items = self.reservations_tbl.find_elements_by_tag_name("tr")
+    def get_lside_scops(self):
+        cnt = 3
+        while cnt > 0:
+            items = self.lside_panel.find_elements_by_xpath(".//div[contains(@class, 'title') and contains(., '/aqt/camera')]/ancestor::div[@role='list']")
+
+
+            if len(items) == 0:
+                cnt -= 1
+                time.sleep(0.25)
+            else:
+                break
 
         return items
+
+    def get_lside_scop(self, scop=""):
+        items = self.get_lside_scops()
+
+        if scop != "":
+            for item in items:
+                if item.get_attribute('innerText').strip() == "/aqt/camera/" + str(scop):
+                    return item
+            return
+        else:
+            return items[0]
+
+    def get_lside_scop_txt(self, scop=""):
+        items = [item.find_element_by_xpath(".//div[contains(@class, 'title') and contains(., '/aqt/camera')]") for item in self.get_lside_scops()]
+
+        if scop != "":
+            for item in items:
+                if item.get_attribute('innerText').strip() == "/aqt/camera/" + str(scop):
+                    return item
+            return
+        else:
+            return items[0]
+
+    def get_lside_recording_btn(self, scop=""):
+        return self.get_lside_scop(scop).find_element_by_xpath(".//button//i[contains(., 'adjust')]")
+
+    def get_lside_fine_focus_btn(self, scop=""):
+        return self.get_lside_scop(scop).find_element_by_xpath(".//button//i[contains(., 'center_focus_strong')]")
+
+    def get_lside_coarse_focus_btn(self, scop=""):
+        return self.get_lside_scop(scop).find_element_by_xpath(".//button//i[contains(., 'center_focus_weak')]")
+
+    def get_lside_advanced_btn(self, scop=""):
+        return self.get_lside_scop(scop).find_element_by_xpath(".//a//i[contains(., 'tune')]")
 
     def remove_all_avi_items(self):
         items = self.get_avi_items()
