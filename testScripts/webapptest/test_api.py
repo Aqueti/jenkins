@@ -30,10 +30,10 @@ class GO:
 
     cur_cam = None
 
+    path = '/home/astepenko/ipics/'
+
     def __init__(self):
-        urls = AQT.StringVector()
-        urls.push_back("aqt://Camera149")
-        self.api = AQT.AquetiAPI("", AQT.U8Vector(), urls)
+        self.api = AQT.AquetiAPI("", AQT.U8Vector(), AQT.StringVector(["aqt://Camera2"]))
 
         self.vs = AQT.ViewState(self.api)
         self.ts = AQT.TimeState(self.api)
@@ -53,7 +53,7 @@ class GO:
 
             if self.stream.GetStatus() == AQT.aqt_STATUS_OKAY:
                 break
-    
+
     @async
     def get_frames(self, delay=0.03):
         while True:
@@ -87,16 +87,22 @@ class GO:
 
         self.stream = AQT.RenderStream(self.api, self.vs, self.ts, self.iss, self.ps, self.sp)
 
-    def start_stream(self):
+    def start_stream(self, c_cam=None):
         self.create_stream()
 
-        cams = self.api.GetAvailableCameras()
-        self.c_cam = cams[0]
-        self.stream.AddCamera(self.c_cam.Name())
+        if c_cam is None:
+            cams = self.api.GetAvailableCameras()
+            self.c_cam = cams[0].Name()
+        else:
+            self.c_cam = c_cam
+
+        self.stream.AddCamera(self.c_cam)
         self.stream.SetStreamingState(True)
         self.ts.PlaySpeed(1.0)
 
         self.get_next_frame()
+
+        time.sleep(1)
 
     def get_cur_time(self, is_in_ms=False):
         cur_time = self.api.GetCurrentSystemTime()
@@ -134,7 +140,7 @@ class GO:
             self.sp.Type(AQT.aqt_STREAM_TYPE_LOCALDISPLAY)
         elif self.sp.Type() == AQT.aqt_STREAM_TYPE_LOCALDISPLAY:
             self.sp.Type(AQT.aqt_JPEG_IMAGE)
-    
+
     def save_frame(self):
         if not os.path.exists(self.path):
             os.mkdir(self.path)
@@ -162,6 +168,17 @@ class Test_API(BaseTest):
     def is_api_status_ok(self):
         if self.go.api.GetStatus() != AQT.aqt_STATUS_OKAY:
             self.fail()
+
+
+    def get_rx(self, ni, delay=1):
+        cmd = 'cat /sys/class/net/' + ni + '/statistics/rx_bytes'
+        s_rx = int(self.exec_cmd(cmd))
+
+        time.sleep(delay)
+
+        e_rx = int(self.exec_cmd(cmd))
+
+        return (e_rx - s_rx) * 8 / (1e6 * delay)
 
     @pytest.mark.skip(reason="")
     def test_stream_types(self):
@@ -694,7 +711,7 @@ class Test_API(BaseTest):
             assert cam.Name() == "/aqt/camera/" + c_cam
 
 
-   # @pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_remove_cam2(self):
         self.go.create_stream()
         cams = self.go.api.GetAvailableCameras()
@@ -711,3 +728,22 @@ class Test_API(BaseTest):
 
         for range in ranges:
             print(range.Start().tv_sec, range.End().tv_sec)
+
+
+    #@pytest.mark.skip(reason="")
+    def test_connection(self):
+        #print(self.env.cam.get_status(tegra=1))
+        #if self.env.cam.get_status(tegra=1) != "active":
+        #    self.env.
+        self.go.start_stream("/aqt/camera/201")
+        self.go.get_frames()
+
+        while True:
+            # print(self.go.frame.Type())
+            self.go.save_frame()
+            time.sleep(1)
+
+
+
+        speed = self.get_rx('enp4s0f0')
+        print("speed: ", speed)

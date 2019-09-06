@@ -37,10 +37,25 @@ class QStreamBox:
     def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]")
 
     @property
-    def video_controls_panel(self): return self.find_by(xpath="//div[contains(@class , 'ptz-wrapper')]")
+    def video_controls_panel(self): return self.find_by(xpath="//nav[contains(@class, 'v-toolbar--dense')]")
 
     @property
-    def gen_new_geometry_btn(self): return self.video_controls_panel.find_by(xpath="//i[contains(., 'blur_')]/ancestor::button")
+    def stream_calibration_btn(self): return self.find_by(xpath="//i[contains(., 'blur_circular')]/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def gen_new_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'blur_on')]/ancestor::button", elem=self.active_panel)
+
+    @property
+    def geometry_progress_bar(self): return self.find_by(xpath="//div[contains(@class, 'v-list__tile__action') and contains(., ' / 4')]", elem=self.active_panel)
+
+    @property
+    def save_cur_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'save_alt')]/ancestor::button", elem=self.active_panel)
+
+    @property
+    def set_to_saved_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'swap_vert')]/ancestor::button", elem=self.active_panel)
+
+    @property
+    def reset_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'refresh')]/ancestor::button", elem=self.active_panel)
 
     @property
     def video_box(self): return self.find_by(xpath="//body")

@@ -27,7 +27,7 @@ class TestConsoleApps(BaseTest):
             self.failure_exception()
 
         cmd = "du -s " + self.data_dir_path + f_name + " | awk '{print$1}'"
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
         return int(res)
 
@@ -36,9 +36,9 @@ class TestConsoleApps(BaseTest):
 
         cmd = "find " + self.zero_dir_path + " -name '*.hc' | wc -l"
 
-        res["hc_files"] = int(self.exec(cmd))
-        res["hc_docs"] = self.get_col_obj("acos_local", "files").count()
-        res["tracks"] = self.get_col_obj("acos", "tracks").count()
+        res["hc_files"] = int(self.exec_cmd(cmd))
+        res["hc_docs"] = len(self.db.query({}, "acos_local", "files"))
+        res["tracks"] = len(self.db.query({}, "acos", "tracks"))
 
         return res
 
@@ -47,12 +47,11 @@ class TestConsoleApps(BaseTest):
 
     def clear_data(self):
         cmd = "rm -rf " + self.zero_dir_path
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
-        col_arr = ['reservations', 'tracks', 'files']
-        for col_name in col_arr:
-            col = self.get_col_obj("", col_name)
-            col.drop()
+        col_arr = [('acos', 'reservations'), ('acos', 'tracks'), ('acos_local', 'files')]
+        for db_name, col_name in col_arr:
+            self.db.drop(db_name, col_name)
 
     @pytest.mark.skip(reason="")
     def test_daemon_restart(self):
@@ -60,21 +59,21 @@ class TestConsoleApps(BaseTest):
         for i in range(0, 10):
             for ip_tail in range(1, self.num_of_tegras + 1):
                 cmd = self.get_ssh_str(self.cam_ip + str(ip_tail), "sudo pkill -9 Aqueti")
-                self.exec(cmd)
+                self.exec_cmd(cmd)
 
                 time.sleep(30)
 
                 cmd = self.get_ssh_str(self.cam_ip + str(ip_tail), "pgrep acosd")
-                res = self.exec(cmd)
+                res = self.exec_cmd(cmd)
 
                 assert res != ''
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     def test_ei_all(self):
         #add logic to record data
         f_name = "export_all.bin"
         cmd = "AquetiExport -v " + self.data_dir_path + f_name
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
         before = self.get_values()
 
@@ -83,7 +82,7 @@ class TestConsoleApps(BaseTest):
         self.clear_data()
 
         cmd = "Import -v " + self.data_dir_path + f_name
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
         after = self.get_values()
 
@@ -92,20 +91,20 @@ class TestConsoleApps(BaseTest):
     @pytest.mark.skip(reason="")
     def test_export_time(self):
         cmd = "AquetiExport -s " + (datetime.now() - timedelta(minutes=10005)).strftime('%m/%d/%Y-%H:%M:%S') + " -e " + datetime.now().strftime('%m/%d/%Y-%H:%M:%S') + " " + self.data_dir_path + "export_all_se.bin"
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
         assert self.get_size("export_all_se.bin") > 0
 
     @pytest.mark.skip(reason="")
     def test_export_time_cam(self):
         cmd = "AquetiExport -cam " + str(self.cam_id) + " -s " + (datetime.now() - timedelta(minutes=10005)).strftime('%m/%d/%Y-%H:%M:%S') + " -e " + datetime.now().strftime('%m/%d/%Y-%H:%M:%S') + " " + self.data_dir_path + "export_all_se_cam.bin"
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
         assert self.get_size("export_all_se_cam.bin") > 0
 
     @pytest.mark.skip(reason="")
     def test_export_nodb(self):
         cmd = "AquetiExport -v -nodb " + self.zero_dir_path + " " + self.data_dir_path + "export_all_nodb.bin"
-        res = self.exec(cmd)
+        res = self.exec_cmd(cmd)
 
         assert self.get_size("export_all_nodb.bin") > 0

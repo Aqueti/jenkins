@@ -33,7 +33,6 @@ class BasePage:
     page_url = ""
 
     def __init__(self, *args):
-
         page_obj = self
 
         def call(self, *args, **kwargs):
@@ -44,6 +43,8 @@ class BasePage:
                     page_obj._(self, kwargs["value"])
                 elif "act" in kwargs.keys():
                     if "click" in kwargs.values():
+                        page_obj.__add_to_log(page_obj.__get_description(self))
+
                         self.click()
                     elif "focus" in kwargs.values():
                         page_obj.exec_js("arguments[0].focus();", self)
@@ -76,14 +77,17 @@ class BasePage:
             self.test = args[0]
 
     def find_by(self, **kwargs):
-        elems = None
+        if 'elem' in kwargs.keys():
+            elems = kwargs['elem']
+        else:
+            elems = None
+
+        IS_VISIBLE = True
+        if "param" in kwargs.keys():
+            if kwargs["param"] == "invisible":
+                IS_VISIBLE = False
 
         try:
-            IS_VISIBLE = True
-            if "param" in kwargs.keys():
-                if "invisible" in kwargs["param"]:
-                    IS_VISIBLE = False
-
             if "id" in kwargs.keys():
                 if IS_VISIBLE:
                     WebDriverWait(self.driver, self.TIMEOUT).until(EC.presence_of_element_located((By.ID, kwargs["id"])))
@@ -97,7 +101,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.NAME, val)))
                             elems = self.driver.find_elements_by_name(val)
                         else:
-                            elems = elems.find_elements_by_name(val)
+                            elems = elems.find_elements_by_name("." + val)
                     elif key == "link_text":
                         if elems is None:
                             if IS_VISIBLE:
@@ -105,7 +109,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.LINK_TEXT, val)))
                             elems = self.driver.find_elements_by_link_text(val)
                         else:
-                            elems = elems.find_elements_by_link_text(val)
+                            elems = elems.find_elements_by_link_text("." + val)
                     elif key == "partial_link_text":
                         if elems is None:
                             if IS_VISIBLE:
@@ -113,7 +117,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.PARTIAL_LINK_TEXT, val)))
                             elems = self.driver.find_elements_by_partial_link_text(val)
                         else:
-                            elems = elems.find_elements_by_partial_link_text(val)
+                            elems = elems.find_elements_by_partial_link_text("." + val)
                     elif key == "tag_name":
                         if elems is None:
                             if IS_VISIBLE:
@@ -121,7 +125,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.TAG_NAME, val)))
                             elems = self.driver.find_elements_by_tag_name(val)
                         else:
-                            elems = elems.find_elements_by_tag_name(val)
+                            elems = elems.find_elements_by_tag_name("." + val)
                     elif key == "class_name":
                         if elems is None:
                             if IS_VISIBLE:
@@ -129,7 +133,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.CLASS_NAME, val)))
                             elems = self.driver.find_elements_by_class_name(val)
                         else:
-                            elems = elems.find_elements_by_class_name(val)
+                            elems = elems.find_elements_by_class_name("." + val)
                     elif key == "css":
                         if elems is None:
                             if IS_VISIBLE:
@@ -137,7 +141,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.CSS_SELECTOR, val)))
                             elems = self.driver.find_elements_by_css_selector(val)
                         else:
-                            elems = elems.find_elements_by_css_selector(val)
+                            elems = elems.find_elements_by_css_selector("." + val)
                     elif key == "xpath":
                         if elems is None:
                             if IS_VISIBLE:
@@ -145,9 +149,9 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.XPATH, val)))
                             elems = self.driver.find_elements_by_xpath(val)
                         else:
-                            elems = elems.find_elements_by_xpath(val)
+                            elems = elems.find_elements_by_xpath("." + val)
                     else:
-                        pass
+                        continue
 
                     if elems is not None:
                         if len(elems) == 1:

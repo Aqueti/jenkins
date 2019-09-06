@@ -1,7 +1,7 @@
 import subprocess
 from abc import ABCMeta, abstractmethod
 import time
-
+from decorators import *
 
 class Environment:
     def run(self):
@@ -47,20 +47,16 @@ class Component(object):
     def get_ssh_str(self, ip, cmd, uname="nvidia"):
         return "ssh " + uname + "@" + ip + " '" + cmd + "'"
 
-    def ex(self, cmd):
+    def exec_cmd(self, cmd):
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(cmd)
-        
-        if result.stdout.decode('utf-8') != "":
-            return result.stdout.decode('utf-8')
-        else:
-            return result.stderr.decode('utf-8')
+
+        return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
 
 
 class Camera(Component):
     def get_ip_list(self, **kwargs):
         ip_list = []
-        if len(kwargs) == 0:
+        if "tegra" not in kwargs:
             for ip_end in range(1, self.num_of_tegras + 1):
                 ip_list.append(self.start_ip + str(ip_end))
         else:
@@ -79,7 +75,7 @@ class Camera(Component):
 
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon start")
-            self.ex(cmd)
+            self.exec_cmd(cmd)
 
     def stop(self, **kwargs):
         if "tegra" in kwargs:
@@ -89,7 +85,7 @@ class Camera(Component):
 
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon stop")
-            self.ex(cmd)
+            self.exec_cmd(cmd)
 
     def restart(self, **kwargs):
         if "tegra" in kwargs:
@@ -99,7 +95,7 @@ class Camera(Component):
 
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon restart")
-            self.ex(cmd)
+            self.exec_cmd(cmd)
 
     def reboot(self, **kwargs):
         if "tegra" in kwargs:
@@ -109,18 +105,18 @@ class Camera(Component):
 
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo reboot")
-            self.ex(cmd)
+            self.exec_cmd(cmd)
 
     def get_status(self, **kwargs):
         if "tegra" in kwargs:
-            ip_list = [kwargs['tegra']]
+            ip_list = [self.start_ip + str(kwargs['tegra'])]
         else:
             ip_list = self.get_ip_list(**kwargs)
 
         st = []
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, "sudo service Aqueti-Daemon status | grep Active")
-            rs = self.ex(cmd)
+            rs = self.exec_cmd(cmd)
 
             st.append(self.is_active(rs))
 
@@ -130,21 +126,34 @@ class Camera(Component):
 
         return self.status[2]
 
-
     def copy_remote_file(self, **kwargs):
         if "tegra" in kwargs:
             if "to_tegra" in kwargs:
                 #cmd = "cat " + kwargs["path_from"] + " | " + self.get_ssh_str(ip, 'sudo sh -c "cat >' + kwargs["path_to"] + '"')
                 cmd = "scp " + kwargs["path_from"] + " nvidia@" + kwargs['tegra'] + ":./; " + self.get_ssh_str(kwargs['tegra'], "sudo cp " + kwargs["path_from"][kwargs["path_from"].rfind("/") + 1:] + " " + kwargs["path_to"])
-                self.ex(cmd)
+                self.exec_cmd(cmd)
             elif "from_tegra" in kwargs:
                 cmd = "scp nvidia@" + kwargs['tegra'] + ":" + kwargs["path_from"] + " " + kwargs["path_to"]
-                self.ex(cmd)
+                self.exec_cmd(cmd)
 
     def read(self, **kwargs):
         if "tegra" in kwargs:
             cmd = self.get_ssh_str(kwargs['tegra'], "cat " + kwargs["f_name"])
-            return self.ex(cmd)
+            return self.exec_cmd(cmd)
+
+    def exec_cmd(self, **kwargs):
+        if "tegra" in kwargs:
+            ip_list = [self.start_ip + str(kwargs['tegra'])]
+        else:
+            ip_list = self.get_ip_list(**kwargs)
+
+        st = []
+        for ip in ip_list:
+            cmd = self.get_ssh_str(ip, kwargs['cmd'])
+            st.append(super(Camera, self).exec_cmd(cmd))
+
+        return st
+
 
     def __init__(self, cam_ip):
         self.num_of_tegras = int(cam_ip[cam_ip.rfind('.') + 1:])
@@ -155,21 +164,23 @@ class Camera(Component):
 class Render(Component):
     def start(self):
         cmd = "sh -c 'sudo service Aqueti-Daemon start'"
-        return self.ex(cmd)
+        return self.exec_cmd(cmd)
 
     def stop(self):
         cmd = "sh -c 'sudo service Aqueti-Daemon stop'"
-        return self.ex(cmd)
+        return self.exec_cmd(cmd)
 
     def restart(self):
         cmd = "sh -c 'sudo service Aqueti-Daemon restart'"
-        return self.ex(cmd)
+        return self.exec_cmd(cmd)
 
     def get_status(self):
         cmd = "sh -c 'sudo service Aqueti-Daemon status | grep Active'"
-        rs = self.ex(cmd)
+        rs = self.exec_cmd(cmd)
 
         return self.is_active(rs)
 
     def __init__(self, ip):
         self.ip = ip
+
+

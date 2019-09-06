@@ -1501,7 +1501,7 @@ class TestQAdmin(BaseTest):
 
         assert "BUSY" in status_arr
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.usefixtures("login")
     @result
     def test_case_115(self):
@@ -1524,6 +1524,166 @@ class TestQAdmin(BaseTest):
 
         assert scop_name == scop_name2
 
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures()
+    @pytest.mark.parametrize("username, password, expected", [("test",  "1111",     True),
+                                                              ("test",  "12345678", True),
+                                                              ("",      "",         True),
+                                                              ("user",  "",         True),
+                                                              ("",      "12345678", True),
+                                                              ("user",  "1234",     True),
+                                                              ("user",  "12345678", False)])
+    @result
+    def test_case_116(self, username, password, expected):
+        self.qvp.username_txt(value=username)
+        self.qvp.password_txt(value=password)
+        self.qvp.system_txt(value=self.system_name)
+        self.qvp.submit_btn()
+        time.sleep(3)
+
+        assert isinstance(self.qvp.form, WebElement) == expected #add assert for proper notification
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_117(self): #logout
+        self.qvp.user_icon()
+
+        self.qvp.logout_btn()
+        self.qvp.dialog_close_btn()
+
+        assert not isinstance(self.qvp.form, WebElement)
+
+        self.qvp.logout_btn()
+        self.qvp.dialog_logout_btn()
+
+        assert isinstance(self.qvp.form, WebElement)
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures()
+    @result
+    def test_case_118(self): #relogin after logout
+        self.qvp.login(username="user", password="12345678", system=self.system_name)
+        self.qvp.logout()
+
+        while not isinstance(self.qvp.form, WebElement):
+            time.sleep(1)
+
+        self.qvp.login(username="user", password="12345678", system=self.system_name)
+
+        time.sleep(2)
+
+        assert not isinstance(self.qvp.form, WebElement)
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_119(self):
+        def is_opened(e):
+            if e is None:
+                return False
+
+            tag_name = e.get_attribute('tagName').lower()
+            if tag_name == "aside":
+                className = e.get_attribute('class')
+                if "v-navigation-drawer--open" in className:
+                    return True
+                return False
+            return False
+
+        if is_opened(self.qvp.left_sidebar):
+            self.qvp.left_sidebar_btn()
+            assert not is_opened(self.qvp.left_sidebar)
+        else:
+            self.qvp.left_sidebar_btn()
+            assert is_opened(self.qvp.left_sidebar)
+
+        if is_opened(self.qvp.right_sidebar):
+            self.qvp.right_sidebar_btn()
+            assert not is_opened(self.qvp.right_sidebar)
+        else:
+            self.qvp.right_sidebar_btn()
+            assert is_opened(self.qvp.right_sidebar)
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_201(self):
+        def get_models():
+            return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
+
+        s_cnt = len(get_models())
+
+        self.qvp.stream_calibration_btn()
+        self.qvp.gen_new_geometry_btn()
+
+        time.sleep(2)
+
+        while isinstance(self.qvp.geometry_progress_bar, WebElement):
+            time.sleep(15)
+
+        e_cnt = len(get_models())
+
+        assert (e_cnt - s_cnt) == 1
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_202(self):
+        s_res = self.env.cam.exec_cmd(cmd="ls -la /etc/aqueti/config.json")
+
+        self.qvp.stream_calibration_btn()
+        self.qvp.save_cur_geometry_btn()
+
+        time.sleep(10)
+
+        e_res = self.env.cam.exec_cmd(cmd="ls -la /etc/aqueti/config.json")
+
+        for i in range(self.env.cam.num_of_tegras):
+            assert s_res != e_res
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_203(self):
+        def get_models():
+            return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
+
+        s_cnt = len(get_models())
+
+        self.qvp.stream_calibration_btn()
+        self.qvp.set_to_saved_geometry_btn()
+
+        time.sleep(3)
+
+        e_cnt = len(get_models())
+
+        assert (e_cnt - s_cnt) == 1
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("login")
+    @result
+    def test_case_204(self):
+        def get_models():
+            return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
+
+        s_cnt = len(get_models())
+
+        self.qvp.stream_calibration_btn()
+        self.qvp.reset_geometry_btn()
+
+        time.sleep(3)
+
+        e_cnt = len(get_models())
+
+        assert (e_cnt - s_cnt) == 1
 
 
 class TestState(BaseTest):
@@ -1585,4 +1745,6 @@ class TestState(BaseTest):
             assert (sleep_time - math.ceil(currt / 1e6)) < 15 and cumrt_next == cumrt
 
             cumrt_next = cumrt + currt
+
+
 

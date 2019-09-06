@@ -33,6 +33,9 @@ class DB:
     def query(self, query, db="acos", col="scops"):
         return list(self.mc[db][col].find(query))
 
+    def drop(self, db="acos", col="scops"):
+        self.db.mc[db][col].drop()
+
 class BaseTest(): # unittest.TestCase
     driver = None
     browser = None
@@ -172,30 +175,3 @@ class BaseTest(): # unittest.TestCase
             return result.stdout.decode('utf-8')
         else:
             return result.stderr.decode('utf-8')
-
-    def get_col_obj(self, db_name, col_name):
-        if db_name == "":
-            if col_name in ('models', 'reservations', 'scops', 'tracks'):
-                db_name = "acos"
-            elif col_name in 'files':
-                db_name = "acos_local"
-
-        return self.db.mc[db_name][col_name]
-
-    def get_rx(self, ni, delay=1):
-        cmd = 'cat /sys/class/net/' + ni + '/statistics/rx_bytes'
-        s_rx = int(self.exec_cmd(cmd))
-
-        time.sleep(delay)
-
-        e_rx = int(self.exec_cmd(cmd))
-
-        return (e_rx - s_rx) * 8 / (1e6 * delay)
-
-    @async
-    def get_logs(self, log_path, s_index, e_index):
-        # /var/log/syslog   /var/log/aqueti/asis.log    /var/log/aqueti/asis-docker.log
-        # cmd = 'wc -l ' + log_path
-        cmd = "sed -n '" + s_index + ", " + e_index + " p' " + log_path
-
-        return self.exec_cmd(cmd)
