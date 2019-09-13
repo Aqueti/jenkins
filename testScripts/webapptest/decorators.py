@@ -8,13 +8,13 @@ def async(f):
 
     return wrapper
 
-def result(f):
+def storeresult(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         try:
             args[0].doc['result'] = 1
             return f(*args, **kwargs)
-        except AssertionError:
+        except Exception as e: #AssertionError
             args[0].doc['result'] = 0
             raise
 

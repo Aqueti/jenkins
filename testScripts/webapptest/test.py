@@ -37,18 +37,18 @@ class TestWebApp(BaseTest):
         aap_i = AquetiAdminPageIssue(self)
         aap_i.navigate_to()
 
-        assert "[This field is required.]" not in aap_i.cur_page_source
+        assert "[This field is required.]" not in aap_i.source
 
         aap_i._(aap_i.title_field, "")
         aap_i._(aap_i.summary_field, "")
         aap_i._(aap_i.description_field, "")
         aap_i._(aap_i.submit_btn)
 
-        assert "[This field is required.]" in aap_i.cur_page_source
+        assert "[This field is required.]" in aap_i.source
 
         aap_sc = aap_i.submit_issue("title", "summary", "description")
 
-        assert aap_sc.page_url == aap_sc.cur_page_url
+        assert aap_sc.page_url == aap_sc.url
 
     @pytest.mark.skip(reason="")
     def test_comp_name_update(self):
@@ -68,7 +68,7 @@ class TestWebApp(BaseTest):
 
         aap_sys._(aap_sys.host) # old style
 
-        assert "Internal Server Error" == aap_sys.cur_page_source
+        assert "Internal Server Error" == aap_sys.source
 
     @pytest.mark.skip(reason="")
     def test_settings(self):
@@ -151,7 +151,7 @@ class TestWebApp(BaseTest):
 
         aap_sys = alp.login(TD.username, TD.password)
 
-        assert aap_sys.page_url == alp.cur_page_url
+        assert aap_sys.page_url == alp.url
 
     @pytest.mark.skip(reason="")
     def test_login_empty_credentials(self):
@@ -160,7 +160,7 @@ class TestWebApp(BaseTest):
 
         aap_sys = alp.login("", "")
 
-        assert alp.page_url in alp.cur_page_url
+        assert alp.page_url in alp.url
 
     @pytest.mark.skip(reason="")
     def test_login_incorrect_login(self):
@@ -169,7 +169,7 @@ class TestWebApp(BaseTest):
 
         aap_sys = alp.login("nimda", TD.password)
 
-        assert "Username or password invalid" in alp.cur_page_source
+        assert "Username or password invalid" in alp.source
 
     @pytest.mark.skip(reason="")
     def test_login_incorrect_password(self):
@@ -178,7 +178,7 @@ class TestWebApp(BaseTest):
 
         aap_sys = alp.login(TD.username, "4321")
 
-        assert "Username or password invalid" in alp.cur_page_source
+        assert "Username or password invalid" in alp.source
 
 
 
@@ -190,11 +190,11 @@ class TestWebApp(BaseTest):
         aap_sys = AquetiAdminPageStatusCamera(self)
         aap_sys.navigate_to()
 
-        assert "Not Authorized to view this page" in aap_sys.cur_page_source
+        assert "Not Authorized to view this page" in aap_sys.source
 
         aap_sys.navigate_to(AquetiAdminPage.base_url + "/log")
 
-        assert "Not Authorized to view this page" in aap_sys.cur_page_source
+        assert "Not Authorized to view this page" in aap_sys.source
 
     @pytest.mark.skip(reason="")
     def test_login_logout(self):
@@ -205,7 +205,7 @@ class TestWebApp(BaseTest):
 
         avp = aap_sys.logout()
 
-        assert avp.page_title == avp.cur_page_title
+        assert avp.page_title == avp.title
 
     @pytest.mark.skip(reason="")
     def test_login_logout_timeout(self):
@@ -218,7 +218,7 @@ class TestWebApp(BaseTest):
 
         aap_sys.navigate_to()
 
-        assert alp.page_url in aap_sys.cur_page_url
+        assert alp.page_url in aap_sys.url
 
     @pytest.mark.skip(reason="")
     def test_login_correct_credentials(self):       
@@ -227,7 +227,7 @@ class TestWebApp(BaseTest):
 
         aap_sys = alp.login(TD.username, TD.password)
 
-        assert aap_sys.page_title == aap_sys.cur_page_title
+        assert aap_sys.page_title == aap_sys.title
 
 
 class TestAPIWebApp(BaseTest):
@@ -784,7 +784,7 @@ class TestAPIWebApp(BaseTest):
                 pass
 
 
-class TestQAdmin(BaseTest):
+class TestQApp(BaseTest):
     browser = "chrome"
 
     env = Environment(render_ip="10.0.0.189", cam_ip="10.1.11.10")
@@ -795,7 +795,7 @@ class TestQAdmin(BaseTest):
 
     api = None
     cam = None
-    qvp = None
+    cpage = None
 
     def get_params(self):
         time.sleep(7)
@@ -844,17 +844,37 @@ class TestQAdmin(BaseTest):
 
 
     def setup_method(self, method):
-        super(TestQAdmin, self).setup_method(method)
-
-        self.qvp = QViewPage(self)
-        self.qvp.navigate_to()
+        super(TestQApp, self).setup_method(method)
 
     def teardown_method(self, method):
-        super(TestQAdmin, self).teardown_method(method)
+        super(TestQApp, self).teardown_method(method)
 
     @pytest.fixture()
     def login(self):
-        self.qvp.login(system=self.system_name)
+        self.cpage.login(username="user", password="12345678", system=self.system_name)
+
+        time.sleep(5)
+
+        max = 5
+        for i in range(max):
+            if self.cpage.failed_dialog is None:
+                break
+            else:
+                if i == (max - 1):
+                    self.failure_exception("Failed to create render stream")
+                    exit(1)
+
+            time.sleep(1)
+
+    @pytest.fixture()
+    def qview(self):
+        self.cpage = QViewPage(self)
+        self.cpage.navigate_to()
+
+    @pytest.fixture()
+    def qadmin(self):
+        self.cpage = QAdminPage(self)
+        self.cpage.navigate_to()
 
     @pytest.fixture()
     def api(self):
@@ -895,7 +915,7 @@ class TestQAdmin(BaseTest):
 
         qas = qad.click_system_lnk()
 
-        assert qas.page_url == qas.cur_page_url
+        assert qas.page_url == qas.url
 
         qad.navigate_to()
 
@@ -903,7 +923,7 @@ class TestQAdmin(BaseTest):
 
         qac = qad.click_camera_lnk()
 
-        assert qac.page_url == qac.cur_page_url
+        assert qac.page_url == qac.url
 
         qad.navigate_to()
 
@@ -911,7 +931,7 @@ class TestQAdmin(BaseTest):
 
         qas = qad.click_storage_lnk()
 
-        assert qas.page_url == qas.cur_page_url
+        assert qas.page_url == qas.url
 
         qad.navigate_to()
 
@@ -919,7 +939,7 @@ class TestQAdmin(BaseTest):
 
         qar = qad.click_render_lnk()
 
-        assert qar.page_url == qar.cur_page_url
+        assert qar.page_url == qar.url
 
     @pytest.mark.skip(reason="")
     def test_mcams_num(self):
@@ -1420,35 +1440,64 @@ class TestQAdmin(BaseTest):
 #QView
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login", "db")
-    @result
+    @pytest.mark.usefixtures("qview", "login", "db")
+    @storeresult
     def test_case_111(self):
-        scops = self.db.query({"type": "mantis"})
+        web_scops = self.cpage.get_lside_scops_names()
+        db_scops = self.db.query({"type": "mantis"})
 
-        for scop in scops:
-            assert self.qvp.get_lside_scop(scop['id']) is not None
+        assert len(web_scops) == len(db_scops)
+
+        for db_scop in db_scops:
+            assert ("/aqt/camera/" + db_scop['id']) in web_scops
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login", "api")
-    @result
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
     def test_case_112(self):
-        self.qvp.get_lside_scop()(act='click')
+        cam_names = self.cpage.get_lside_scops_names()
+
+        for cam_name in sorted(cam_names, reverse=True):
+            self.cpage.get_lside_add_cam_btn(cam_name)(act="click")
+            time.sleep(7)
+
+            renders = self.api.GetAvailableRenderers()
+            render = renders[0]
+
+            render_info = json.loads(self.api.GetDetailedStatus(render.Name()))
+            streams = render_info["render_streams"]
+
+            assert len(streams) > 0
+
+            stream = streams[0]
+            stream_info = json.loads(self.api.GetDetailedStatus(render.Name() + '/' + stream))
+
+            scop_list = stream_info["SCOP_list"]
+
+            for scop_name in scop_list:
+                assert cam_name == "/aqt/camera/" + scop_name
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_113(self):
+        self.cpage.get_lside_scop()(act='click')
 
         if not self.cam.IsRecording():
-            self.qvp.get_lside_recording_btn()(act='click')
+            self.cpage.get_lside_recording_btn()(act='click')
             time.sleep(1)
             assert self.cam.IsRecording()
 
         if self.cam.IsRecording():
-            self.qvp.get_lside_recording_btn()(act='click')
+            self.cpage.get_lside_recording_btn()(act='click')
             time.sleep(1)
             assert not self.cam.IsRecording()
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login", "api")
-    @result
-    def test_case_113(self):
-        self.qvp.get_lside_scop()(act='click')
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_114(self):
+        self.cpage.get_lside_scop()(act='click')
         # self.api.SetParameters(self.cam_name, json.dumps({"fineAutofocus": True}))
 
         status_arr = []
@@ -1461,7 +1510,7 @@ class TestQAdmin(BaseTest):
 
         assert "BUSY" not in status_arr
 
-        self.qvp.get_lside_fine_focus_btn()(act='click')
+        self.cpage.get_lside_fine_focus_btn()(act='click')
 
         status_arr = []
         s_time = dt.datetime.now()
@@ -1474,10 +1523,10 @@ class TestQAdmin(BaseTest):
         assert "BUSY" in status_arr
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login", "api")
-    @result
-    def test_case_114(self):
-        self.qvp.get_lside_scop()(act='click')
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_115(self):
+        self.cpage.get_lside_scop()(act='click')
 
         status_arr = []
         s_time = dt.datetime.now()
@@ -1489,7 +1538,7 @@ class TestQAdmin(BaseTest):
 
         assert "BUSY" not in status_arr
 
-        self.qvp.get_lside_coarse_focus_btn()(act='click')
+        self.cpage.get_lside_coarse_focus_btn()(act='click')
 
         status_arr = []
         s_time = dt.datetime.now()
@@ -1502,15 +1551,15 @@ class TestQAdmin(BaseTest):
         assert "BUSY" in status_arr
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
-    def test_case_115(self):
-        scop_name = self.qvp.get_lside_scop_txt().get_attribute('innerText')
-        self.qvp.get_lside_scop()(act='click')
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_116(self):
+        scop_name = self.cpage.get_lside_scops_names()[-1]
+        self.cpage.get_lside_scop(scop_name=scop_name)(act='click')
 
         time.sleep(0.5)
 
-        self.qvp.get_lside_advanced_btn()(act='click')
+        self.cpage.get_lside_advanced_btn(scop_name=scop_name)(act='click')
 
         time.sleep(2)
 
@@ -1520,12 +1569,12 @@ class TestQAdmin(BaseTest):
 
         qacm = QAdminCameraMicrocameras(self)
 
-        scop_name2 = qacm.cam_select_div.get_attribute('innerText')
+        scop_name2 = qacm.cam_select_div.text
 
         assert scop_name == scop_name2
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures()
+    @pytest.mark.usefixtures("qview")
     @pytest.mark.parametrize("username, password, expected", [("test",  "1111",     True),
                                                               ("test",  "12345678", True),
                                                               ("",      "",         True),
@@ -1533,55 +1582,52 @@ class TestQAdmin(BaseTest):
                                                               ("",      "12345678", True),
                                                               ("user",  "1234",     True),
                                                               ("user",  "12345678", False)])
-    @result
-    def test_case_116(self, username, password, expected):
-        self.qvp.username_txt(value=username)
-        self.qvp.password_txt(value=password)
-        self.qvp.system_txt(value=self.system_name)
-        self.qvp.submit_btn()
+    @storeresult
+    def test_case_120(self, username, password, expected):
+        self.cpage.login(username=username, password=password, system=self.system_name)
         time.sleep(3)
 
-        assert isinstance(self.qvp.form, WebElement) == expected #add assert for proper notification
+        assert isinstance(self.cpage.active_dialog, WebElement) == expected
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
-    def test_case_117(self): #logout
-        self.qvp.user_icon()
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_121(self): #logout
+        self.cpage.user_icon()
 
-        self.qvp.logout_btn()
-        self.qvp.dialog_close_btn()
+        self.cpage.logout_btn()
+        self.cpage.dialog_close_btn()
 
-        assert not isinstance(self.qvp.form, WebElement)
+        assert not isinstance(self.cpage.active_dialog, WebElement)
 
-        self.qvp.logout_btn()
-        self.qvp.dialog_logout_btn()
+        self.cpage.logout_btn()
+        self.cpage.dialog_logout_btn()
 
-        assert isinstance(self.qvp.form, WebElement)
+        assert isinstance(self.cpage.form, WebElement)
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures()
-    @result
-    def test_case_118(self): #relogin after logout
-        self.qvp.login(username="user", password="12345678", system=self.system_name)
-        self.qvp.logout()
+    @pytest.mark.usefixtures("qview")
+    @storeresult
+    def test_case_122(self): #relogin after logout
+        self.cpage.login(username="user", password="12345678", system=self.system_name)
+        self.cpage.logout()
 
-        while not isinstance(self.qvp.form, WebElement):
+        while not isinstance(self.cpage.form, WebElement):
             time.sleep(1)
 
-        self.qvp.login(username="user", password="12345678", system=self.system_name)
+        self.cpage.login(username="user", password="12345678", system=self.system_name)
 
         time.sleep(2)
 
-        assert not isinstance(self.qvp.form, WebElement)
+        assert not isinstance(self.cpage.active_dialog, WebElement)
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
-    def test_case_119(self):
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_123(self):
         def is_opened(e):
             if e is None:
                 return False
@@ -1594,36 +1640,36 @@ class TestQAdmin(BaseTest):
                 return False
             return False
 
-        if is_opened(self.qvp.left_sidebar):
-            self.qvp.left_sidebar_btn()
-            assert not is_opened(self.qvp.left_sidebar)
+        if is_opened(self.cpage.left_sidebar):
+            self.cpage.left_sidebar_btn()
+            assert not is_opened(self.cpage.left_sidebar)
         else:
-            self.qvp.left_sidebar_btn()
-            assert is_opened(self.qvp.left_sidebar)
+            self.cpage.left_sidebar_btn()
+            assert is_opened(self.cpage.left_sidebar)
 
-        if is_opened(self.qvp.right_sidebar):
-            self.qvp.right_sidebar_btn()
-            assert not is_opened(self.qvp.right_sidebar)
+        if is_opened(self.cpage.right_sidebar):
+            self.cpage.right_sidebar_btn()
+            assert not is_opened(self.cpage.right_sidebar)
         else:
-            self.qvp.right_sidebar_btn()
-            assert is_opened(self.qvp.right_sidebar)
+            self.cpage.right_sidebar_btn()
+            assert is_opened(self.cpage.right_sidebar)
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
     def test_case_201(self):
         def get_models():
             return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
 
         s_cnt = len(get_models())
 
-        self.qvp.stream_calibration_btn()
-        self.qvp.gen_new_geometry_btn()
+        self.cpage.stream_calibration_btn()
+        self.cpage.gen_new_geometry_btn()
 
         time.sleep(2)
 
-        while isinstance(self.qvp.geometry_progress_bar, WebElement):
+        while isinstance(self.cpage.geometry_progress_bar, WebElement):
             time.sleep(15)
 
         e_cnt = len(get_models())
@@ -1632,13 +1678,13 @@ class TestQAdmin(BaseTest):
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
     def test_case_202(self):
         s_res = self.env.cam.exec_cmd(cmd="ls -la /etc/aqueti/config.json")
 
-        self.qvp.stream_calibration_btn()
-        self.qvp.save_cur_geometry_btn()
+        self.cpage.stream_calibration_btn()
+        self.cpage.save_cur_geometry_btn()
 
         time.sleep(10)
 
@@ -1649,16 +1695,16 @@ class TestQAdmin(BaseTest):
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
     def test_case_203(self):
         def get_models():
             return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
 
         s_cnt = len(get_models())
 
-        self.qvp.stream_calibration_btn()
-        self.qvp.set_to_saved_geometry_btn()
+        self.cpage.stream_calibration_btn()
+        self.cpage.set_to_saved_geometry_btn()
 
         time.sleep(3)
 
@@ -1668,22 +1714,275 @@ class TestQAdmin(BaseTest):
 
 
     @pytest.mark.skip(reason="")
-    @pytest.mark.usefixtures("login")
-    @result
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
     def test_case_204(self):
         def get_models():
             return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
 
         s_cnt = len(get_models())
 
-        self.qvp.stream_calibration_btn()
-        self.qvp.reset_geometry_btn()
+        time.sleep(1)
+        self.cpage.stream_calibration_btn()
+        #self.cpage.reset_geometry_btn()
 
         time.sleep(3)
 
         e_cnt = len(get_models())
 
         assert (e_cnt - s_cnt) == 1
+
+
+    #@pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1000(self):
+        self.cpage.video_box(act="rightclick")
+        self.cpage.customize_stream_btn()
+
+        assert True
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1001(self):
+        self.cpage.dots_icon()
+
+        self.cpage.stream_keybindings_btn()
+
+        assert isinstance(self.cpage.find_by(xpath="//div[contains(@class, 'title') and contains(., 'Stream Keybindings')]", elem=self.cpage.active_dialog), WebElement)
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1002(self):
+        self.cpage.dots_icon()
+
+        self.cpage.submit_issue_btn()
+
+        f_name = "test_" + str(dt.datetime.now().strftime('%s'))
+
+        self.cpage.si_filename_txt(value=f_name)
+        self.cpage.si_summary_txt(value="test")
+        self.cpage.si_description_txt(value="test")
+        self.cpage.dialog_submit_btn()
+
+        time.sleep(30)
+
+        assert os.path.exists("/var/tmp/aqueti/" + f_name + ".zip")
+        assert os.path.exists(os.path.expanduser("~") + "/Downloads/" + f_name + ".zip")
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1003(self):
+        self.cpage.dots_icon()
+
+        self.cpage.qadmin_btn(self)
+
+        qap = QAdminPage(self)
+
+        assert qap.url == self.cpage.url
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1004(self):
+        self.cpage.dots_icon()
+
+        self.cpage.help_manual_btn()
+
+        time.sleep(5)
+
+        assert os.path.exists(os.path.expanduser("~") + "/Downloads/qview.pdf")
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1005(self):
+        self.cpage.dots_icon()
+
+        self.cpage.language_dd()
+
+        self.cpage.get_dd_elem("中文")(act="click")
+
+        assert "实时" in self.cpage.live_btn.text
+
+        self.cpage.language_dd()
+
+        self.cpage.get_dd_elem("English")(act="click")
+
+        assert "LIVE" in self.cpage.live_btn.text
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview")
+    @storeresult
+    def test_case_1006(self):
+        self.cpage.login(username="user", password="12345678", language="cn", system="camera11")
+
+        assert "实时" in self.cpage.live_btn.text
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qadmin", "login")
+    @pytest.mark.parametrize("cur_passwd, new_passwd, new_passwd2, err_msg, expected",
+                                                             [("", "", "", "Password too short", False),
+                                                              ("12345678", "", "",  "Password too short", False),
+                                                              ("", "87654321", "87654321", "", False),
+                                                              ("11111111", "87654321", "87654321", "", False),
+                                                              ("12345678", "4321", "4321", "Password too short", False),
+                                                              ("12345678", "4321", "321", "Passwords do not match.", False),
+                                                              ("12345678", "87654321", "987654321", "Passwords do not match.", False),
+                                                              ("12345678", "12345678", "12345678", "", True)
+                                                              ])
+    @storeresult
+    def test_case_1007(self, cur_passwd, new_passwd, new_passwd2, err_msg, expected):
+        self.cpage.user_icon()
+        self.cpage.change_password_btn()
+
+        self.cpage.current_password_txt(value=cur_passwd)
+        self.cpage.new_password_txt(value=new_passwd)
+        self.cpage.confirm_password_txt(value=new_passwd2)
+
+        self.cpage.dialog_submit_btn()
+
+        assert self.cpage.get_dialog_warning() == err_msg
+
+        if expected:
+            time.sleep(3)
+
+        assert (self.cpage.active_dialog is None) == expected
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qadmin")
+    @pytest.mark.parametrize("cur_pwd, new_pwd, expected",
+                                                        [("12345678", "987654321", True),
+                                                         ("987654321", "12345678", True)])
+    @storeresult
+    def test_case_1008(self, cur_pwd, new_pwd, expected):
+        self.cpage.login(username="user", password=cur_pwd, system=self.system_name)
+
+        time.sleep(3)
+
+        self.cpage.user_icon()
+        self.cpage.change_password_btn()
+
+        self.cpage.current_password_txt(value=cur_pwd)
+        self.cpage.new_password_txt(value=new_pwd)
+        self.cpage.confirm_password_txt(value=new_pwd)
+
+        self.cpage.dialog_submit_btn()
+
+        if expected:
+            time.sleep(3)
+
+        assert (self.cpage.active_dialog is None) == expected
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1009(self):
+        self.cpage.right_sidebar_btn()
+        self.cpage.rside_avi_lnk()
+
+        self.cpage.avi_arrow_dd()
+        self.cpage.get_dd_elem("All")(act="click")
+
+        s_cnt = len(self.cpage.get_rows(self.cpage.avi_tbl))
+
+        time.sleep(5)
+        self.cpage.export_avi_chkb()
+        time.sleep(10)
+        self.cpage.export_avi_chkb()
+        time.sleep(5)
+
+        m_cnt = len(self.cpage.get_rows(self.cpage.avi_tbl))
+
+        assert (m_cnt - s_cnt) == 1
+
+        f_name = self.cpage.get_last_col(self.cpage.avi_tbl).text.strip().replace(":", "_")
+
+        #assert os.path.exists("/var/tmp/aqueti/avi/" + f_name)
+        assert os.path.exists(os.path.expanduser('~') + "/Downloads/" + f_name)
+
+        self.cpage.get_avi_download_btn(self.cpage.get_rows(self.cpage.avi_tbl)[-1])(act="click")
+        time.sleep(5)
+
+        assert os.path.exists(os.path.expanduser('~') + "/Downloads/" + f_name[:f_name.rindex(".")] + " (1)" + f_name[f_name.rindex("."):])
+
+        self.cpage.get_avi_delete_btn(self.cpage.get_rows(self.cpage.avi_tbl)[-1])(act="click")
+        time.sleep(10)
+
+        # assert not os.path.exists("/var/tmp/aqueti/avi/" + f_name)
+
+        e_cnt = len(self.cpage.get_rows(self.cpage.avi_tbl))
+
+        assert (m_cnt - e_cnt) == 1
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1010(self):
+        self.cpage.right_sidebar_btn()
+        time.sleep(1)
+        self.cpage.rside_reservations_lnk()
+
+        self.cpage.reservations_arrow_dd()
+        self.cpage.get_dd_elem("All")(act="click")
+
+        rows = self.cpage.get_rows(self.cpage.reservations_tbl)
+        s_cnt = 0 if 'No data available' in rows[-1].text else len(rows)
+
+        self.cpage.recording_btn()
+        time.sleep(10)
+        self.cpage.recording_btn()
+        time.sleep(5)
+
+        rows = self.cpage.get_rows(self.cpage.reservations_tbl)
+        m_cnt = 0 if 'No data available' in rows[-1].text else len(rows)
+
+        assert (m_cnt - s_cnt) == 1
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1011(self):
+        time.sleep(5)
+        self.cpage.right_sidebar_btn()
+        time.sleep(1)
+        self.cpage.rside_reservations_lnk()
+
+        rows = self.cpage.get_rows(self.cpage.reservations_tbl)
+        s_cnt = 0 if 'No data available' in rows[-1].text else len(rows)
+
+        self.cpage.create_reservation_btn()
+
+        self.cpage.description_txt(value="test")
+        self.cpage.start_date_txt(act="click")
+        self.cpage.get_calendar_elem("first")(act="click")
+        #self.cpage.start_time_txt()
+        self.cpage.end_date_txt(act="click")
+        self.cpage.get_calendar_elem("last")(act="click")
+        #self.cpage.end_time_txt()
+        self.cpage.expiration_date_txt(act="click")
+        self.cpage.get_calendar_elem("last")(act="click")
+        #self.cpage.expiration_time_txt()
+
+        self.cpage.dialog_create_btn()
+
+        rows = self.cpage.get_rows(self.cpage.reservations_tbl)
+        m_cnt = 0 if 'No data available' in rows[-1].text else len(rows)
+
+        assert (m_cnt - s_cnt) == 1
 
 
 class TestState(BaseTest):

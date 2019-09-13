@@ -4,40 +4,273 @@ import time
 import math
 
 
-class LoginForm:
+class Dialog:
     @property
-    def form(self): return self.find_by(css="div.v-dialog--active")
-
-    @property
-    def username_txt(self): return self.find_by(css="input[aria-label='Username']", param="invisible")
+    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')][last()]")
 
     @property
-    def password_txt(self): return self.find_by(css="input[aria-label='Password']", param="invisible")
+    def active_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]")
 
     @property
-    def system_txt(self): return self.find_by(css="input[aria-label='System']", param="invisible")
+    def failed_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active') and contains(., 'RenderStream Creation')]", param="invisible")
 
     @property
-    def submit_btn(self): return self.find_by(xpath="(//div[contains(., 'Login')]//button[contains(., 'Submit')])[1]", param="invisible")
-
-    def login(self, username="user", password="12345678", system=""):
-        self.username_txt(value=username)
-        self.password_txt(value=password)
-        self.system_txt(value=system + Keys.ESCAPE)
-        self.submit_btn()
-
-        cnt = 5
-        while isinstance(self.form, WebElement) and cnt > 0:
-            time.sleep(1)
-            cnt -= 1
-
-
-class QStreamBox:
-    @property
-    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]")
+    def dialog_submit_btn(self): return self.find_by(xpath="//button[contains(., 'Submit')]", elem=self.active_dialog)
 
     @property
-    def video_controls_panel(self): return self.find_by(xpath="//nav[contains(@class, 'v-toolbar--dense')]")
+    def dialog_close_btn(self): return self.find_by(xpath="//button[contains(., 'Close')]", elem=self.active_dialog)
+
+    @property
+    def dialog_cancel_btn(self): return self.find_by(xpath="//button[contains(., 'Cancel')]", elem=self.active_dialog)
+
+    @property
+    def dialog_create_btn(self): return self.find_by(xpath="//button[contains(., 'Create')]", elem=self.active_dialog)
+
+    def get_dd(self, title):
+        return self.find_by(xpath="//div[@class='v-select__slot' and contains(., '" + title + "')]")
+
+    def get_dd_elem(self, val, is_contain=True):
+        return self.find_by(xpath="//a", elem=self.get_panel_elem(val, is_contain))
+
+    def get_panel_elem(self, title, is_contain=True):
+        if not is_contain:
+            return self.find_by(xpath="//div[text()='" + title + "') and @role='listitem']", elem=self.active_panel)
+
+        return self.find_by(xpath="//div[contains(., '" + title + "') and @role='listitem']", elem=self.active_panel)
+
+    def get_dialog_warning_elem(self):
+        return self.find_by(xpath="//i[text()='warning']/parent::div", elem=self.active_dialog)
+
+    def get_dialog_warning(self):
+        e = self.get_dialog_warning_elem()
+
+        if e is not None:
+            txt = e.get_attribute('innerText')
+            return txt.replace("warning", "").strip()
+        else:
+            return ""
+
+    def get_rows(self, tbl):
+        rows = self.find_by(xpath="//tr", elem=tbl)
+
+        if rows is not None:
+            if isinstance(rows, list):
+                return rows
+            else:
+                return [rows]
+        else:
+            return []
+
+    def get_last_col(self, tbl):
+        rows = self.get_rows(tbl)
+
+        if len(rows) > 0:
+            columns = self.find_by(xpath="//td", elem=rows[-1])
+
+            return columns[0]
+
+    def get_calendar_elem(self, title):
+        if title == "first":
+            return self.find_by(xpath="(//tbody//tr//td)[1]//button", elem=self.active_panel)
+        elif title == "last":
+            return self.find_by(xpath="(//tbody//tr//td)[last()]//button", elem=self.active_panel)
+        else:
+            return self.find_by(xpath="//tbody//div[text()='" + title + "']//ancestor::button", elem=self.active_panel)
+
+
+class LoginForm(Dialog):
+    @property
+    def username_txt(self): return self.find_by(css="input[aria-label='Username']", elem=self.active_dialog)
+
+    @property
+    def password_txt(self): return self.find_by(css="input[aria-label='Password']", elem=self.active_dialog)
+
+    @property
+    def system_txt(self): return self.find_by(css="input[aria-label='System']", elem=self.active_dialog)
+
+    @property
+    def login_language_dd(self): return self.find_by(xpath="//input[@aria-label='Language']/ancestor::div[@class='v-select__slot']", elem=self.active_dialog)
+
+    def login(self, *args, **kwargs):
+        self.username_txt(value=kwargs['username'])
+        self.password_txt(value=kwargs['password'])
+        self.system_txt(value=kwargs['system'] + Keys.ESCAPE)
+
+        if 'language' in kwargs.keys():
+            self.login_language_dd()
+            if kwargs['language'] == 'cn':
+                self.get_dd_elem("中文")(act="click")
+                self.find_by(xpath="//button[contains(., '提交')]", elem=self.active_dialog)(act="click")
+            else:
+                self.get_dd_elem("English")(act="click")
+                self.find_by(xpath="//button[contains(., 'Submit')]", elem=self.active_dialog)(act="click")
+        else:
+            self.dialog_submit_btn()
+
+class QStreamBox(Dialog):
+    @property
+    def video_area(self): return self.find_by(xpath="(//video)[1]/ancestor::div[contains(@class, 'container')]")
+
+    @property
+    def video_box(self): return self.find_by(xpath="(//video)[1]", elem=self.video_area)
+
+    @property
+    def video_controls_panel(self): return self.find_by(xpath="//nav[contains(@class, 'v-toolbar--dense')]", elem=self.video_area)
+
+# other
+
+    @property
+    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')][last()]")
+
+    @property
+    def cam_select_dd(self): return self.find_by(id="camera_select")
+
+    @property
+    def cam_select_div(self): return self.find_by(xpath="//*[@id='camera_select']/parent::div")
+
+    @property
+    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
+
+    def get_slider(self, val):
+        return self.find_by("//input[@aria-label='" + val + "']//ancestor::input[@role='slider']/parent::div[contains(@class,'v-slider__thumb-container')]")
+
+# Right-click menu
+
+    @property
+    def customize_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Customize Stream"))
+
+    @property
+    def change_camera_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Change Camera"))
+
+    @property
+    def refresh_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Refresh Stream"))
+
+    @property
+    def delet_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Delete Stream"))
+
+    @property
+    def video_controls_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Video Controls"))
+
+# Customize Stream
+
+    @property
+    def type_dd(self): return self.find_by(xpath="//label[contains(., 'Type')]/..", elem=self.active_panel)
+
+    @property
+    def display_dd(self): return self.find_by(xpath="//label[contains(., 'Display')]/..//input", elem=self.active_panel)
+
+    @property
+    def framerate_dd(self): return self.find_by(xpath="//label[contains(., 'Framerate')]/..//input", elem=self.active_panel)
+
+    @property
+    def projection_dd(self): return self.find_by(xpath="//label[contains(., 'Projection')]/..//input", elem=self.active_panel)
+
+    def right_click_menu(self):
+        self.video_box
+
+# controls
+
+    @property
+    def recording_btn(self): return self.find_by(xpath="//i[text()='adjust']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def play_btn(self): return self.find_by(xpath="//i[text()='play_arrow']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def pause_btn(self): return self.find_by(xpath="//i[text()='pause']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def fast_rewind_btn(self): return self.find_by(xpath="//i[text()='fast_rewind']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def fast_forward_btn(self): return self.find_by(xpath="//i[text()='fast_forward_btn']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def step_rewind_btn(self): return self.find_by(xpath="//i[text()='skip_previous']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def step_forward_btn(self): return self.find_by(xpath="//i[text()='skip_next']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def speed_dd(self): return self.find_by(xpath="//input[@aria-label='speed']/parent::div", elem=self.video_controls_panel)
+
+    @property
+    def live_btn(self): return self.find_by(id="live")
+
+    @property
+    def single_stream_btn(self): return self.find_by(xpath="//i[text()='crop_landscape']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def multi_stream_btn(self): return self.find_by(xpath="//i[text()='view_column']/ancestor::button", elem=self.video_controls_panel)
+
+# create_tag_btn
+
+    @property
+    def create_tag_btn(self): return self.find_by(xpath="//i[text()='loyalty']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def description_txt(self): return self.find_by(xpath="//input[@aria-label='Description']", elem=self.active_panel)
+
+# stream_settings_btn
+
+    @property
+    def stream_settings_btn(self): return self.find_by(xpath="//i[text()='tune']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def brightness_txt(self): return self.find_by(id="brightness_text_field", elem=self.active_panel)
+
+    @property
+    def contrast_txt(self): return self.find_by(id="contrast_text_field", elem=self.active_panel)
+
+    @property
+    def dark_level_txt(self): return self.find_by(id="dark_level_text_field", elem=self.active_panel)
+
+    @property
+    def pixel_width_txt(self): return self.find_by(id="pixel_width_text_field", elem=self.active_panel)
+
+    @property
+    def set_btn(self): return self.find_by(id="set_parameters_btn", elem=self.active_panel)
+
+    @property
+    def remove_btn(self): return self.find_by(id="remove_parameters_btn", elem=self.active_panel)
+
+# go_to_time_btn
+
+    @property
+    def go_to_time_btn(self): return self.find_by(xpath="//i[text()='access_time']/ancestor::button", elem=self.video_controls_panel)
+
+# timeline_settings_btn
+
+    @property
+    def timeline_settings_btn(self): return self.find_by(xpath="//i[text()='more_vert']/ancestor::button", elem=self.video_controls_panel)
+
+# show_timeline_btn
+
+    @property
+    def show_timeline_btn(self): return self.find_by(xpath="//i[text()='keyboard_arrow_up']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def panning_panel(self): return self.find_by(xpath="//div[@class='layout column']", elem=self.video_area)
+
+    @property
+    def zoom_in_btn(self): return self.find_by(xpath="//i[text()='zoom_in']/ancestor::button", elem=self.panning_panel)
+
+    @property
+    def zoom_out_btn(self): return self.find_by(xpath="//i[text()='zoom_out']/ancestor::button", elem=self.panning_panel)
+
+    @property
+    def arrow_up_btn(self): return self.find_by(xpath="//i[text()='arrow_upward']/ancestor::button", elem=self.panning_panel)
+
+    @property
+    def arrow_down_btn(self): return self.find_by(xpath="//i[text()='arrow_downward']/ancestor::button", elem=self.panning_panel)
+
+    @property
+    def arrow_left_btn(self): return self.find_by(xpath="//i[text()='arrow_back']/ancestor::button", elem=self.panning_panel)
+
+    @property
+    def arrow_right_btn(self): return self.find_by(xpath="//i[text()='arrow_forward']/ancestor::button", elem=self.panning_panel)
+
+# stream_calibration_btn
 
     @property
     def stream_calibration_btn(self): return self.find_by(xpath="//i[contains(., 'blur_circular')]/ancestor::button", elem=self.video_controls_panel)
@@ -56,21 +289,6 @@ class QStreamBox:
 
     @property
     def reset_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'refresh')]/ancestor::button", elem=self.active_panel)
-
-    @property
-    def video_box(self): return self.find_by(xpath="//body")
-
-    @property
-    def cam_select_dd(self): return self.find_by(id="camera_select")
-
-    @property
-    def cam_select_div(self): return self.find_by(xpath="//*[@id='camera_select']/parent::div")
-
-    @property
-    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
-
-    def get_slider(self, val):
-        return self.find_by("//input[@aria-label='" + val + "']//ancestor::input[@role='slider']/parent::div[contains(@class,'v-slider__thumb-container')]")
 
 
 class QAdminSidebar:
@@ -227,116 +445,86 @@ class QAdminSidebar:
 
 class QPage(BasePage, LoginForm):
     @property
-    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]")
+    def top_panel(self): return self.find_by(xpath="//nav[.//img]")
 
     @property
-    def left_sidebar(self): return self.find_by(xpath="(//aside)[1]")
+    def left_sidebar_btn(self): return self.find_by(xpath="(//button[contains(., 'menu')][1]", elem=self.top_panel)
 
     @property
-    def right_sidebar(self): return self.find_by(xpath="(//aside)[last()]")
+    def dots_icon(self): return self.find_by(xpath="//button[contains(., 'more_vert')]", elem=self.top_panel)
 
     @property
-    def active_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]")
+    def versions_icon(self): return self.find_by(xpath="//span[contains(@class, 'v-chip__content')]", elem=self.top_panel)
 
     @property
-    def top_toolbar(self): return self.find_by(xpath="//img[@id='logo']/parent::div")
+    def ping_time_fld(self): return self.find_by(xpath="//span[contains(@class, 'v-tooltip')]", elem=self.top_panel)
 
     @property
-    def left_sidebar_btn(self): return self.find_by(xpath="(//img[@id='logo']/parent::div//button[contains(., 'menu')])[1]")
+    def user_icon(self): return self.find_by(xpath="//i[contains(., 'account_circle')]/parent::div", elem=self.top_panel)
+
+# left_sidebar_btn
 
     @property
-    def dots_icon(self): return self.find_by(xpath="//img[@id='logo']/parent::div//button[contains(., 'more_vert')]")
-
-    @property
-    def right_sidebar_btn(self): return self.find_by(xpath="(//img[@id='logo']/parent::div//button[contains(., 'menu')])[2]")
-
-    @property
-    def versions_icon(self): return self.find_by(xpath="//img[@id='logo']/parent::div//span[contains(@class, 'v-chip__content')]")
-
-    @property
-    def ping_time_fld(self): return self.find_by(xpath="//img[@id='logo']/parent::div//span[contains(@class, 'v-tooltip')]")
-
-    @property
-    def user_icon(self): return self.find_by(xpath="//img[@id='logo']/parent::div//i[contains(., 'account_circle')]")
+    def left_sidebar(self): return self.find_by(xpath="//aside[1]")
 
 # User icon
 
     @property
-    def change_password_btn(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]//i[contains(., 'autorenew')]//ancestor::button")
+    def change_password_btn(self): return self.find_by(xpath="//i[contains(., 'autorenew')]//ancestor::button", elem=self.active_panel)
 
     @property
-    def user_settings_btn(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')]//i[contains(., 'settings')]//ancestor::button")
+    def user_settings_btn(self): return self.find_by(xpath="//i[contains(., 'settings')]//ancestor::button", elem=self.active_panel)
 
     @property
-    def logout_btn(self): return self.active_panel.find_by(xpath="//i[contains(., 'input')]//ancestor::button")
+    def logout_btn(self): return self.active_panel.find_by(xpath="//i[contains(., 'input')]//ancestor::button", elem=self.active_panel)
 
     @property
-    def dialog_close_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Close')]")
+    def dialog_close_btn(self): return self.find_by(xpath="//button[contains(., 'Close')]", elem=self.active_dialog)
 
     @property
-    def dialog_logout_btn(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Logout')]")
-
+    def dialog_logout_btn(self): return self.find_by(xpath="//button[contains(., 'Logout')]", elem=self.active_dialog)
 
 # Dots icon
 
-
-
-
-
-# Right-click menu
+    @property
+    def stream_keybindings_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Stream Keybindings"))
 
     @property
-    def customize_stream_btn(self): return self.find_by(xpath="//button[contains(., 'settings')]")
+    def submit_issue_btn(self): return self.find_by(xpath="//i[text()='report_problem']/ancestor::button", elem=self.active_panel)
 
     @property
-    def refresh_stream_btn(self): return self.find_by(xpath="(//button[contains(., 'refresh')])[2]")
+    def qadmin_btn(self): return self.find_by(xpath="//i[text()='person']/ancestor::a", elem=self.active_panel)
 
     @property
-    def stream_keybindings_btn(self): return self.find_by(xpath="//i[contains(., 'help')]")
+    def help_manual_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Help Manual"))
 
     @property
-    def submit_issue_btn(self): return self.find_by(xpath="//i[contains(., 'report_problem')]")
+    def language_dd(self): return self.find_by(xpath="//i[text()='language']//ancestor::div[@role='listitem']//div[contains(@class, 'v-select__slot')]", elem=self.active_panel)
 
-# Customize Stream
-    @property
-    def type_dd(self): return self.find_by(xpath="//label[contains(., 'Type')]/..")
-
-    @property
-    def display_dd(self): return self.find_by(xpath="//label[contains(., 'Display')]/..//input")
-
-    @property
-    def framerate_dd(self): return self.find_by(xpath="//label[contains(., 'Framerate')]/..//input")
-
-    @property
-    def projection_dd(self): return self.find_by(xpath="//label[contains(., 'Projection')]/..//input")
-
-    @property
-    def cs_update_btn(self): return self.find_by(xpath="//button/div[contains(., 'Update')]")
-
-    @property
-    def cs_cancel_btn(self): return self.find_by(xpath="//button/div[contains(., 'Cancel')]")
-
-# Submit Issue
+# submit_issue_btn
 
     @property
     def si_filename_txt(self):
-        return self.find_by(css="input[aria-label='Filename']")
+        return self.find_by(css="input[aria-label='Filename']", elem=self.active_dialog)
 
     @property
     def si_summary_txt(self):
-        return self.find_by(css="textarea[aria-label='Summary']")
+        return self.find_by(css="textarea[aria-label='Summary']", elem=self.active_dialog)
 
     @property
     def si_description_txt(self):
-        return self.find_by(css="textarea[aria-label='Description']")
+        return self.find_by(css="textarea[aria-label='Description']", elem=self.active_dialog)
+
+# change_password_btn
 
     @property
-    def si_submit_btn(self):
-        return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Submit')]")
+    def current_password_txt(self): return self.find_by(xpath="//input[@aria-label='Current Password']", elem=self.active_dialog)
 
     @property
-    def si_close_btn(self):
-        return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]//button[contains(., 'Close')]")
+    def new_password_txt(self): return self.find_by(xpath="//input[@aria-label='New Password']", elem=self.active_dialog)
+
+    @property
+    def confirm_password_txt(self): return self.find_by(xpath="//input[@aria-label='Confirm Password']", elem=self.active_dialog)
 
 
     def submit_issue(self, *args, **kwargs):
@@ -344,7 +532,7 @@ class QPage(BasePage, LoginForm):
         self.si_summary_txt(value=kwargs["summary"])
         self.si_description_txt(value=kwargs["description"])
 
-        self.si_submit_btn()
+        self.dialog_submit_btn()
 
     def logout(self):
         self.user_icon()
@@ -352,17 +540,11 @@ class QPage(BasePage, LoginForm):
 
         self.dialog_logout_btn()
 
-    def get_dd_elem(self, val, is_contain=True):
-        if is_contain:
-            return self.find_by(xpath="(//a[contains(@class, 'v-list__tile--link')]//div[contains(., '" + val + "')]//ancestor::a)[1]")
-        else:
-            return self.find_by(xpath="//a[contains(@class, 'v-list__tile--link')]//div[text()='" + val + "']//ancestor::a")
-
     def __init__(self, *args):
         BasePage.__init__(self, *args)
 
         if len(args) > 0:
-            self.page_url = "http://" + args[0].env.render.ip + "/admin/#/"
+            self.page_url = "http://" + args[0].env.render.ip
 
         def __call__(self, text):
             BasePage.__call__()
@@ -370,30 +552,102 @@ class QPage(BasePage, LoginForm):
 
 class QViewPage(QPage, QStreamBox):
     @property
-    def left_menu_icon(self): return self.find_by(xpath="//nav//button[contains(., 'menu')]")
+    def right_sidebar_btn(self): return self.find_by(xpath="//button[contains(., 'menu')][2]", elem=self.top_panel)
+
+# right_sidebar_btn
 
     @property
-    def export_avi_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Export AVI']/..", param="invisible")
+    def right_sidebar(self):
+        return self.find_by(xpath="//aside[last()]")
 
     @property
-    def recording_chkb(self): return self.find_by(xpath="//input[@aria-label = 'Recording']/..", param="invisible")
+    def rside_avi_lnk(self):
+        return self.find_by(xpath="//a[text()='AVI']", elem=self.right_sidebar)
 
     @property
-    def avi_tab(self): return self.find_by(css="a[href = '#avi-tab']")
+    def rside_reservations_lnk(self):
+        return self.find_by(xpath="//a[text()='Reservations']", elem=self.right_sidebar)
 
     @property
-    def reservations_tab(self): return self.find_by(css="a[href='#reservation-tab']")
+    def avi_tab(self):
+        return self.find_by(id="avi-tab")
 
     @property
-    def avi_tbl(self): return self.find_by(xpath="//div[@id='avi-tab']//table/tbody")
+    def reservations_tab(self):
+        return self.find_by(id="reservation_tab")
 
     @property
-    def reservations_tbl(self): return self.find_by(xpath="//div[@id='reservation-tab']//table/tbody")
+    def export_avi_chkb(self):
+        return self.find_by(xpath="//input[@aria-label='Export AVI']/parent::div", elem=self.right_sidebar)
 
     @property
-    def lside_panel(self): return self.find_by(xpath="//aside//div[@role='list']/parent::aside")
+    def avi_tbl(self):
+        return self.find_by(xpath="//table/tbody", elem=self.avi_tab)
 
-    def get_avi_items(self):
+    @property
+    def reservations_tbl(self):
+        return self.find_by(xpath="//table/tbody", elem=self.reservations_tab)
+
+    @property
+    def avi_delete_btn(self):
+        return self.find_by(xpath="//i[text()='delete']", elem=self.avi_tab)
+
+    @property
+    def avi_download_btn(self):
+        return self.find_by(xpath="//i[text()='cloud_download']", elem=self.avi_tab)
+
+    @property
+    def reservations_edit_btn(self):
+        return self.find_by(xpath="//i[text()='create']", elem=self.reservations_tab)
+
+    @property
+    def reservations_remove_btn(self):
+        return self.find_by(xpath="//i[text()='delete']", elem=self.reservations_tab)
+
+    @property
+    def avi_arrow_dd(self):
+        return self.find_by(xpath="//i[text()='arrow_drop_down']/parent::div", elem=self.avi_tab)
+
+    @property
+    def reservations_arrow_dd(self):
+        return self.find_by(xpath="//i[text()='arrow_drop_down']/parent::div", elem=self.reservations_tab)
+
+# create_reservation_btn
+
+    @property
+    def create_reservation_btn(self):
+        return self.find_by(xpath="//i[text()='add_circle']/ancestor::button", elem=self.reservations_tab)
+
+    @property
+    def description_txt(self):
+        return self.find_by(xpath="//input[@aria-label='Description']", elem=self.active_dialog)
+
+    @property
+    def start_date_txt(self):
+        return self.find_by(xpath="//input[@aria-label='Start Date']", elem=self.active_dialog)
+
+    @property
+    def start_time_txt(self):
+        return self.find_by(xpath="//input[@aria-label='Start Time']", elem=self.active_dialog)
+
+    @property
+    def end_date_txt(self):
+        return self.find_by(xpath="//input[@aria-label='End Date']", elem=self.active_dialog)
+
+    @property
+    def end_time_txt(self):
+        return self.find_by(xpath="//input[@aria-label='End Time']", elem=self.active_dialog)
+
+    @property
+    def expiration_date_txt(self):
+        return self.find_by(xpath="//input[@aria-label='Expiration Date']", elem=self.active_dialog)
+
+    @property
+    def expiration_time_txt(self):
+        return self.find_by(xpath="//input[@aria-label='Expiration Time']", elem=self.active_dialog)
+
+
+    def get_avi_elems(self):
         items = self.avi_tbl.find_elements_by_tag_name("tr")
 
         for i in range(len(items)):
@@ -403,62 +657,53 @@ class QViewPage(QPage, QStreamBox):
         return items
 
     def get_lside_scops(self):
-        cnt = 3
-        while cnt > 0:
-            items = self.lside_panel.find_elements_by_xpath(".//div[contains(@class, 'title') and contains(., '/aqt/camera')]/ancestor::div[@role='list']")
+        scops = self.find_by(xpath="//div[@class='v-list__group' or @class='v-list__group v-list__group--active']", elem=self.left_sidebar)
 
+        if not isinstance(scops, list):
+            scops = [scops]
 
-            if len(items) == 0:
-                cnt -= 1
-                time.sleep(0.25)
+        return scops
+
+    def get_lside_scops_names(self):
+        return [scop.get_attribute("innerText").split()[0].strip() for scop in self.get_lside_scops()]
+
+    def get_lside_scop(self, scop_name=""):
+        scops = self.get_lside_scops()
+
+        for scop in scops:
+            if scop_name != "":
+                if scop.get_attribute("innerText").split()[0].strip() == scop_name.lower():
+                    return scop
             else:
-                break
+                return scops[0]
 
-        return items
+    def get_lside_add_cam_btn(self, scop_name=""):
+        return self.find_by(xpath="//i[text()='cast']/ancestor::button", elem=self.get_lside_scop(scop_name))
 
-    def get_lside_scop(self, scop=""):
-        items = self.get_lside_scops()
+    def get_lside_selected_scop_name(self):
+        names = self.get_lside_scops_names()
 
-        if scop != "":
-            for item in items:
-                if item.get_attribute('innerText').strip() == "/aqt/camera/" + str(scop):
-                    return item
-            return
-        else:
-            return items[0]
+        for name in names:
+            if 'darken-2' not in self.get_lside_add_cam_btn(name).get_attribute('class'):
+                return name
 
-    def get_lside_scop_txt(self, scop=""):
-        items = [item.find_element_by_xpath(".//div[contains(@class, 'title') and contains(., '/aqt/camera')]") for item in self.get_lside_scops()]
+    def get_lside_recording_btn(self, scop_name=""):
+        return self.find_by(xpath="//i[text()='adjust']/ancestor::button", elem=self.get_lside_scop(scop_name))
 
-        if scop != "":
-            for item in items:
-                if item.get_attribute('innerText').strip() == "/aqt/camera/" + str(scop):
-                    return item
-            return
-        else:
-            return items[0]
+    def get_lside_fine_focus_btn(self, scop_name=""):
+        return self.find_by(xpath="//i[text()='center_focus_strong']/ancestor::button", elem=self.get_lside_scop(scop_name))
 
-    def get_lside_recording_btn(self, scop=""):
-        return self.get_lside_scop(scop).find_element_by_xpath(".//button//i[contains(., 'adjust')]")
+    def get_lside_coarse_focus_btn(self, scop_name=""):
+        return self.find_by(xpath="//i[text()='center_focus_weak']/ancestor::button", elem=self.get_lside_scop(scop_name))
 
-    def get_lside_fine_focus_btn(self, scop=""):
-        return self.get_lside_scop(scop).find_element_by_xpath(".//button//i[contains(., 'center_focus_strong')]")
+    def get_lside_advanced_btn(self, scop_name=""):
+        return self.find_by(xpath="//i[text()='tune']/ancestor::a", elem=self.get_lside_scop(scop_name))
 
-    def get_lside_coarse_focus_btn(self, scop=""):
-        return self.get_lside_scop(scop).find_element_by_xpath(".//button//i[contains(., 'center_focus_weak')]")
+    def get_avi_download_btn(self, row):
+        return self.find_by(xpath="//i[text()='cloud_download']", elem=row)
 
-    def get_lside_advanced_btn(self, scop=""):
-        return self.get_lside_scop(scop).find_element_by_xpath(".//a//i[contains(., 'tune')]")
-
-    def remove_all_avi_items(self):
-        items = self.get_avi_items()
-
-        for item in items:
-            btn_arr = item.find_elements_by_xpath("//i[contains(., 'delete')]")
-            if len(btn_arr) > 0:
-                btn_arr[0].click()
-
-                time.sleep(2)
+    def get_avi_delete_btn(self, row):
+        return self.find_by(xpath="//i[text()='delete']", elem=row)
 
     def __init__(self, *args):
         QPage.__init__(self, *args)
@@ -602,30 +847,6 @@ class QAdminCamera(QAdminPage):
 
 
 class QAdminCameraReservations(QAdminPage, QStreamBox):
-    @property
-    def reserv_panel(self): return self.find_by(xpath="//nav[contains(@class,'v-toolbar grey darken-4')]//button[contains(@class,'v-toolbar__side-icon v-btn v-btn--icon')]")
-
-    @property
-    def recording_chkb(self): return self.find_by(xpath="//input[@aria-label='Recording']/../div[contains(@class,'v-input--selection-controls__ripple')]")
-
-    @property
-    def track_chkb(self): return self.find_by(xpath="//input[@aria-label='Track']/../div[contains(@class,'v-input--selection-controls__ripple')]")
-
-    @property
-    def play_pause_btn(self): return self.find_by(id="play_pause")
-
-    @property
-    def step_frame_back_chkb(self): return self.find_by(id="skip_previous")
-
-    @property
-    def step_frame_forward_chkb(self): return self.find_by(id="skip_next")
-
-    @property
-    def live_btn(self): return self.find_by(id="live")
-
-    @property
-    def speed_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Speed')]/..")
-
     page_url = QAdminPage.base_url + "camera_reservations/none"
     page_title = "qadmin"
 

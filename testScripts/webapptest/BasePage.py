@@ -11,19 +11,19 @@ import time
 
 class BasePage:
     @property
-    def cur_page_url(self):
+    def url(self):
         return self.driver.current_url
 
     @property
-    def cur_page_title(self):
+    def title(self):
         return self.driver.title
 
     @property
-    def cur_page_source(self):
+    def source(self):
         return self.driver.page_source
 
     @property
-    def cur_page_source_hash(self):
+    def source_hash(self):
         return hashlib.md5(self.driver.page_source.encode('utf-8')).hexdigest()
 
     prev_page_url = ""
@@ -44,8 +44,13 @@ class BasePage:
                 elif "act" in kwargs.keys():
                     if "click" in kwargs.values():
                         page_obj.__add_to_log(page_obj.__get_description(self))
-
                         self.click()
+                    elif "rightclick" in kwargs.values():
+                        actionChains = ActionChains(page_obj.driver)
+                        actionChains.context_click(self).perform()
+                    elif "dblclick" in kwargs.values():
+                        actionChains = ActionChains(page_obj.driver)
+                        actionChains.double_click(self).perform()
                     elif "focus" in kwargs.values():
                         page_obj.exec_js("arguments[0].focus();", self)
                     elif "scroll_to" in kwargs.values():
@@ -101,7 +106,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.NAME, val)))
                             elems = self.driver.find_elements_by_name(val)
                         else:
-                            elems = elems.find_elements_by_name("." + val)
+                            elems = elems.find_elements_by_name(val)
                     elif key == "link_text":
                         if elems is None:
                             if IS_VISIBLE:
@@ -109,7 +114,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.LINK_TEXT, val)))
                             elems = self.driver.find_elements_by_link_text(val)
                         else:
-                            elems = elems.find_elements_by_link_text("." + val)
+                            elems = elems.find_elements_by_link_text(val)
                     elif key == "partial_link_text":
                         if elems is None:
                             if IS_VISIBLE:
@@ -117,7 +122,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.PARTIAL_LINK_TEXT, val)))
                             elems = self.driver.find_elements_by_partial_link_text(val)
                         else:
-                            elems = elems.find_elements_by_partial_link_text("." + val)
+                            elems = elems.find_elements_by_partial_link_text(val)
                     elif key == "tag_name":
                         if elems is None:
                             if IS_VISIBLE:
@@ -125,7 +130,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.TAG_NAME, val)))
                             elems = self.driver.find_elements_by_tag_name(val)
                         else:
-                            elems = elems.find_elements_by_tag_name("." + val)
+                            elems = elems.find_elements_by_tag_name(val)
                     elif key == "class_name":
                         if elems is None:
                             if IS_VISIBLE:
@@ -133,7 +138,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.CLASS_NAME, val)))
                             elems = self.driver.find_elements_by_class_name(val)
                         else:
-                            elems = elems.find_elements_by_class_name("." + val)
+                            elems = elems.find_elements_by_class_name(val)
                     elif key == "css":
                         if elems is None:
                             if IS_VISIBLE:
@@ -141,7 +146,7 @@ class BasePage:
                                     EC.visibility_of_any_elements_located((By.CSS_SELECTOR, val)))
                             elems = self.driver.find_elements_by_css_selector(val)
                         else:
-                            elems = elems.find_elements_by_css_selector("." + val)
+                            elems = elems.find_elements_by_css_selector(val)
                     elif key == "xpath":
                         if elems is None:
                             if IS_VISIBLE:
@@ -156,8 +161,11 @@ class BasePage:
                     if elems is not None:
                         if len(elems) == 1:
                             return elems[0]
+                        elif len(elems) == 0:
+                            return None
+
         except Exception as e:
-            err_msg = "Element not found: " + str(kwargs) + "\n"
+            err_msg = "\tELEMENT NOT FOUND: " + str(kwargs) + "\n"
             self.__add_to_log(err_msg)
             if self.test is not None:
                 self.test.failure_exception(err_msg)
@@ -238,7 +246,7 @@ class BasePage:
 
             self.__perf_action(elem, value)
 
-            if "Internal Server Error" in self.cur_page_source:
+            if "Internal Server Error" in self.source:
                 if self.test is not None:
                     self.test.fail()
 
@@ -268,9 +276,9 @@ class BasePage:
 
         out = "\t"
 
-        if self.prev_page_url != self.cur_page_url:
-            self.prev_page_url = self.cur_page_url
-            out = self.cur_page_url + "\n" + out
+        if self.prev_page_url != self.url:
+            self.prev_page_url = self.url
+            out = self.url + "\n" + out
         if step_name != self.step_name:
             self.step_name = step_name
             out = self.step_name + "\n" + out
@@ -354,6 +362,7 @@ class BasePage:
 
     def navigate_to(self, url=""):
         if url == "":
+            print(self.page_url)
             self.driver.get(self.page_url)
         else:
             self.driver.get(url)

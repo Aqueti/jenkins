@@ -61,15 +61,17 @@ class BaseTest(): # unittest.TestCase
         return '{0}/{1}_{2}.png'.format(self.cur_dir, self.doc["test_name"], datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
 
     @property
-    def failure_exception(self):
+    def failure_exception(self, *args, **kwargs):
         class BaseTestFailureException(AssertionError):
             def __init__(self, *args, **kwargs):
                 return super(BaseTestFailureException, self).__init__(*args, **kwargs)
 
             def __call__(self, *args, **kwargs):
+                self.add_to_log(args[0])
+
                 with suppress(Exception): self.driver.save_screenshot(self.screenshot_path)
 
-        BaseTestFailureException.__name__ = AssertionError.__name__
+        BaseTestFailureException.__name__ = Exception.__name__   # AssertionError.__name__
 
         return BaseTestFailureException
 
@@ -80,6 +82,10 @@ class BaseTest(): # unittest.TestCase
     def setup_class(self):
         self.db = DB()
         self.logger = logging.getLogger(__name__)
+
+        self.cur_dir = self.base_dir + self.__name__ + "/" + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        if not os.path.exists(self.cur_dir):
+            os.makedirs(self.cur_dir)
 
     @classmethod
     def teardown_class(self):
@@ -126,10 +132,6 @@ class BaseTest(): # unittest.TestCase
         self.doc["log"] = ""
         self.doc["timestamp"] = int(self.doc["start_time"].timestamp())
 
-        self.cur_dir = self.base_dir + "/" + self.doc["suite_name"] + "/" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S')
-        if not os.path.exists(self.cur_dir):
-            os.makedirs(self.cur_dir)
-
         self.log_path = self.cur_dir + "/" + self.doc["test_name"] + ".txt"
 
         self.add_to_log("Suite:\t" + self.doc["suite_name"] + "\n" +
@@ -146,9 +148,7 @@ class BaseTest(): # unittest.TestCase
             result = "FAILED" if self.doc["result"] == 0 else "ERROR"
             with suppress(Exception): self.driver.save_screenshot(self.screenshot_path)
 
-        self.add_to_log("\n\nExec time: " + str(datetime.timedelta(seconds=self.doc["duration"])) +
-                        "\n----------------------\n" +
-                        "Result: " + result + "\n")
+        self.add_to_log("\nExec time: " + str(datetime.timedelta(seconds=self.doc["duration"])) + "\nRESULT: " + result + "\n\n")
 
         with suppress(Exception): DB(DB.server2_ip).mc["qa"]["auto"].insert_one(self.doc)
 
