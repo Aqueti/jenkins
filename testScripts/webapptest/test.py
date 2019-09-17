@@ -784,6 +784,34 @@ class TestAPIWebApp(BaseTest):
                 pass
 
 
+class GO:
+    cams = None
+    renderers = None
+
+    def __init__(self, *args, **kwargs):
+        self.api = args[0]
+        self.__call__(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        self.cams = self.api.GetAvailableCameras()
+        self.renderers = self.api.GetAvailableRenderers()
+
+    def get_stream_info(self, r_index, s_index):
+        if self.renderers is not None:
+            renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
+
+            if len(renderer_info["render_streams"]) > s_index:
+                stream_info = json.loads(self.api.GetDetailedStatus("/aqt/render/" + renderer_info["id"] + '/' + renderer_info["render_streams"][s_index]))
+
+                return stream_info
+
+    def get_renderer_info(self, r_index):
+        if self.renderers is not None:
+            renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
+
+            return renderer_info
+
+
 class TestQApp(BaseTest):
     browser = "chrome"
 
@@ -880,6 +908,7 @@ class TestQApp(BaseTest):
     def api(self):
         self.api = AQT.AquetiAPI("test_api", AQT.U8Vector(), AQT.StringVector(["aqt://" + self.system_name]))
         self.cam = AQT.Camera(self.api, self.cam_name)
+        self.go = GO(self.api)
 
         yield
 
@@ -1597,12 +1626,12 @@ class TestQApp(BaseTest):
         self.cpage.user_icon()
 
         self.cpage.logout_btn()
-        self.cpage.dialog_close_btn()
+        self.cpage.get_dialog_btn("Close")()
 
         assert not isinstance(self.cpage.active_dialog, WebElement)
 
         self.cpage.logout_btn()
-        self.cpage.dialog_logout_btn()
+        self.cpage.get_dialog_btn("Logout")()
 
         assert isinstance(self.cpage.form, WebElement)
 
@@ -1737,10 +1766,12 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1000(self):
-        self.cpage.video_box(act="rightclick")
-        self.cpage.customize_stream_btn()
+        state = {}
 
-        assert True
+        self.cpage.user_icon()
+        self.cpage.user_settings_btn()
+
+
 
     @pytest.mark.skip(reason="")
     @pytest.mark.usefixtures("qview", "login")
@@ -1750,7 +1781,7 @@ class TestQApp(BaseTest):
 
         self.cpage.stream_keybindings_btn()
 
-        assert isinstance(self.cpage.find_by(xpath="//div[contains(@class, 'title') and contains(., 'Stream Keybindings')]", elem=self.cpage.active_dialog), WebElement)
+        assert self.cpage.active_dialog is not None
 
 
     @pytest.mark.skip(reason="")
@@ -1766,7 +1797,7 @@ class TestQApp(BaseTest):
         self.cpage.si_filename_txt(value=f_name)
         self.cpage.si_summary_txt(value="test")
         self.cpage.si_description_txt(value="test")
-        self.cpage.dialog_submit_btn()
+        self.cpage.get_dialog_btn("Submit")()
 
         time.sleep(30)
 
@@ -1849,7 +1880,7 @@ class TestQApp(BaseTest):
         self.cpage.new_password_txt(value=new_passwd)
         self.cpage.confirm_password_txt(value=new_passwd2)
 
-        self.cpage.dialog_submit_btn()
+        self.cpage.get_dialog_btn("Submit")()
 
         assert self.cpage.get_dialog_warning() == err_msg
 
@@ -1877,7 +1908,7 @@ class TestQApp(BaseTest):
         self.cpage.new_password_txt(value=new_pwd)
         self.cpage.confirm_password_txt(value=new_pwd)
 
-        self.cpage.dialog_submit_btn()
+        self.cpage.get_dialog_btn("Submit")()
 
         if expected:
             time.sleep(3)
@@ -1977,12 +2008,188 @@ class TestQApp(BaseTest):
         self.cpage.get_calendar_elem("last")(act="click")
         #self.cpage.expiration_time_txt()
 
-        self.cpage.dialog_create_btn()
+        self.cpage.get_dialog_btn("Create")()
 
         rows = self.cpage.get_rows(self.cpage.reservations_tbl)
         m_cnt = 0 if 'No data available' in rows[-1].text else len(rows)
 
         assert (m_cnt - s_cnt) == 1
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_1012(self):
+        types = {"H264": "H264", "LOCALDISPLAY": "Window"}
+        resolutions = {"480p": (640, 480), "720p": (1280, 720), "1080p": (1920, 1080), "4k": (3840, 2160)}
+        framerates = [5, 10, 15, 20, 25, 30]
+        projections = ["PLANE", "CYLINDER"]
+
+        for type, vtype in types.items():
+            for resolution, img_wh in resolutions.items():
+                for framerate in framerates:
+                    self.cpage.video_box(act="rightclick")
+                    self.cpage.customize_stream_btn()
+
+                    time.sleep(1)
+
+                    self.cpage.type_dd()
+                    self.cpage.get_dd_elem(type)(act="click")
+
+                    self.cpage.display_dd()
+                    self.cpage.get_dd_elem(resolution)(act="click")
+
+                    self.cpage.framerate_dd()
+                    self.cpage.get_dd_elem(framerate)(act="click")
+
+                    self.cpage.projection_dd()
+                    self.cpage.get_dd_elem(projections[random.randint(0, 1)])(act="click")
+
+                    self.cpage.letterbox_chkb()
+
+                    self.cpage.get_dialog_btn("Update")()
+
+                    time.sleep(5)
+
+                    stream_info = self.go.get_stream_info(0, 0)
+
+                    assert stream_info["encoder"] == vtype
+                    assert stream_info["width"] == img_wh[0] and stream_info["height"] == img_wh[1]
+                    assert stream_info["framerate"] == framerate
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_1013(self):
+        self.cpage.video_box(act="rightclick")
+        self.cpage.change_camera_btn()
+
+        time.sleep(0.5)
+        self.cpage.get_dd("Camera")(act="click")
+        dds = self.cpage.get_dd_elems()
+
+        cur_scop = self.cpage.get_dd("Camera").text
+        cur_scop = cur_scop[cur_scop.rindex("/") + 1: cur_scop.rindex("\n")]
+
+        assert self.go.get_stream_info(0, 0)["SCOP_list"][0] == cur_scop
+
+        for dd in dds:
+            dd_scop = dd.text.replace("/aqt/camera/", "")
+            if cur_scop not in dd_scop:
+                cur_scop = dd_scop
+                self.cpage.get_dd_elem(dd.text)(act="click")
+
+        self.cpage.dialog__btn("Update")()
+
+        time.sleep(5)
+
+        assert self.go.get_stream_info(0, 0)["SCOP_list"][0] == cur_scop
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_1014(self):
+        self.cpage.video_box(act="rightclick")
+
+        s_stream = self.go.get_renderer_info(0)["render_streams"]
+
+        time.sleep(1)
+        self.cpage.refresh_stream_btn()
+        time.sleep(3)
+
+        l_stream = self.go.get_renderer_info(0)["render_streams"]
+
+        assert l_stream == s_stream
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_1015(self):
+        self.cpage.video_box(act="rightclick")
+
+        s_stream = self.go.get_renderer_info(0)["render_streams"]
+
+        time.sleep(1)
+        self.cpage.delete_stream_btn()
+        self.cpage.get_dialog_btn("yes")()
+        time.sleep(3)
+
+        l_stream = self.go.get_renderer_info(0)["render_streams"]
+
+        assert len(s_stream) > 0
+        assert len(l_stream) == 0
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1016(self):
+        self.cpage.video_box(act="rightclick")
+
+        time.sleep(1)
+        self.cpage.video_controls_btn()
+
+        self.cpage.contain_rd()
+        self.cpage.fill_rd()
+        self.cpage.cover_rd()
+
+        self.cpage.display_controls_chkb()
+
+        self.cpage.get_dialog_btn("Close")()
+
+        assert self.cpage.display_controls_chkb is None
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1017(self):
+        state = {}
+
+        self.cpage.user_icon()
+        self.cpage.user_settings_btn()
+
+        self.cpage.stream_on_page_load_chkb()
+        time.sleep(1)
+
+        state.update({"chkb": self.cpage.stream_on_page_load_chkb.is_checked()})
+
+        if self.cpage.middle_rd.is_checked():
+            self.cpage.corner_rd()
+            state.update({"radio":"corner"})
+        else:
+            self.cpage.middle_rd()
+            state.update({"radio": "middle"})
+
+        self.cpage.get_dd("Camera")(act="click")
+
+        state.update({"dd": self.cpage.get_dd_elem().text})
+
+        self.cpage.get_dd_elem(index=-1)(act="click")
+
+        self.cpage.live_latency_bounce(value="50;2")
+
+        state.update({"slider": self.cpage.live_latency_slider.get_attribute("value")})
+
+        self.cpage.get_dialog_btn("Close")()
+
+        self.cpage.live_btn()
+
+        self.cpage.reload()
+
+        self.cpage.user_icon()
+        self.cpage.user_settings_btn()
+
+        assert state["chkb"] == self.cpage.stream_on_page_load_chkb.is_checked()
+        if state["radio"] == "middle":
+            assert state["chkb"] == self.cpage.middle_rd.is_checked()
+        else:
+            assert state["chkb"] == self.cpage.corner_rd.is_checked()
+        assert state["dd"] == self.cpage.get_dd_elem().text
+        assert state["slider"] == self.cpage.live_latency_slider.get_attribute("value")
 
 
 class TestState(BaseTest):

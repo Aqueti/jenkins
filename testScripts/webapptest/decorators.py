@@ -14,7 +14,7 @@ def storeresult(f):
         try:
             args[0].doc['result'] = 1
             return f(*args, **kwargs)
-        except Exception as e: #AssertionError
+        except Exception as e: #AssertionError #ElementClickInterceptedException
             args[0].doc['result'] = 0
             raise
 

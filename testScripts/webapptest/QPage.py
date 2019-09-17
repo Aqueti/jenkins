@@ -4,39 +4,55 @@ import time
 import math
 
 
-class Dialog:
+class BaseCont:
     @property
     def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')][last()]")
 
     @property
-    def active_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')]")
+    def active_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active')][last()]")
 
     @property
     def failed_dialog(self): return self.find_by(xpath="//div[contains(@class, 'v-dialog--active') and contains(., 'RenderStream Creation')]", param="invisible")
 
     @property
-    def dialog_submit_btn(self): return self.find_by(xpath="//button[contains(., 'Submit')]", elem=self.active_dialog)
+    def active_elem(self):
+        if self.active_dialog is not None:
+            return self.active_dialog
+        elif self.active_panel is not None:
+            return self.active_panel
+        else:
+            return None
 
-    @property
-    def dialog_close_btn(self): return self.find_by(xpath="//button[contains(., 'Close')]", elem=self.active_dialog)
-
-    @property
-    def dialog_cancel_btn(self): return self.find_by(xpath="//button[contains(., 'Cancel')]", elem=self.active_dialog)
-
-    @property
-    def dialog_create_btn(self): return self.find_by(xpath="//button[contains(., 'Create')]", elem=self.active_dialog)
+    def get_dialog_btn(self, title):
+        return self.find_by(xpath="//button[contains(., '" + title + "')]", elem=self.active_elem)
 
     def get_dd(self, title):
-        return self.find_by(xpath="//div[@class='v-select__slot' and contains(., '" + title + "')]")
+        return self.find_by(xpath="//input[@aria-label='" + str(title) + "']//ancestor::div[@class='v-select__slot']", elem=self.active_elem)
 
-    def get_dd_elem(self, val, is_contain=True):
-        return self.find_by(xpath="//a", elem=self.get_panel_elem(val, is_contain))
+    def get_dd_elems(self):
+        return self.find_by(xpath="//div[@class='v-list__tile__title']/ancestor::div[@role='listitem']", elem=self.active_panel)
 
-    def get_panel_elem(self, title, is_contain=True):
-        if not is_contain:
-            return self.find_by(xpath="//div[text()='" + title + "') and @role='listitem']", elem=self.active_panel)
+    def get_dd_elem(self, *args, **kwargs):
+        if len(args) > 0:
+            title = args[0]
+            return self.find_by(xpath="//div[@class='v-list__tile__title' and text()='" + str(title) + "']/ancestor::div[@role='listitem']", elem=self.active_panel)
+        else:
+            dds = self.get_dd_elems()
 
-        return self.find_by(xpath="//div[contains(., '" + title + "') and @role='listitem']", elem=self.active_panel)
+            if len(kwargs) > 0:
+                if "index" in kwargs.keys():
+                    if len(dds) > kwargs["index"]:
+                        return dds[kwargs["index"]]
+            else:
+                for dd in dds:
+                    a = self.find_by(xpath="//a", elem=dd)
+                    if a is not None:
+                        if "active" in a.get_attribute("class"):
+                            return dd
+
+
+    def get_panel_elem(self, title):
+        return self.find_by(xpath="//div[contains(., '" + str(title) + "') and @role='listitem']", elem=self.active_panel)
 
     def get_dialog_warning_elem(self):
         return self.find_by(xpath="//i[text()='warning']/parent::div", elem=self.active_dialog)
@@ -49,6 +65,12 @@ class Dialog:
             return txt.replace("warning", "").strip()
         else:
             return ""
+
+    def get_dialog_btn(self, title):
+        return self.find_by(xpath="//button[contains(., '" + title + "')]", elem=self.active_dialog)
+
+    def get_slider(self, val):
+        return self.find_by("//input[@aria-label='" + val + "']//ancestor::input[@role='slider']/parent::div[contains(@class,'v-slider__thumb-container')]")
 
     def get_rows(self, tbl):
         rows = self.find_by(xpath="//tr", elem=tbl)
@@ -78,7 +100,7 @@ class Dialog:
             return self.find_by(xpath="//tbody//div[text()='" + title + "']//ancestor::button", elem=self.active_panel)
 
 
-class LoginForm(Dialog):
+class LoginForm(BaseCont):
     @property
     def username_txt(self): return self.find_by(css="input[aria-label='Username']", elem=self.active_dialog)
 
@@ -88,16 +110,13 @@ class LoginForm(Dialog):
     @property
     def system_txt(self): return self.find_by(css="input[aria-label='System']", elem=self.active_dialog)
 
-    @property
-    def login_language_dd(self): return self.find_by(xpath="//input[@aria-label='Language']/ancestor::div[@class='v-select__slot']", elem=self.active_dialog)
-
     def login(self, *args, **kwargs):
         self.username_txt(value=kwargs['username'])
         self.password_txt(value=kwargs['password'])
         self.system_txt(value=kwargs['system'] + Keys.ESCAPE)
 
         if 'language' in kwargs.keys():
-            self.login_language_dd()
+            self.get_dd("Language")(act="click")
             if kwargs['language'] == 'cn':
                 self.get_dd_elem("中文")(act="click")
                 self.find_by(xpath="//button[contains(., '提交')]", elem=self.active_dialog)(act="click")
@@ -105,9 +124,9 @@ class LoginForm(Dialog):
                 self.get_dd_elem("English")(act="click")
                 self.find_by(xpath="//button[contains(., 'Submit')]", elem=self.active_dialog)(act="click")
         else:
-            self.dialog_submit_btn()
+            self.get_dialog_btn("Submit")(act="click")
 
-class QStreamBox(Dialog):
+class QStreamBox(BaseCont):
     @property
     def video_area(self): return self.find_by(xpath="(//video)[1]/ancestor::div[contains(@class, 'container')]")
 
@@ -116,23 +135,6 @@ class QStreamBox(Dialog):
 
     @property
     def video_controls_panel(self): return self.find_by(xpath="//nav[contains(@class, 'v-toolbar--dense')]", elem=self.video_area)
-
-# other
-
-    @property
-    def active_panel(self): return self.find_by(xpath="//div[contains(@class, 'menuable__content__active')][last()]")
-
-    @property
-    def cam_select_dd(self): return self.find_by(id="camera_select")
-
-    @property
-    def cam_select_div(self): return self.find_by(xpath="//*[@id='camera_select']/parent::div")
-
-    @property
-    def camera_dd(self): return self.find_by(xpath="//div[@role='combobox']//label[contains(.,'Camera')]/..")
-
-    def get_slider(self, val):
-        return self.find_by("//input[@aria-label='" + val + "']//ancestor::input[@role='slider']/parent::div[contains(@class,'v-slider__thumb-container')]")
 
 # Right-click menu
 
@@ -146,27 +148,46 @@ class QStreamBox(Dialog):
     def refresh_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Refresh Stream"))
 
     @property
-    def delet_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Delete Stream"))
+    def delete_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Delete Stream"))
 
     @property
     def video_controls_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Video Controls"))
 
-# Customize Stream
+# customize_stream_btn
 
     @property
-    def type_dd(self): return self.find_by(xpath="//label[contains(., 'Type')]/..", elem=self.active_panel)
+    def type_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Type')]",
+                                           elem=self.active_dialog)
 
     @property
-    def display_dd(self): return self.find_by(xpath="//label[contains(., 'Display')]/..//input", elem=self.active_panel)
+    def display_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Display')]",
+                                              elem=self.active_dialog)
 
     @property
-    def framerate_dd(self): return self.find_by(xpath="//label[contains(., 'Framerate')]/..//input", elem=self.active_panel)
+    def framerate_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Framerate')]",
+                                                elem=self.active_dialog)
 
     @property
-    def projection_dd(self): return self.find_by(xpath="//label[contains(., 'Projection')]/..//input", elem=self.active_panel)
+    def projection_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Projection')]",
+                                                 elem=self.active_dialog)
 
-    def right_click_menu(self):
-        self.video_box
+    @property
+    def letterbox_chkb(self): return self.find_by(xpath="//input[@aria-label='Letterbox']/parent::div", elem=self.active_dialog)
+
+# video_controls_btn
+
+    @property
+    def contain_rd(self): return self.find_by(xpath="//input[@aria-label='contain']/parent::div", elem=self.active_dialog)
+
+    @property
+    def fill_rd(self): return self.find_by(xpath="//input[@aria-label='fill']/parent::div", elem=self.active_dialog)
+
+    @property
+    def cover_rd(self): return self.find_by(xpath="//input[@aria-label='cover']/parent::div", elem=self.active_dialog)
+
+    @property
+    def display_controls_chkb(self): return self.find_by(xpath="//input[@aria-label='Display Video Controls']/parent::div", elem=self.active_dialog)
+
 
 # controls
 
@@ -195,7 +216,7 @@ class QStreamBox(Dialog):
     def speed_dd(self): return self.find_by(xpath="//input[@aria-label='speed']/parent::div", elem=self.video_controls_panel)
 
     @property
-    def live_btn(self): return self.find_by(id="live")
+    def live_btn(self): return self.find_by(xpath="//button[@id='live']/parent::span", elem=self.video_controls_panel)
 
     @property
     def single_stream_btn(self): return self.find_by(xpath="//i[text()='crop_landscape']/ancestor::button", elem=self.video_controls_panel)
@@ -467,7 +488,7 @@ class QPage(BasePage, LoginForm):
     @property
     def left_sidebar(self): return self.find_by(xpath="//aside[1]")
 
-# User icon
+# user_icon
 
     @property
     def change_password_btn(self): return self.find_by(xpath="//i[contains(., 'autorenew')]//ancestor::button", elem=self.active_panel)
@@ -478,13 +499,27 @@ class QPage(BasePage, LoginForm):
     @property
     def logout_btn(self): return self.active_panel.find_by(xpath="//i[contains(., 'input')]//ancestor::button", elem=self.active_panel)
 
-    @property
-    def dialog_close_btn(self): return self.find_by(xpath="//button[contains(., 'Close')]", elem=self.active_dialog)
+## user_settings_btn
 
     @property
-    def dialog_logout_btn(self): return self.find_by(xpath="//button[contains(., 'Logout')]", elem=self.active_dialog)
+    def stream_on_page_load_chkb(self): return self.find_by(xpath="//input[@aria-label='Create a render stream on page load']/parent::div", elem=self.active_dialog)
 
-# Dots icon
+    @property
+    def corner_rd(self): return self.find_by(xpath="//input[@aria-label='Corner']/parent::div", elem=self.active_dialog)
+
+    @property
+    def middle_rd(self): return self.find_by(xpath="//input[@aria-label='Middle']/parent::div", elem=self.active_dialog)
+
+    @property
+    def live_latency_slider(self): return self.find_by(xpath="//input[@aria-label='Live Latency']", elem=self.active_dialog)
+
+    @property
+    def live_latency_bounce(self): return self.find_by(xpath="//input[@aria-label='Live Latency']/parent::div//div[@class='v-slider__thumb primary']", elem=self.active_dialog)
+
+    @property
+    def live_latency_txt(self): return self.find_by(xpath="//input[@id='live_setback_text_field']", elem=self.active_dialog)
+
+# dots_icon
 
     @property
     def stream_keybindings_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Stream Keybindings"))
@@ -501,7 +536,7 @@ class QPage(BasePage, LoginForm):
     @property
     def language_dd(self): return self.find_by(xpath="//i[text()='language']//ancestor::div[@role='listitem']//div[contains(@class, 'v-select__slot')]", elem=self.active_panel)
 
-# submit_issue_btn
+## submit_issue_btn
 
     @property
     def si_filename_txt(self):
@@ -532,13 +567,13 @@ class QPage(BasePage, LoginForm):
         self.si_summary_txt(value=kwargs["summary"])
         self.si_description_txt(value=kwargs["description"])
 
-        self.dialog_submit_btn()
+        self.get_dialog_btn("Submit")()
 
     def logout(self):
         self.user_icon()
         self.logout_btn()
 
-        self.dialog_logout_btn()
+        self.get_dialog_btn("Logout")()
 
     def __init__(self, *args):
         BasePage.__init__(self, *args)
@@ -989,12 +1024,6 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
 
 
 class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
-    @property
-    def camera_dd(self): return self.find_by(xpath="//input[@id='camera_select']/../../div[@class='v-input__append-inner']")
-
-    @property
-    def microcamera_dd(self): return self.find_by(xpath="//input[@id='microcamera_select']/../../div[@class='v-input__append-inner']")
-
     @property
     def microcamera_device_lnk(self): return self.find_by(id="microcamera_device")
 

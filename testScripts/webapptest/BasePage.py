@@ -60,10 +60,12 @@ class BasePage:
                         page_obj._(self)
 
         def is_checked(self):
-            if "accent--text" in self.get_attribute('class'): # .is_selected()
-                return True
-            else:
-                return False
+            e = page_obj.find_by(xpath="//input[@type='radio' or @type='checkbox']", elem=self)
+            if e is not None:
+                if e.get_attribute("aria-checked") == "true":
+                    return True
+
+            return False
 
         def is_focused(self):
             pass
@@ -267,8 +269,11 @@ class BasePage:
         else:
             self.driver.switch_to.default_content()
 
-    def exec_js(self, js, elem):
+    def exec_js(self, js, elem=None):
         self.driver.execute_script(js, elem)
+
+    def reload(self):
+        self.exec_js("location.reload();")
 
     def __get_description(self, elem, value="", step_name=""):
         if elem is None:
