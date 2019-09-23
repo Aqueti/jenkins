@@ -1,0 +1,43 @@
+form label {
+  display: block;
+  padding: 3px 0;
+}
+
+form input#recipient,
+form input#subject {
+  width: 300px;
+  height: 20px;
+  border: 1px solid #cccccc;
+}
+
+form textarea#message {
+  height: 100px;
+  width: 300px;
+  background-color: #fafafa;
+  border: 1px solid #cccccc;
+  margin-bottom: 2px;
+  padding: 5px;
+}
+
+form input#submit {
+  display: block;
+  border:1px solid #d8d8d8;
+  padding: 10px;
+  font-weight:bold;
+  text-align: center;
+  color: #000000;
+  background-color: #f4f4f4;
+}
+
+form input#submit:hover{
+  cursor: pointer;
+  border:1px solid #c1c1c1;
+  background-color: #dbdbdb;
+}
+
+#backlink {
+    margin-bottom: 10px;
+    font-size: 90%;
+    width: auto;
+    display: inline-block;
+}

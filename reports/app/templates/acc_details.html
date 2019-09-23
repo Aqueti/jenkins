@@ -1,16 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>User information</title>
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='email.css') }}" rel="stylesheet" type="text/css" />
 </head>
+
 <body>
+    <div id="backlink">
+        <span><a href="/back"><<</a></span>
+    </div>
+
+    <div style="display: block;">
+        <h3>Tester statistics</h3>
+        <br>
+        <table>
+            <tr><td>pass:</td><td>17</td></tr>
+            <tr><td>fail:</td><td>3</td></tr>
+            <tr><td>total:</td><td>20</td></tr>
+        </table>
+        <br>
+    </div>
+
     <div>
-        <br>
-        <h2>User information</h2>
-        <br>
-        <span>test</span>
+        <h3>Submit Report</h3>
+        <form action="" method=post>
+          <!-- {{ form.hidden_tag() }} -->
+
+          {{ form.recipient.label }}
+          {{ form.recipient }}
+
+          {{ form.subject.label }}
+          {{ form.subject }}
+
+          {{ form.message.label }}
+          {{ form.message }}
+
+          {{ form.submit }}
+        </form>
     </div>
 </body>
+
 </html>

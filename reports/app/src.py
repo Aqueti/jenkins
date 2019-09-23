@@ -10,8 +10,8 @@ import json
 
 DB_SERVER_IP = "127.0.0.1:27017"
 DB_NAME = "qa"
-CASES_COL_NAME = "cases"
-RESULTS_COL_NAME = "results"
+CASES_COL_NAME = "cases2" #cases
+RESULTS_COL_NAME = "auto" #results
 
 app.config["MONGO_URI"] = "mongodb://" + DB_SERVER_IP + "/" + DB_NAME
 mongo = PyMongo(app)
@@ -122,11 +122,11 @@ class DD():
 
     def get_list(self, name):
         if name == "proj":
-            lst = mongo.db.results.distinct("project")
+            lst = mongo.db[RESULTS_COL_NAME].distinct("project")
         elif name == "branch":
-            lst = mongo.db.results.distinct("branch", {"project": self.proj.value[1]})
+            lst = mongo.db[RESULTS_COL_NAME].distinct("branch", {"project": self.proj.value[1]})
         elif name == "build":
-            lst = mongo.db.results.distinct("build", {"branch": self.branch.value[1], "project": self.proj.value[1]})
+            lst = mongo.db[RESULTS_COL_NAME].distinct("build", {"branch": self.branch.value[1], "project": self.proj.value[1]})
         else:
             lst = list()
 

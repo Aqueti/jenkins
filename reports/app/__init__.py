@@ -12,6 +12,6 @@ login.login_view = 'login'
 
 mail = Mail(app)
 
-from app import views
+from app import routes
 
 app.config.from_object(Config)

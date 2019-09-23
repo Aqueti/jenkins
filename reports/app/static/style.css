@@ -79,7 +79,7 @@ li {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    border-bottom: 1px solid #616161
+    border-bottom: 1px solid #616161;
 }
 
 #top-panel div {
@@ -153,6 +153,7 @@ div.user-info {
     font-size: 60%;
     color: white;
     float: right;
+    margin-right: 5px;
 
 }
 
