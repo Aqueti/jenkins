@@ -27,6 +27,9 @@ class BaseCont:
         return self.find_by(xpath="//button[contains(., '" + title + "')]", elem=self.active_elem)
 
     def get_dd(self, title):
+        if title == "Camera":
+            time.sleep(0.5)
+
         return self.find_by(xpath="//input[@aria-label='" + str(title) + "']//ancestor::div[@class='v-select__slot']", elem=self.active_elem)
 
     def get_dd_elems(self):
@@ -50,9 +53,17 @@ class BaseCont:
                         if "active" in a.get_attribute("class"):
                             return dd
 
+    def get_list_elems(self, elem=None):
+        if elem is None:
+            elem = self.active_panel
 
-    def get_panel_elem(self, title):
-        return self.find_by(xpath="//div[contains(., '" + str(title) + "') and @role='listitem']", elem=self.active_panel)
+        return self.find_by(xpath="//div[@role='listitem']", elem=elem)
+
+    def get_list_elem(self, title, elem=None):
+        if elem is None:
+            elem = self.active_panel
+
+        return self.find_by(xpath="//div[contains(., '" + str(title) + "') and @role='listitem']", elem=elem)
 
     def get_dialog_warning_elem(self):
         return self.find_by(xpath="//i[text()='warning']/parent::div", elem=self.active_dialog)
@@ -139,19 +150,19 @@ class QStreamBox(BaseCont):
 # Right-click menu
 
     @property
-    def customize_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Customize Stream"))
+    def customize_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Customize Stream"))
 
     @property
-    def change_camera_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Change Camera"))
+    def change_camera_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Change Camera"))
 
     @property
-    def refresh_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Refresh Stream"))
+    def refresh_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Refresh Stream"))
 
     @property
-    def delete_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Delete Stream"))
+    def delete_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Delete Stream"))
 
     @property
-    def video_controls_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Video Controls"))
+    def video_controls_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Video Controls"))
 
 # customize_stream_btn
 
@@ -204,7 +215,7 @@ class QStreamBox(BaseCont):
     def fast_rewind_btn(self): return self.find_by(xpath="//i[text()='fast_rewind']/ancestor::button", elem=self.video_controls_panel)
 
     @property
-    def fast_forward_btn(self): return self.find_by(xpath="//i[text()='fast_forward_btn']/ancestor::button", elem=self.video_controls_panel)
+    def fast_forward_btn(self): return self.find_by(xpath="//i[text()='fast_forward']/ancestor::button", elem=self.video_controls_panel)
 
     @property
     def step_rewind_btn(self): return self.find_by(xpath="//i[text()='skip_previous']/ancestor::button", elem=self.video_controls_panel)
@@ -213,7 +224,7 @@ class QStreamBox(BaseCont):
     def step_forward_btn(self): return self.find_by(xpath="//i[text()='skip_next']/ancestor::button", elem=self.video_controls_panel)
 
     @property
-    def speed_dd(self): return self.find_by(xpath="//input[@aria-label='speed']/parent::div", elem=self.video_controls_panel)
+    def speed_dd(self): return self.find_by(xpath="//input[@aria-label='speed']", elem=self.video_controls_panel)
 
     @property
     def live_btn(self): return self.find_by(xpath="//button[@id='live']/parent::span", elem=self.video_controls_panel)
@@ -522,7 +533,7 @@ class QPage(BasePage, LoginForm):
 # dots_icon
 
     @property
-    def stream_keybindings_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Stream Keybindings"))
+    def stream_keybindings_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Stream Keybindings"))
 
     @property
     def submit_issue_btn(self): return self.find_by(xpath="//i[text()='report_problem']/ancestor::button", elem=self.active_panel)
@@ -531,7 +542,7 @@ class QPage(BasePage, LoginForm):
     def qadmin_btn(self): return self.find_by(xpath="//i[text()='person']/ancestor::a", elem=self.active_panel)
 
     @property
-    def help_manual_btn(self): return self.find_by(xpath="//button", elem=self.get_panel_elem("Help Manual"))
+    def help_manual_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Help Manual"))
 
     @property
     def language_dd(self): return self.find_by(xpath="//i[text()='language']//ancestor::div[@role='listitem']//div[contains(@class, 'v-select__slot')]", elem=self.active_panel)
@@ -694,8 +705,9 @@ class QViewPage(QPage, QStreamBox):
     def get_lside_scops(self):
         scops = self.find_by(xpath="//div[@class='v-list__group' or @class='v-list__group v-list__group--active']", elem=self.left_sidebar)
 
-        if not isinstance(scops, list):
-            scops = [scops]
+        if scops is not None:
+            if not isinstance(scops, list):
+                scops = [scops]
 
         return scops
 
@@ -705,22 +717,22 @@ class QViewPage(QPage, QStreamBox):
     def get_lside_scop(self, scop_name=""):
         scops = self.get_lside_scops()
 
+        if scops is None:
+            return None
+
         for scop in scops:
             if scop_name != "":
                 if scop.get_attribute("innerText").split()[0].strip() == scop_name.lower():
                     return scop
             else:
-                return scops[0]
+                if 'darken-2' not in self.find_by(xpath="//div[contains(@class, 'v-list__group__header')]//button", elem=scop).get_attribute('class'):
+                    return scop
 
     def get_lside_add_cam_btn(self, scop_name=""):
         return self.find_by(xpath="//i[text()='cast']/ancestor::button", elem=self.get_lside_scop(scop_name))
 
     def get_lside_selected_scop_name(self):
-        names = self.get_lside_scops_names()
-
-        for name in names:
-            if 'darken-2' not in self.get_lside_add_cam_btn(name).get_attribute('class'):
-                return name
+        return self.get_lside_scop().get_attribute("innerText")
 
     def get_lside_recording_btn(self, scop_name=""):
         return self.find_by(xpath="//i[text()='adjust']/ancestor::button", elem=self.get_lside_scop(scop_name))

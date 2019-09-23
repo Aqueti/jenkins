@@ -36,7 +36,6 @@ class TestWebApp(BaseTest):
     def test_issue_submition(self):
         aap_i = AquetiAdminPageIssue(self)
         aap_i.navigate_to()
-
         assert "[This field is required.]" not in aap_i.source
 
         aap_i._(aap_i.title_field, "")
@@ -877,8 +876,8 @@ class TestQApp(BaseTest):
     def teardown_method(self, method):
         super(TestQApp, self).teardown_method(method)
 
-    @pytest.fixture()
-    def login(self):
+    @pytest.fixture
+    def login(self, caplog):
         self.cpage.login(username="user", password="12345678", system=self.system_name)
 
         time.sleep(5)
@@ -1766,11 +1765,12 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1000(self):
-        state = {}
-
-        self.cpage.user_icon()
-        self.cpage.user_settings_btn()
-
+        self.cpage.zoom_in_btn()
+        self.cpage.zoom_out_btn()
+        self.cpage.arrow_up_btn()
+        self.cpage.arrow_down_btn()
+        self.cpage.arrow_left_btn()
+        self.cpage.arrow_right_btn()
 
 
     @pytest.mark.skip(reason="")
@@ -2147,6 +2147,47 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1017(self):
+        lst_scops = self.cpage.get_lside_scops_names()
+
+        self.cpage.user_icon()
+        self.cpage.user_settings_btn()
+
+        self.cpage.get_dd("Camera")(act="click")
+
+        dd_scops = [dd.text for dd in self.cpage.get_dd_elems()]
+
+        assert lst_scops == dd_scops
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1018(self):
+        self.cpage.user_icon()
+        self.cpage.user_settings_btn()
+
+        self.cpage.get_dd("Camera")(act="click")
+
+        cur_dd = self.cpage.get_dd_elem().text
+        for dd in self.cpage.get_dd_elems():
+            if dd.text != cur_dd:
+                self.cpage.get_dd_elem(dd.text)(act="click")
+                break
+
+        self.cpage.reload()
+
+        time.sleep(2)
+
+        selected_dd = self.cpage.get_lside_scop()
+
+        assert selected_dd is not None
+        assert selected_dd.text.split()[0].strip() == cur_dd
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1019(self):
         state = {}
 
         self.cpage.user_icon()
@@ -2190,6 +2231,55 @@ class TestQApp(BaseTest):
             assert state["chkb"] == self.cpage.corner_rd.is_checked()
         assert state["dd"] == self.cpage.get_dd_elem().text
         assert state["slider"] == self.cpage.live_latency_slider.get_attribute("value")
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1020(self):
+        assert self.cpage.speed_dd.get_attribute("value") == "1"
+
+        self.cpage.fast_rewind_btn()
+
+        assert self.cpage.speed_dd.get_attribute("value") == "0.75"
+
+        self.cpage.fast_forward_btn()
+
+        assert self.cpage.speed_dd.get_attribute("value") == "1"
+
+        for i in range(5):
+            self.cpage.fast_rewind_btn()
+
+        assert self.cpage.speed_dd.get_attribute("value") == "0.25"
+
+        for i in range(5):
+            self.cpage.fast_forward_btn()
+
+        assert self.cpage.speed_dd.get_attribute("value") == "1"
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1021(self):
+        assert self.cpage.pause_btn is not None
+        assert self.cpage.fast_rewind_btn is not None
+        assert self.cpage.fast_forward_btn is not None
+        assert self.cpage.speed_dd.get_attribute("value") == "1"
+
+        self.cpage.pause_btn()
+
+        assert self.cpage.play_btn is not None
+        assert self.cpage.step_rewind_btn is not None
+        assert self.cpage.step_forward_btn is not None
+        assert self.cpage.speed_dd.get_attribute("value") == ""
+
+        self.cpage.live_btn()
+
+        assert self.cpage.pause_btn is not None
+        assert self.cpage.fast_rewind_btn is not None
+        assert self.cpage.fast_forward_btn is not None
+        assert self.cpage.speed_dd.get_attribute("value") == "1"
 
 
 class TestState(BaseTest):

@@ -41,17 +41,18 @@ class BaseTest(): # unittest.TestCase
     browser = None
 
     db = None
-
-    doc = OrderedDict()
+    logger = None
 
     log_path = None
+    script_dir = None
     cur_dir = None
     home_dir = expanduser("~")
     base_dir = home_dir + "/Pictures/tests/"
 
     chrome_path = home_dir + "/Downloads/src/jenkins/testScripts/webapptest/chromedriver"
 
-    logger = None
+    doc = OrderedDict()
+
 
     def raises(self):
         pass
@@ -83,6 +84,7 @@ class BaseTest(): # unittest.TestCase
         self.db = DB()
         self.logger = logging.getLogger(__name__)
 
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.cur_dir = self.base_dir + self.__name__ + "/" + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         if not os.path.exists(self.cur_dir):
             os.makedirs(self.cur_dir)
@@ -125,12 +127,10 @@ class BaseTest(): # unittest.TestCase
         self.doc["result"] = -1
 
         self.doc["user"] = "script"
-        self.doc["project"] = ""
-        self.doc["branch"] = ""
-        self.doc["build"] = ""
-        self.doc["req_id"] = ""
-        self.doc["log"] = ""
-        self.doc["timestamp"] = int(self.doc["start_time"].timestamp())
+        self.doc["project"] = pytest.config.getoption('--project')
+        self.doc["branch"] = pytest.config.getoption('--branch')
+        self.doc["build"] = pytest.config.getoption('--build')
+        self.doc["timestamp"] = int(self.doc["start_time"].timestamp() * 1e3)
 
         self.log_path = self.cur_dir + "/" + self.doc["test_name"] + ".txt"
 
@@ -139,8 +139,12 @@ class BaseTest(): # unittest.TestCase
                         "Date:\t" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S') + "\n\n")
 
     def teardown_method(self, method):
+        with open(self.script_dir + '/pytest.log', 'r') as f:
+            log = f.read()
+
         self.doc["end_time"] = datetime.datetime.now()
         self.doc["duration"] = int((self.doc["end_time"] - self.doc["start_time"]).total_seconds())
+        self.doc["log"] = log
 
         if self.doc["result"] == 1:
             result = "PASSED"
