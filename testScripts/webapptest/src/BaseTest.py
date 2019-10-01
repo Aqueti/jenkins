@@ -1,20 +1,16 @@
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver import ChromeOptions
-from selenium import webdriver
-import unittest
-import pytest
 import datetime
+import logging
 import os
 import subprocess
-import time
-import pymongo
 from collections import OrderedDict
-from decorators import *
-from os.path import expanduser
-import logging
-import json
-import sys
 from contextlib import suppress
+from os.path import expanduser
+
+import pymongo
+import pytest
+from selenium import webdriver
+from selenium.webdriver import ChromeOptions
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class DB:
@@ -46,13 +42,14 @@ class BaseTest(): # unittest.TestCase
     log_path = None
     script_dir = None
     cur_dir = None
-    home_dir = expanduser("~")
-    base_dir = home_dir + "/Pictures/tests/"
 
-    chrome_path = home_dir + "/Downloads/src/jenkins/testScripts/webapptest/chromedriver"
+    home_dir = expanduser("~")
+    base_dir = home_dir + "/Downloads/tests/"
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = script_dir[:script_dir.rindex('/')]
+    chrome_path = script_dir + "/drivers/chromedriver"
 
     doc = OrderedDict()
-
 
     def raises(self):
         pass
@@ -84,7 +81,6 @@ class BaseTest(): # unittest.TestCase
         self.db = DB()
         self.logger = logging.getLogger(__name__)
 
-        self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.cur_dir = self.base_dir + self.__name__ + "/" + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         if not os.path.exists(self.cur_dir):
             os.makedirs(self.cur_dir)

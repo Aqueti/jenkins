@@ -1,9 +1,12 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.remote.command import Command
+from selenium.common.exceptions import ElementClickInterceptedException
 import hashlib
 import random
 import time
@@ -59,6 +62,12 @@ class BasePage:
                         # page_obj.driver.execute_script("arguments[0].setAttribute(arguments[1], arguments[2]);", self, "default", "")
                         page_obj._(self)
 
+        def click(self, *args, **kwargs):
+            try:
+                self._execute(Command.CLICK_ELEMENT)
+            except ElementClickInterceptedException:
+                page_obj.exec_js("return arguments[0].click()", self)
+
         def is_checked(self):
             e = page_obj.find_by(xpath="//input[@type='radio' or @type='checkbox']", elem=self)
             if e is not None:
@@ -71,6 +80,7 @@ class BasePage:
             pass
 
         WebElement.__call__ = call
+        WebElement.click = click
         WebElement.is_checked = is_checked
         WebElement.is_focused = is_focused
 
@@ -183,16 +193,12 @@ class BasePage:
         if elem is None:
             return
 
-        self.exec_js("arguments[0].scrollIntoView(true);", elem)
-
         value = value.lower()
         tag_name = str(elem.get_attribute('tagName')).lower()
 
         if tag_name == "select":
-            for option in elem.find_elements_by_tag_name('option'):
-                if option.get_attribute("value").lower() == value:
-                    option.click()
-                    break
+            select = Select(elem)
+            select.select_by_value(value)
         elif tag_name == "textarea":
             elem.clear()
             elem.send_keys(value)
@@ -220,7 +226,6 @@ class BasePage:
                 else:
                     elem.click()
             elif type in ("text", "password"):
-
                 if elem.get_attribute('value') != "":
                     elem.click()
 
@@ -245,6 +250,8 @@ class BasePage:
     def _(self, elem, value="", step_name=""):
         if elem is not None:
             self.__add_to_log(self.__get_description(elem, value, step_name))
+
+            self.exec_js("arguments[0].scrollIntoView(true);", elem)
 
             self.__perf_action(elem, value)
 

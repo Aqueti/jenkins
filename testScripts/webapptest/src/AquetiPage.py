@@ -1,5 +1,6 @@
-from BasePage import *
 from selenium.webdriver.common.action_chains import ActionChains
+
+from src.BasePage import *
 
 
 class AquetiPage(BasePage):
@@ -562,7 +563,7 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     def sharpening_slider(self): return self.find_by(css="div#sharpening_slider div[role='slider']")
 
     @property
-    def sharpening_slider_ribbon(self): return self.find_by(css="div#sharpening_slider div.noUi-base")
+    def sharpening_slider_ribbon(self): return self.find_by(css="div#sharpening_slider div.noUi-src")
 
     @property
     def sharpening_slider_value(self): return self.find_by(css="div#sharpening_slider div[role='slider'] div.noUi-tooltip")
@@ -571,7 +572,7 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     def denoising_slider(self): return self.find_by(css="div#denoising_slider div[role='slider']")
 
     @property
-    def denoising_slider_ribbon(self): return self.find_by(css="div#denoising_slider div.noUi-base")
+    def denoising_slider_ribbon(self): return self.find_by(css="div#denoising_slider div.noUi-src")
 
     @property
     def denoising_slider_value(self): return self.find_by(css="div#denoising_slider div[role='slider'] div.noUi-tooltip")
@@ -580,7 +581,7 @@ class AquetiAdminPageCamera(AquetiAdminPage):
     def saturation_slider(self): return self.find_by(css="div#saturation_slider div[role='slider']")
 
     @property
-    def saturation_slider_ribbon(self): return self.find_by(css="div#saturation_slider div.noUi-base")
+    def saturation_slider_ribbon(self): return self.find_by(css="div#saturation_slider div.noUi-src")
 
     @property
     def saturation_slider_value(self): return self.find_by(css="div#saturation_slider div[role='slider'] div.noUi-tooltip")
@@ -953,13 +954,13 @@ class AquetiAdminPageConfigurationCamera(AquetiAdminPageConfiguration, AquetiAdm
     def sharpening_slider(self): return self.find_by(css="#panel1 div#sharpening_slider div[role='slider']")
 
     @property
-    def sharpening_slider_ribbon(self): return self.find_by(css="#panel1 div#sharpening_slider div.noUi-base")
+    def sharpening_slider_ribbon(self): return self.find_by(css="#panel1 div#sharpening_slider div.noUi-src")
 
     @property
     def denoising_slider(self): return self.find_by(css="#panel1 div#denoising_slider div[role='slider']")
 
     @property
-    def denoising_slider_ribbon(self): return self.find_by(css="#panel1 div#denoising_slider div.noUi-base")
+    def denoising_slider_ribbon(self): return self.find_by(css="#panel1 div#denoising_slider div.noUi-src")
 
     @property
     def night_mode_chkb(self): return self.find_by(id="night_mode")

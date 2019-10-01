@@ -1,7 +1,7 @@
-from BasePage import *
-from selenium.webdriver.common.action_chains import ActionChains
-import time
 import math
+import time
+
+from src.BasePage import *
 
 
 class BaseCont:

@@ -1,9 +1,11 @@
-from BaseTest import BaseTest
-import pytest
-import time
 import os
+import time
 from datetime import datetime
 from datetime import timedelta
+
+import pytest
+
+from src.BaseTest import BaseTest
 
 
 class TestConsoleApps(BaseTest):

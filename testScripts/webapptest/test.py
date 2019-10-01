@@ -1,19 +1,21 @@
-import pytest
-from BaseTest import BaseTest
-from AquetiPage import *
-from QPage import *
-from BaseEnv import *
-from pprint import pprint
-import time
-import re
-import cv2
-import json
 import datetime as dt
-import numpy as np
-import subprocess
-import random
+import json
 import math
 import os
+import random
+import re
+import subprocess
+import time
+import cv2
+import numpy as np
+import pytest
+
+from src.AquetiPage import *
+from src.BaseEnv import *
+from src.QPage import *
+from src.BaseTest import BaseTest
+from src.decorators import *
+
 try:
     import AQT
 except ImportError:
