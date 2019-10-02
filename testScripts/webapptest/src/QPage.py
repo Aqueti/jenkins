@@ -282,7 +282,7 @@ class QStreamBox(BaseCont):
     def show_timeline_btn(self): return self.find_by(xpath="//i[text()='keyboard_arrow_up']/ancestor::button", elem=self.video_controls_panel)
 
     @property
-    def panning_panel(self): return self.find_by(xpath="//div[@class='layout column']", elem=self.video_area)
+    def panning_panel(self): return self.find_by(xpath="//div[@class='layout column' and .//button]", elem=self.video_area)
 
     @property
     def zoom_in_btn(self): return self.find_by(xpath="//i[text()='zoom_in']/ancestor::button", elem=self.panning_panel)
@@ -727,6 +727,8 @@ class QViewPage(QPage, QStreamBox):
             else:
                 if 'darken-2' not in self.find_by(xpath="//div[contains(@class, 'v-list__group__header')]//button", elem=scop).get_attribute('class'):
                     return scop
+
+        return scops[0]
 
     def get_lside_add_cam_btn(self, scop_name=""):
         return self.find_by(xpath="//i[text()='cast']/ancestor::button", elem=self.get_lside_scop(scop_name))

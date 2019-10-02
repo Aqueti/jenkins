@@ -46,8 +46,12 @@ class BasePage:
                     page_obj._(self, kwargs["value"])
                 elif "act" in kwargs.keys():
                     if "click" in kwargs.values():
-                        page_obj.__add_to_log(page_obj.__get_description(self))
-                        self.click()
+                        times = 1
+                        if "times" in kwargs.keys():
+                            times = kwargs["times"]
+                        for i in range(times):
+                            page_obj.__add_to_log(page_obj.__get_description(self))
+                            self.click()
                     elif "rightclick" in kwargs.values():
                         actionChains = ActionChains(page_obj.driver)
                         actionChains.context_click(self).perform()

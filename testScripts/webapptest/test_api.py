@@ -8,8 +8,8 @@ import time
 from datetime import datetime, timedelta
 
 import pytest
-from BaseEnv import *
-from BaseTest import BaseTest
+from src.BaseEnv import *
+from src.BaseTest import BaseTest
 
 from src.decorators import *
 
