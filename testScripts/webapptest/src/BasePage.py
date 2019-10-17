@@ -62,6 +62,12 @@ class BasePage:
                         page_obj.exec_js("arguments[0].focus();", self)
                     elif "scroll_to" in kwargs.values():
                         page_obj.exec_js("arguments[0].scrollIntoView(true);", self)
+                    elif "check" in kwargs.values():
+                        if not self.is_selected():
+                            page_obj._(self)
+                    elif "uncheck" in kwargs.values():
+                        if self.is_selected():
+                            page_obj._(self)
                     elif "default" in kwargs.values():
                         # page_obj.driver.execute_script("arguments[0].setAttribute(arguments[1], arguments[2]);", self, "default", "")
                         page_obj._(self)
@@ -96,6 +102,7 @@ class BasePage:
         else:
             self.driver = args[0].driver
             self.test = args[0]
+
 
     def find_by(self, **kwargs):
         if 'elem' in kwargs.keys():

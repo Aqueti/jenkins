@@ -8,6 +8,9 @@ import subprocess
 import time
 import cv2
 import numpy as np
+from PIL import Image
+#from skimage.measure import compare_ssim
+import io
 import pytest
 
 from src.AquetiPage import *
@@ -35,7 +38,7 @@ class GO:
         self.cams = self.api.GetAvailableCameras()
         self.renderers = self.api.GetAvailableRenderers()
 
-    def get_stream_info(self, r_index, s_index):
+    def get_stream_info(self, r_index=0, s_index=0):
         if self.renderers is not None:
             renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
 
@@ -44,7 +47,7 @@ class GO:
 
                 return stream_info
 
-    def get_renderer_info(self, r_index):
+    def get_renderer_info(self, r_index=0):
         if self.renderers is not None:
             renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
 
@@ -193,6 +196,7 @@ class TestQApp(BaseTest):
 #QView
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "db")
     @storeresult
     def test_case_111(self):
@@ -205,6 +209,7 @@ class TestQApp(BaseTest):
             assert ("/aqt/camera/" + db_scop['id']) in web_scops
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_112(self):
@@ -231,6 +236,7 @@ class TestQApp(BaseTest):
                 assert cam_name == "/aqt/camera/" + scop_name
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_113(self):
@@ -247,6 +253,7 @@ class TestQApp(BaseTest):
             assert not self.cam.IsRecording()
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_114(self):
@@ -276,6 +283,7 @@ class TestQApp(BaseTest):
         assert "BUSY" in status_arr
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_115(self):
@@ -304,6 +312,7 @@ class TestQApp(BaseTest):
         assert "BUSY" in status_arr
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_116(self):
@@ -327,6 +336,7 @@ class TestQApp(BaseTest):
         assert scop_name == scop_name2
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview")
     @pytest.mark.parametrize("username, password, expected", [("test",  "1111",     True),
                                                               ("test",  "12345678", True),
@@ -344,6 +354,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_121(self): #logout
@@ -361,6 +372,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview")
     @storeresult
     def test_case_122(self): #relogin after logout
@@ -378,6 +390,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_123(self):
@@ -409,6 +422,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_201(self):
@@ -431,23 +445,26 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_202(self):
-        s_res = self.env.cam.exec_cmd(cmd="ls -la /etc/aqueti/config.json")
+        def get_models():
+            return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
 
         self.cpage.stream_calibration_btn()
         self.cpage.save_cur_geometry_btn()
 
         time.sleep(10)
 
-        e_res = self.env.cam.exec_cmd(cmd="ls -la /etc/aqueti/config.json")
+        config_file = self.env.cam.exec_cmd(cmd="ls -la /etc/aqueti/config.json")
 
         for i in range(self.env.cam.num_of_tegras):
-            assert s_res != e_res
+            assert get_models()[-1] in config_file
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_203(self):
@@ -467,6 +484,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_204(self):
@@ -486,15 +504,16 @@ class TestQApp(BaseTest):
         assert (e_cnt - s_cnt) == 1
 
 
-    #@pytest.mark.skip(reason="")
+
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
-    @pytest.mark.usefixtures("qview", "login", "avi")
+    @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1000(self):
         pass
 
-
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1001(self):
@@ -506,6 +525,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1002(self):
@@ -527,6 +547,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1003(self):
@@ -540,6 +561,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1004(self):
@@ -553,6 +575,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1005(self):
@@ -572,6 +595,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview")
     @storeresult
     def test_case_1006(self):
@@ -581,6 +605,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login")
     @pytest.mark.parametrize("cur_passwd, new_passwd, new_passwd2, err_msg, expected",
                                                              [("", "", "", "Password too short", False),
@@ -612,6 +637,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin")
     @pytest.mark.parametrize("cur_pwd, new_pwd, expected",
                                                         [("12345678", "987654321", True),
@@ -638,6 +664,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1009(self):
@@ -680,6 +707,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1010(self):
@@ -705,6 +733,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1011(self):
@@ -738,6 +767,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_1012(self):
@@ -772,7 +802,7 @@ class TestQApp(BaseTest):
 
                     time.sleep(5)
 
-                    stream_info = self.go.get_stream_info(0, 0)
+                    stream_info = self.go.get_stream_info()
 
                     assert stream_info["encoder"] == vtype
                     assert stream_info["width"] == img_wh[0] and stream_info["height"] == img_wh[1]
@@ -780,6 +810,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_1013(self):
@@ -809,6 +840,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_1014(self):
@@ -826,6 +858,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_1015(self):
@@ -845,6 +878,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1016(self):
@@ -865,6 +899,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1017(self):
@@ -881,6 +916,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1018(self):
@@ -906,6 +942,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1019(self):
@@ -955,6 +992,7 @@ class TestQApp(BaseTest):
 
 
     @pytest.mark.skip(reason="")
+    @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_1020(self):
@@ -1023,3 +1061,218 @@ class TestQApp(BaseTest):
         time.sleep(2)
 
         assert True
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.smoke
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qview", "login")
+    @storeresult
+    def test_case_1000(self):
+        def get_storage_path():
+            config_path = "/etc/aqueti/daemonConfiguration.json"
+            with open(config_path, "r") as f:
+                configs = json.load(f)
+
+            for config in configs["submodule"]:
+                if 'storageDirs' in config.keys():
+
+                    return config['storageDirs'][0]
+
+        def get_files(storage_path, file_ext=".hc"):
+            arr = []
+            for root, dirs, files in os.walk(storage_path):
+                for file in files:
+                    name, ext = os.path.splitext(file)
+                    if ext == file_ext:
+                        arr.append(os.path.join(root, file))
+
+            return arr
+
+        def get_files_diff(f_arr1, f_arr2):
+            return [f for f in f_arr2 if f not in f_arr1]
+
+        s_files = get_files(get_storage_path())
+        s_models = len(self.db.query({"scop": self.cam_id}, "acos", "models"))
+
+        self.cpage.recording_btn()
+        time.sleep(10)
+        self.cpage.recording_btn()
+        time.sleep(5)
+
+        e_files = get_files(get_storage_path())
+        e_models = len(self.db.query({"scop": self.cam_id}, "acos", "models"))
+
+        new_files = get_files_diff(e_files, s_files)
+
+        assert (e_models - s_models) == 1
+        assert len(new_files) == self.env.cam.num_of_sensors
+
+        for file in e_files:
+            assert os.path.getsize(file) == 67108864
+
+#QAdmin
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login")
+    @storeresult
+    def test_case_2000(self):
+        self.cpage = self.cpage.menu_cam_settings()
+
+        time.sleep(2)
+
+
+
+        self.cpage.global_auto_chkb(act="check")
+
+        self.cpage.auto_stream_settings_btn()
+
+        print()
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login")
+    @storeresult
+    def test_case_2001(self):
+        self.cpage = self.cpage.menu_cam_settings()
+
+        time.sleep(2)
+
+        self.cpage.global_auto_chkb(act="check")
+
+        self.cpage.auto_stream_settings_btn()
+        self.cpage.day_night_mode_chkb(act="check")
+
+        assert self.cpage.day_threshold_txt.is_enabled()
+        assert self.cpage.night_threshold_txt.is_enabled()
+        assert self.cpage.day_threshold_slider.is_enabled()
+        assert self.cpage.night_threshold_slider.is_enabled()
+
+        self.cpage.close_dialog()
+
+        assert not self.cpage.exposure_time_chkb.is_enabled()
+        assert not self.cpage.exposure_time_slider.get_attribute("tabindex") == "-1"
+        assert not self.cpage.exposure_time_txt.is_enabled()
+
+        assert not self.cpage.analog_gain_chkb.is_enabled()
+        assert not self.cpage.analog_gain_slider.get_attribute("tabindex") == "-1"
+        assert not self.cpage.analog_gain_txt.is_enabled()
+
+        assert not self.cpage.digital_gain_slider.get_attribute("tabindex") == "-1"
+        assert not self.cpage.digital_gain_txt.is_enabled()
+
+        assert self.cpage.fps_dd.is_enabled()
+        assert self.cpage.whitebalance_dd.is_enabled()
+        assert self.cpage.whitebalance_slider.get_attribute("tabindex") != "-1"
+        assert self.cpage.whitebalance_txt.is_enabled()
+
+        assert not self.cpage.ir_filter_chkb.is_enabled()
+
+        self.cpage.image_tab()
+
+        assert not self.cpage.sharpening_slider.is_enabled()
+        assert not self.cpage.sharpening_txt.is_enabled()
+        assert not self.cpage.denoising_slider.is_enabled()
+        assert not self.cpage.denoising_txt.is_enabled()
+        assert not self.cpage.saturation_slider.is_enabled()
+        assert not self.cpage.saturation_txt.is_enabled()
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login")
+    @storeresult
+    def test_case_2002(self):
+        self.cpage = self.cpage.menu_cam_settings()
+
+        time.sleep(2)
+
+        if self.cpage.global_auto_chkb.is_selected():
+            self.cpage.global_auto_chkb(act="uncheck")
+            self.cpage.auto_disable_btn()
+
+        self.cpage.auto_stream_settings_btn()
+        self.cpage.day_night_mode_chkb(act="uncheck")
+
+        assert not self.cpage.day_threshold_txt.is_enabled()
+        assert not self.cpage.night_threshold_txt.is_enabled()
+        assert not self.cpage.day_threshold_slider.is_enabled()
+        assert not self.cpage.night_threshold_slider.is_enabled()
+
+        self.cpage.close_dialog()
+
+        assert self.cpage.exposure_time_chkb.is_enabled()
+        assert not self.cpage.exposure_time_slider.get_attribute("tabindex") == "-1"
+        assert not self.cpage.exposure_time_txt.is_enabled()
+
+        assert self.cpage.analog_gain_chkb.is_enabled()
+        assert self.cpage.analog_gain_slider.get_attribute("tabindex") != "-1"
+        assert self.cpage.analog_gain_txt.is_enabled()
+
+        assert self.cpage.digital_gain_slider.get_attribute("tabindex") != "-1"
+        assert self.cpage.digital_gain_txt.is_enabled()
+
+        assert self.cpage.fps_dd.is_enabled()
+        assert self.cpage.whitebalance_dd.is_enabled()
+        assert self.cpage.whitebalance_slider.get_attribute("tabindex") != "-1"
+        assert self.cpage.whitebalance_txt.is_enabled()
+
+        assert self.cpage.ir_filter_chkb.is_enabled()
+
+        self.cpage.image_tab()
+
+        assert self.cpage.sharpening_slider.is_enabled()
+        assert self.cpage.sharpening_txt.is_enabled()
+        assert self.cpage.denoising_slider.is_enabled()
+        assert self.cpage.denoising_txt.is_enabled()
+        assert self.cpage.saturation_slider.is_enabled()
+        assert self.cpage.saturation_txt.is_enabled()
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login")
+    @storeresult
+    def test_case_3000(self):
+        #def compare_imgs(img_a, img_b):
+        #    img_a_grey = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
+        #    img_b_grey = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
+        #
+        #    return compare_ssim(img_a_grey, img_b_grey)
+
+        #def to_cv2_img(img):
+        #   np_arr = np.fromstring(img_a, np.uint8)
+        #   img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        #
+        #   return img
+
+        def is_img_black(img):
+            im = Image.open(io.BytesIO(img))
+            rgb_im = im.convert('RGB')
+
+            pixels = {}
+
+            for i in range(rgb_im.width):
+                for j in range(rgb_im.height):
+                    if rgb_im.getpixel((i, j)) in pixels.keys():
+                        pixels[rgb_im.getpixel((i, j))] += 1
+                    else:
+                        pixels[rgb_im.getpixel((i, j))] = 1
+
+            if (rgb_im.width * rgb_im.height / pixels[(0, 0, 0)]) > 0.99:
+                return True
+
+            return False
+
+        def is_video_black():
+            return is_img_black(self.cpage.video_box.screenshot_as_png)
+
+        # sensors = self.env.cam.get_sensor_id()
+
+        self.cpage = self.cpage.menu_cam_settings()
+
+        if is_video_black():
+            self.cpage.video_box(act="rightclick")
+            self.cpage.customize_stream_btn()
+            self.cpage.get_dialog_btn("Update")()

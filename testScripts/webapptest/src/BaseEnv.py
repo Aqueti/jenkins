@@ -1,4 +1,5 @@
 import subprocess
+import json
 from abc import ABCMeta, abstractmethod
 
 
@@ -146,18 +147,42 @@ class Camera(Component):
         else:
             ip_list = self.get_ip_list(**kwargs)
 
-        st = []
+        st = {}
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, kwargs['cmd'])
-            st.append(super(Camera, self).exec_cmd(cmd))
+            st.update( {ip : super(Camera, self).exec_cmd(cmd)} )
 
         return st
+
+    def get_config(self, **kwargs):
+        kwargs["cmd"] = "cat /etc/aqueti/config.json"
+        ret = self.exec_cmd(**kwargs)
+
+        for k, v in ret.items():
+            ret[k] = json.loads(v)
+
+        return ret
+
+    def get_sensor_id(self, **kwargs):
+        ret = self.get_config(**kwargs)
+
+        ids = {}
+        for k, v in ret.items():
+            for k2 in ret[k]["tegra"]["cameras"].keys():
+                if "slot_" in k2:
+                    if ret[k]["tegra"]["cameras"][k2] is None:
+                        continue
+
+                    ids.setdefault(k, []).append(ret[k]["tegra"]["cameras"][k2]["sensor_id"])
+
+        return ids
 
 
     def __init__(self, cam_ip):
         self.num_of_tegras = int(cam_ip[cam_ip.rfind('.') + 1:])
         self.start_ip = cam_ip[:cam_ip.rfind('.') + 1]
         self.ip = self.get_ip_list()
+        self.num_of_sensors = 19 if self.num_of_tegras == 10 else self.num_of_tegras * 2
 
 
 class Render(Component):

@@ -26,6 +26,12 @@ class BaseCont:
     def get_dialog_btn(self, title):
         return self.find_by(xpath="//button[contains(., '" + title + "')]", elem=self.active_elem)
 
+    def close_dialog(self):
+        e = self.active_panel
+
+        self.exec_js("arguments[0].setAttribute('style', 'display: none;');", e)
+        self.exec_js("arguments[0].classList.remove('menuable__content__active');", e)
+
     def get_dd(self, title):
         if title == "Camera":
             time.sleep(0.5)
@@ -139,10 +145,10 @@ class LoginForm(BaseCont):
 
 class QStreamBox(BaseCont):
     @property
-    def video_area(self): return self.find_by(xpath="(//video)[1]/ancestor::div[contains(@class, 'container')]")
+    def video_area(self): return self.find_by(xpath="(//video)[1]/ancestor::div[contains(@class, 'container')][last()]")
 
     @property
-    def video_box(self): return self.find_by(xpath="(//video)[1]", elem=self.video_area)
+    def video_box(self): return self.find_by(xpath="//video[1]", elem=self.video_area)
 
     @property
     def video_controls_panel(self): return self.find_by(xpath="//nav[contains(@class, 'v-toolbar--dense')]", elem=self.video_area)
@@ -905,99 +911,172 @@ class QAdminCameraReservations(QAdminPage, QStreamBox):
 
 class QAdminCameraSettings(QAdminPage, QStreamBox):
     @property
-    def image_tab(self): return self.find_by(xpath="//nav//a[contains(.,'Image')]")
+    def capture_tab(self): return self.find_by(xpath="//div[@id='capture_tab']//a")
 
     @property
-    def compression_tab(self): return self.find_by(xpath="//nav//a[contains(.,'Compression')]")
+    def image_tab(self): return self.find_by(xpath="//div[@id='image_tab']//a")
 
     @property
-    def calibrate_tab(self): return self.find_by(xpath="//nav//a[contains(.,'Calibrate')]")
+    def compression_tab(self): return self.find_by(xpath="//div[@id='compression_tab']//a")
 
     @property
-    def focus_tab(self): return self.find_by(xpath="//nav//a[contains(.,'Focus')]")
+    def focus_tab(self): return self.find_by(xpath="//div[@id='focus_tab']//a")
 
 # Capture
     @property
-    def auto_slider(self): return self.find_by(xpath="//div[@id='global_switch']//div[contains(@class,'v-slider__thumb-container')]/div")
+    def global_auto_chkb(self): return self.find_by(id="global_switch")
 
     @property
-    def auto_chkb(self): return self.find_by(xpath="//input[@id='global_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
+    def auto_stream_settings_btn(self): return self.find_by(xpath="//label[contains(., 'Global Auto')]/ancestor::div[contains(@class, 'row')][1]//button")
+
+# ---Popup
+    @property
+    def auto_disable_btn(self):
+        return self.find_by(id="auto_warning_ok")
 
     @property
-    def auto_txt(self): return self.find_by(id="global_text_field")
+    def auto_cancel_btn(self):
+        return self.find_by(id="auto_warning_cancel")
+# ---
 
-    #---Popup
+# Auto Stream Settings
     @property
-    def auto_disable_btn(self): return self.find_by(id="auto_warning_ok")
-
-    @property
-    def auto_cancel_btn(self): return self.find_by(id="auto_warning_cancel")
-    #---
-    @property
-    def exposure_slider(self): return self.find_by(xpath="//div[@id='exposure_time_slider']//div[contains(@class,'v-slider__thumb-container')]/div")
+    def day_night_mode_chkb(self): return self.find_by(xpath="//input[@id='auto_night_mode_switch']", elem=self.active_panel)
 
     @property
-    def exposure_chkb(self): return self.find_by(xpath="//input[@id='exposure_time_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
+    def day_night_ir_chkb(self): return self.find_by(xpath="//input[@id='auto_night_mode_ir_switch']", elem=self.active_panel)
 
     @property
-    def exposure_txt(self): return self.find_by(id="exposure_time_text_field")
+    def day_threshold_txt(self): return self.find_by(xpath="//input[@id='day_night_threshold_text_field']", elem=self.active_panel)
 
     @property
-    def analog_gain_slider(self): return self.find_by(xpath="//div[@id='analog_gain_slider']//div[contains(@class,'v-slider__thumb-container')]/div")
+    def night_threshold_txt(self): return self.find_by(xpath="//input[@id='night_mode_threshold_text_field']", elem=self.active_panel)
 
     @property
-    def analog_gain_chkb(self): return self.find_by(xpath="//input[@id='analog_gain_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
+    def day_threshold_slider(self): return self.find_by(xpath="//input[@id='day_night_threshold_text_field'][1]", elem=self.active_panel)
+
+    @property
+    def night_threshold_slider(self): return self.find_by(xpath="//input[@id='day_night_threshold_text_field'][last()]", elem=self.active_panel)
+
+    @property
+    def day_sharpening_txt(self): return self.find_by(xpath="//input[@id='sharpening_threshold_text_field'][1]", elem=self.active_panel)
+
+    @property
+    def night_sharpening_txt(self): return self.find_by(xpath="//input[@id='sharpening_threshold_text_field'][last()]", elem=self.active_panel)
+
+    @property
+    def day_sharpening_slider(self): return self.find_by(xpath="//input[@id='sharpening_threshold_slider'][1]", elem=self.active_panel)
+
+    @property
+    def night_sharpening_slider(self): return self.find_by(xpath="//input[@id='sharpening_threshold_slider'][last()]", elem=self.active_panel)
+
+    @property
+    def day_denoising_txt(self): return self.find_by(xpath="//input[@id='denoising_threshold_text_field'][1]", elem=self.active_panel)
+
+    @property
+    def night_denoising_txt(self): return self.find_by(xpath="//input[@id='denoising_threshold_text_field'][last()]", elem=self.active_panel)
+
+    @property
+    def day_denoising_slider(self): return self.find_by(xpath="//input[@id='denoising_threshold_slider'][1]", elem=self.active_panel)
+
+    @property
+    def night_denoising_slider(self): return self.find_by(xpath="//input[@id='denoising_threshold_slider'][last()]", elem=self.active_panel)
+
+    @property
+    def day_saturation_txt(self): return self.find_by(xpath="//input[@id='saturation_threshold_text_field'][1]", elem=self.active_panel)
+
+    @property
+    def night_saturation_txt(self): return self.find_by(xpath="//input[@id='saturation_threshold_text_field'][last()]", elem=self.active_panel)
+
+    @property
+    def day_saturation_slider(self): return self.find_by(xpath="//input[@id='saturation_threshold_slider'][1]", elem=self.active_panel)
+
+    @property
+    def night_saturation_slider(self): return self.find_by(xpath="//input[@id='saturation_threshold_slider'][last()]", elem=self.active_panel)
+
+    @property
+    def day_fps_dd(self): return self.find_by(xpath="//input[@id='framerate_select'][1]", elem=self.active_panel)
+
+    @property
+    def night_fps_dd(self): return self.find_by(xpath="//input[@id='framerate_select'][last()]", elem=self.active_panel)
+# ----
+
+    @property
+    def exposure_time_chkb(self): return self.find_by(id="exposure_time_switch")
+
+    @property
+    def exposure_time_slider(self): return self.find_by(id="exposure_time_slider")
+
+    @property
+    def exposure_time_txt(self): return self.find_by(id="exposure_time_text_field")
+
+    @property
+    def analog_gain_chkb(self): return self.find_by(id="analog_gain_switch")
+
+    @property
+    def analog_gain_slider(self): return self.find_by(id="analog_gain_slider")
 
     @property
     def analog_gain_txt(self): return self.find_by(id="analog_gain_text_field")
 
     @property
-    def digital_gain_slider(self): return self.find_by(xpath="//div[@id='digital_gain_slider']//div[contains(@class,'v-slider__thumb-container')]/div")
+    def digital_gain_slider(self): return self.find_by(id="digital_gain_slider")
 
     @property
     def digital_gain_txt(self): return self.find_by(id="digital_gain_text_field")
 
     @property
-    def framerate_dd(self): return self.find_by(xpath="//input[@id='framerate_select']/../../div[@class='v-input__append-inner']")
+    def fps_dd(self): return self.find_by(id="framerate_select")
 
     @property
-    def whitebalance_dd(self): return self.find_by(xpath="//input[@id='whitebalance_select']/../../div[@class='v-input__append-inner']")
+    def whitebalance_dd(self): return self.find_by(id="whitebalance_select")
+
+    @property
+    def whitebalance_slider(self): return self.find_by(id="global_slider")
+
+    @property
+    def whitebalance_txt(self): return self.find_by(id="global_text_field")
+
+    @property
+    def ir_filter_chkb(self): return self.find_by(id="ir_filter_switch")
 
 # Image
 
     @property
-    def night_mode_chkb(self): return self.find_by(xpath="//input[@id='night_mode_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
-
-    @property
-    def night_mode_ir_chkb(self): return self.find_by(id="auto_night_mode_ir_switch")
-
-    @property
-    def night_mode_threshold_txt(self): return self.find_by(id="night_mode_threshold_text_field") #2
+    def sharpening_slider(self): return self.find_by(id="sharpening_slider")
 
     @property
     def sharpening_txt(self): return self.find_by(id="sharpening_text_field")
 
     @property
+    def denoising_slider(self): return self.find_by(id="denoising_slider")
+
+    @property
     def denoising_txt(self): return self.find_by(id="denoising_text_field")
+
+    @property
+    def saturation_slider(self): return self.find_by(id="saturation_slider")
 
     @property
     def saturation_txt(self): return self.find_by(id="saturation_text_field")
 
-    @property
-    def ir_filter_switch_chkb(self): return self.find_by(id="ir_filter_switch")
 
 # Compression
 
     @property
-    def compression_dd(self): return self.find_by(xpath="//input[@id='quality_select']/../../div[@class='v-input__append-inner']")
+    def compression_quality_dd(self): return self.find_by(xpath="id='quality_select")
 
 # Focus
 
     @property
-    def ft_coarse_btn(self): return self.find_by(id="focus_coarse_btn")
+    def coarse_focus_btn(self): return self.find_by(id="focus_coarse_btn")
 
     @property
-    def ft_fine_btn(self): return self.find_by(id="focus_fine_btn")
+    def fine_focus_btn(self): return self.find_by(id="focus_fine_btn")
+
+    @property
+    def focus_dd(self): return self.find_by(id="focus_select")
+
 
     page_title = "qadmin"
 
@@ -1015,26 +1094,6 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
         QAdminPage.__init__(self, *args)
 
         self.page_url = self.base_url + "camera_settings/none"
-
-'''
-
-# Calibrate
-
-    @property
-    def ct_calibrate_btn(self): return self.find_by(id="calibrate_now_btn")
-
-    @property
-    def ct_save_geom_btn(self): return self.find_by(id="save_geometry_btn")
-
-    @property
-    def ct_set_geom_btn(self): return self.find_by(id="set_geometry_btn")
-
-    @property
-    def ct_reset_geom_btn(self): return self.find_by(id="reset_geometry_btn")
-
-'''
-
-
 
 
 class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
