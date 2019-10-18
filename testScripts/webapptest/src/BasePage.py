@@ -43,7 +43,7 @@ class BasePage:
                 page_obj._(self)
             else:
                 if "value" in kwargs.keys():
-                    page_obj._(self, kwargs["value"])
+                    page_obj._(self, str(kwargs["value"]))
                 elif "act" in kwargs.keys():
                     if "click" in kwargs.values():
                         times = 1
@@ -236,7 +236,7 @@ class BasePage:
                         self.exec_js("return $(arguments[0]).trigger('mousedown').trigger('touchcancel');", elem)
                 else:
                     elem.click()
-            elif type in ("text", "password"):
+            elif type in ("number", "text", "password"):
                 if elem.get_attribute('value') != "":
                     elem.click()
 

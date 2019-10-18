@@ -9,7 +9,7 @@ import time
 import cv2
 import numpy as np
 from PIL import Image
-#from skimage.measure import compare_ssim
+from skimage.measure import compare_ssim
 import io
 import pytest
 
@@ -52,6 +52,11 @@ class GO:
             renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
 
             return renderer_info
+
+    def get_cam_info(self, cam_id):
+        cam_info = json.loads(self.api.GetDetailedStatus("/aqt/camera/" + str(cam_id)))
+
+        return cam_info
 
 
 class TestQApp(BaseTest):
@@ -102,7 +107,7 @@ class TestQApp(BaseTest):
         	"system_auto_interval": 300,
         	"ir_filter": false,
         	"framerate": 30,
-        	"system_auto_enabled": false,
+        	"system_auto_enabled": true,
         	"auto_model_generation_enabled": false,
         	"analog_gain": 1,
         	"auto_model_generation_interval_seconds": 0,
@@ -111,6 +116,40 @@ class TestQApp(BaseTest):
         '''
 
         self.set_params(json_str)
+
+
+    def compare_imgs(img_a, img_b):
+        img_a_grey = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
+        img_b_grey = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
+
+        return compare_ssim(img_a_grey, img_b_grey)
+
+    def to_cv2_img(self, img):
+       np_arr = np.fromstring(img, np.uint8)
+       img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+       return img
+
+    def is_img_black(self, img):
+        im = Image.open(io.BytesIO(img))
+        rgb_im = im.convert('RGB')
+
+        pixels = {}
+
+        for i in range(rgb_im.width):
+            for j in range(rgb_im.height):
+                if rgb_im.getpixel((i, j)) in pixels.keys():
+                    pixels[rgb_im.getpixel((i, j))] += 1
+                else:
+                    pixels[rgb_im.getpixel((i, j))] = 1
+
+        if (rgb_im.width * rgb_im.height / pixels[(0, 0, 0)]) > 0.99:
+            return True
+
+        return False
+
+    def is_stream_black(self):
+        return self.is_img_black(self.cpage.video_box.screenshot_as_png)
 
 
     def setup_method(self, method):
@@ -503,14 +542,6 @@ class TestQApp(BaseTest):
 
         assert (e_cnt - s_cnt) == 1
 
-
-
-    @pytest.mark.skip(reason="")
-    @pytest.mark.regression
-    @pytest.mark.usefixtures("qview", "login")
-    @storeresult
-    def test_case_1000(self):
-        pass
 
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
@@ -1116,24 +1147,6 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login")
     @storeresult
-    def test_case_2000(self):
-        self.cpage = self.cpage.menu_cam_settings()
-
-        time.sleep(2)
-
-
-
-        self.cpage.global_auto_chkb(act="check")
-
-        self.cpage.auto_stream_settings_btn()
-
-        print()
-
-
-    @pytest.mark.skip(reason="")
-    @pytest.mark.regression
-    @pytest.mark.usefixtures("qadmin", "login")
-    @storeresult
     def test_case_2001(self):
         self.cpage = self.cpage.menu_cam_settings()
 
@@ -1232,47 +1245,207 @@ class TestQApp(BaseTest):
 
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
-    @pytest.mark.usefixtures("qadmin", "login")
+    @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
-    def test_case_3000(self):
-        #def compare_imgs(img_a, img_b):
-        #    img_a_grey = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
-        #    img_b_grey = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
-        #
-        #    return compare_ssim(img_a_grey, img_b_grey)
+    def test_case_2003(self):
+        expected = {
+            'analog_gain': 0,
+            'auto_analog_gain_enabled': False,
+            'auto_digital_gain_enabled': False,
+            'auto_exposure_enabled': False,
+            'auto_ir_filter_enabled': True,
+            'auto_model_generation_enabled': False,
+            'auto_model_generation_interval_seconds': 0,
+            'auto_night_mode_disable_threshold': 5,
+            'auto_night_mode_enable_threshold': 22,
+            'auto_night_mode_enabled': True,
+            'auto_whitebalance': True,
+            'auto_whitebalance_interval_seconds': 300,
+            'compression_quality_modes': ['high', 'medium', 'low'],
+            'data_routing_policy': '',
+            'day_mode_FPS': 30,
+            'day_mode_denoising': 0.1,
+            'day_mode_saturation': 0.85,
+            'day_mode_sharpening': 0.2,
+            'day_mode_whitebalance': 'AUTO',
+            'denoising': 0.1,
+            'digital_gain': 1,
+            'exposure_time_milliseconds': 0,
+            'focus_status': 'IDLE',
+            'framerate': 30,
+            'host': '',
+            'id': '11',
+            'ir_filter': False,
+            'kernel': '',
+            'mcam_state': {'1105': 'CONNECTED', '11010': 'CONNECTED', '11017': 'CONNECTED', '11012': 'CONNECTED',
+                           '11011': 'CONNECTED', '1102': 'CONNECTED', '1101': 'CONNECTED', '1107': 'CONNECTED',
+                           '11014': 'CONNECTED', '11016': 'CONNECTED', '1106': 'CONNECTED', '1103': 'CONNECTED'},
+            'mcams_connected': 19,
+            'mcams_expected': 19,
+            'microcameras': ['1101', '11010', '11011', '11012', '11013', '11014', '11015', '11016', '11017', '11018',
+                             '11019', '1102', '1103', '1104', '1105', '1106', '1107', '1108', '1109'],
+            'model': 'mantis',
+            'modelGen': {'maxStep': 4, 'databaseConnected': True, 'inProgress': False, 'statusText': 'idle', 'currentStep': 0},
+            'model_generator_found': True,
+            'night_mode_FPS': 10,
+            'night_mode_denoising': 1,
+            'night_mode_saturation': 0.1,
+            'night_mode_sharpening': 0,
+            'night_mode_whitebalance': 'AUTO',
+            'operating_mode': {'framerate': 30, 'compression': 2, 'tiling_policy': 2},
+            'quality': 'medium',
+            'saturation': 0.85,
+            'serial_number': '666',
+            'sharpening': 0.2,
+            'software': '',
+            'state': {'generalHealth': 'OK', 'Database Connection': 'OK', 'All Mcams Connected': 'OK'},
+            'supported_framerates': [5, 10, 15, 20, 25, 30],
+            'supported_whitebalance_modes': ['AUTO', 'CLOUDY', 'FIXED', 'FLUORESCENT', 'HORIZON',
+                                             'INCANDESCENT', 'SHADE', 'SUNLIGHT', 'TUNGSTEN'],
+            'system_auto_enabled': True,
+            'system_auto_interval': 300,
+            'whitebalance_mode': 'AUTO'
+        }
 
-        #def to_cv2_img(img):
-        #   np_arr = np.fromstring(img_a, np.uint8)
-        #   img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        #
-        #   return img
-
-        def is_img_black(img):
-            im = Image.open(io.BytesIO(img))
-            rgb_im = im.convert('RGB')
-
-            pixels = {}
-
-            for i in range(rgb_im.width):
-                for j in range(rgb_im.height):
-                    if rgb_im.getpixel((i, j)) in pixels.keys():
-                        pixels[rgb_im.getpixel((i, j))] += 1
-                    else:
-                        pixels[rgb_im.getpixel((i, j))] = 1
-
-            if (rgb_im.width * rgb_im.height / pixels[(0, 0, 0)]) > 0.99:
-                return True
-
-            return False
-
-        def is_video_black():
-            return is_img_black(self.cpage.video_box.screenshot_as_png)
-
-        # sensors = self.env.cam.get_sensor_id()
 
         self.cpage = self.cpage.menu_cam_settings()
 
-        if is_video_black():
-            self.cpage.video_box(act="rightclick")
-            self.cpage.customize_stream_btn()
-            self.cpage.get_dialog_btn("Update")()
+        time.sleep(1)
+
+        self.cpage.global_auto_chkb(act="check")
+
+        cam_info = self.go.get_cam_info(self.cam_id)
+
+        keys = ["analog_gain", "digital_gain", "exposure_time_milliseconds", "auto_analog_gain_enabled", "auto_digital_gain_enabled", "auto_exposure_enabled",
+                "auto_whitebalance"]
+
+        for key in keys:
+            assert cam_info[key] == expected[key]
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login", "api")
+    @storeresult
+    def test_case_2004(self):
+        expected = {
+            "exposure_time_milliseconds": 33,
+            "analog_gain": 22,
+            "digital_gain": 10
+
+        }
+
+        self.cpage = self.cpage.menu_cam_settings()
+        time.sleep(1)
+
+        if self.cpage.global_auto_chkb.is_selected():
+            self.cpage.global_auto_chkb(act="uncheck")
+            self.cpage.auto_disable_btn()
+            time.sleep(2)
+
+        self.cpage.exposure_time_chkb(act="uncheck")
+        self.cpage.analog_gain_chkb(act="uncheck")
+
+        self.cpage.exposure_time_txt(value=expected["exposure_time_milliseconds"])
+        self.cpage.analog_gain_txt(value=expected["analog_gain"])
+        self.cpage.digital_gain_txt(value=expected["digital_gain"])
+
+        time.sleep(5)
+
+        cam_info = self.go.get_cam_info(self.cam_id)
+
+        assert cam_info["exposure_time_milliseconds"] == expected["exposure_time_milliseconds"]
+        assert cam_info["analog_gain"] == expected["analog_gain"]
+        assert cam_info["digital_gain"] == expected["digital_gain"]
+
+        self.cpage.exposure_time_chkb(act="check")
+
+        time.sleep(5)
+
+        cam_info = self.go.get_cam_info(self.cam_id)
+
+        assert cam_info["exposure_time_milliseconds"] != expected["exposure_time_milliseconds"]
+        assert cam_info["analog_gain"] == expected["analog_gain"]
+        assert cam_info["digital_gain"] == expected["digital_gain"]
+
+        self.cpage.analog_gain_chkb(act="check")
+
+        time.sleep(5)
+
+        cam_info = self.go.get_cam_info(self.cam_id)
+
+        assert cam_info["exposure_time_milliseconds"] != expected["exposure_time_milliseconds"]
+        assert cam_info["analog_gain"] != expected["analog_gain"]
+        assert cam_info["digital_gain"] == expected["digital_gain"]
+
+
+    #@pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login", "api")
+    @storeresult
+    def test_case_2005(self):
+        expected = {
+            "exposure_time_milliseconds": 33,
+            "analog_gain": 22,
+            "digital_gain": 10
+
+        }
+
+        self.cpage = self.cpage.menu_cam_settings()
+        time.sleep(1)
+
+        if self.cpage.global_auto_chkb.is_selected():
+            self.cpage.global_auto_chkb(act="uncheck")
+            self.cpage.auto_disable_btn()
+            time.sleep(2)
+
+        self.cpage.exposure_time_chkb(act="uncheck")
+        self.cpage.analog_gain_chkb(act="uncheck")
+
+        self.cpage.exposure_time_txt(value=expected["exposure_time_milliseconds"])
+        self.cpage.analog_gain_txt(value=expected["analog_gain"])
+        self.cpage.digital_gain_txt(value=expected["digital_gain"])
+
+        self.cpage.global_auto_chkb(act="check")
+
+        time.sleep(5)
+
+        cam_info = self.go.get_cam_info(self.cam_id)
+
+        assert cam_info["exposure_time_milliseconds"] != expected["exposure_time_milliseconds"]
+        assert cam_info["analog_gain"] != expected["analog_gain"]
+        assert cam_info["digital_gain"] == expected["digital_gain"]
+
+
+    def test_case_2006(self):
+        expected = {
+            "exposure_time_milliseconds": 33,
+            "analog_gain": 22,
+            "digital_gain": 10
+
+        }
+
+        self.cpage = self.cpage.menu_cam_settings()
+        time.sleep(1)
+
+        if self.cpage.global_auto_chkb.is_selected():
+            self.cpage.global_auto_chkb(act="uncheck")
+            self.cpage.auto_disable_btn()
+            time.sleep(2)
+
+        self.cpage.exposure_time_chkb(act="uncheck")
+        self.cpage.analog_gain_chkb(act="uncheck")
+
+        self.cpage.exposure_time_txt(value=expected["exposure_time_milliseconds"])
+        self.cpage.analog_gain_txt(value=expected["analog_gain"])
+        self.cpage.digital_gain_txt(value=expected["digital_gain"])
+
+        self.cpage.global_auto_chkb(act="check")
+
+        time.sleep(5)
+
+        cam_info = self.go.get_cam_info(self.cam_id)
+
+        assert cam_info["exposure_time_milliseconds"] != expected["exposure_time_milliseconds"]
+        assert cam_info["analog_gain"] != expected["analog_gain"]
+        assert cam_info["digital_gain"] == expected["digital_gain"]
