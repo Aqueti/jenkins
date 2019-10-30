@@ -100,6 +100,31 @@ class BaseCont:
         else:
             return []
 
+    def get_tbl_tds(self, tbl):
+        tbl_ths = {}
+        tbl_tds = {}
+
+        ths = self.find_by(xpath="/thead/tr/th", elem=tbl)
+        trs = self.find_by(xpath="/tbody/tr", elem=tbl)
+
+        if not isinstance(trs, list):
+            trs = [trs]
+
+        if ths is not None:
+            for i in range(len(ths)):
+                key = ths[i].text if 'arrow' not in ths[i].text else ths[i].text[: ths[i].text.index('arrow')]
+
+                tbl_ths.update({i: key})
+        else:
+            tbl_ths = {k: str(k) for k in range(len(self.find_by(xpath="/td", elem=trs[0])))}
+
+        for tr in trs:
+            tds = self.find_by(xpath="/td", elem=tr)
+            for i in range(len(tds)):
+                tbl_tds.setdefault(tbl_ths[i], []).append(tds[i])
+
+        return tbl_tds
+
     def get_last_col(self, tbl):
         rows = self.get_rows(tbl)
 
@@ -372,6 +397,10 @@ class QAdminSidebar:
     @property
     def logs_lnk(self): return self.find_by(id="logs_page")
 
+    @property
+    def users_lnk(self): return self.find_by(id="users_page")
+
+
     def menu_dashboard(self):
         self.dashboard_lnk()
 
@@ -415,6 +444,11 @@ class QAdminSidebar:
         self.logs_lnk()
 
         return QAdminLogs(self.test)
+
+    def menu_users(self):
+        self.users_lnk()
+
+        return QAdminUsers(self.test)
 
     def menu_cam_reservations(self):
         self.camera_lnk()
@@ -1333,6 +1367,40 @@ class QAdminLogs(QAdminPage):
         return self.find_by(xpath="//th[@role='columnheader' and contains(.,'" + col_name + "')]")
 
     page_url = QAdminPage.base_url + "logs"
+    page_title = "qadmin"
+
+    def __init__(self, *args):
+        QAdminPage.__init__(self, *args)
+
+
+class QAdminUsers(QAdminPage):
+    @property
+    def users_cont(self): return self.find_by(xpath="//i[contains(., 'add_circle')]//ancestor::div[@class='container fluid']")
+
+    @property
+    def create_btn(self): return self.find_by(xpath="//i[contains(., 'add_circle')]//ancestor::button")
+
+    @property
+    def users_tbl(self): return self.find_by(xpath="//table", elem=self.users_cont)
+
+    @property
+    def users_tbl(self): return self.find_by(xpath="//input[@aria-label='Search']")
+
+
+    def get_users(self):
+        users = []
+
+        pass
+
+
+    def get_access_level(self, username):
+        pass
+
+    def get_delete_btn(self, username):
+        pass
+
+
+    page_url = QAdminPage.base_url + "users"
     page_title = "qadmin"
 
     def __init__(self, *args):

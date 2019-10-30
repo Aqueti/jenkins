@@ -14,8 +14,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class DB:
-    server_ip = "10.0.0.189"
-    server2_ip = "10.0.0.176"
+    server_ip = "10.1.1.177"
+    server2_ip = "10.1.1.176"
 
     dbs = ["acos", "acos_local"]
     col_names = ["scops", "models", "reservations", "tracks", "render_parameters", "files"]
@@ -28,6 +28,9 @@ class DB:
 
     def query(self, query, db="acos", col="scops"):
         return list(self.mc[db][col].find(query))
+
+    def query_one(self, query, db="acos", col="scops"):
+        return self.mc[db][col].find_one(query, sort = [('_id', pymongo.DESCENDING)])
 
     def drop(self, db="acos", col="scops"):
         self.db.mc[db][col].drop()

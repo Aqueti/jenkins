@@ -11,6 +11,7 @@ class Environment:
     def __init__(self, **args):
         self.render = Render(args["render_ip"])
         self.cam = Camera(args["cam_ip"])
+        self.raspi = RaspberryPi("10.1.1.200")   # args["cam_ip"]
 
 
 class Component(object):
@@ -175,6 +176,9 @@ class Camera(Component):
 
                     ids.setdefault(k, []).append(ret[k]["tegra"]["cameras"][k2]["sensor_id"])
 
+        if "list" in kwargs:
+            return [id for id in ids.values()] #extend()
+
         return ids
 
 
@@ -183,6 +187,9 @@ class Camera(Component):
         self.start_ip = cam_ip[:cam_ip.rfind('.') + 1]
         self.ip = self.get_ip_list()
         self.num_of_sensors = 19 if self.num_of_tegras == 10 else self.num_of_tegras * 2
+        self.cam_id = self.start_ip[self.start_ip[:-1].rfind('.'):].replace(".", "")
+        self.cam_name = "/aqt/camera/" + self.cam_id
+        self.sensors = [self.cam_id + "0" + str(mcam + 1) for mcam in range(self.num_of_sensors)]
 
 
 class Render(Component):
@@ -206,5 +213,96 @@ class Render(Component):
 
     def __init__(self, ip):
         self.ip = ip
+
+
+class RaspberryPi(Component):
+    def get_ssh_str(self, cmd):
+        return "ssh pi@" + self.ip + " '" + cmd + "'"
+
+
+    def reboot(self):
+        cmd = "sudo reboot"
+
+        return self.exec_cmd(self.get_ssh_str(cmd))
+
+
+    def exec_script(self, script):
+        with open("script.py", "w") as f:
+            f.write(script)
+
+        cmd = "cat script.py | " + self.get_ssh_str("python -")
+
+        return self.exec_cmd(cmd)
+
+
+    def powercycle(self, *args, **kwargs):
+        script = """
+import RPi.GPIO as GPIO
+import time
+
+pin = {}
+
+GPIO.setwarnings(False)
+GPIO.cleanup()
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(pin, GPIO.OUT)
+
+GPIO.output(pin, GPIO.LOW)
+time.sleep({})
+GPIO.output(pin, GPIO.HIGH)
+        """.format(kwargs["pin"], kwargs["delay"])
+
+        self.exec_script(script)
+
+
+    def ledstrip(self, *args, **kwargs):
+        script = """
+import time
+from neopixel import *
+
+LED_COUNT      = 240
+LED_PIN        = 18
+LED_FREQ_HZ    = 800000
+LED_DMA        = 10
+LED_BRIGHTNESS = 255
+LED_INVERT     = False
+LED_CHANNEL    = 0
+
+
+def colorWipe(strip, color, wait_ms=50):
+    for i in range(strip.numPixels()):
+        strip.setPixelColor(i, color)
+        strip.show()
+        #time.sleep(wait_ms/1000.0)
+
+def rainbow(strip, wait_ms=20, iterations=1):
+    for j in range(256*iterations):
+        for i in range(strip.numPixels()):
+            strip.setPixelColor(i, wheel((i+j) & 255))
+        strip.show()
+        time.sleep(wait_ms/1000.0)
+
+strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+strip.begin()
+
+rainbow(strip, 20, 10)
+
+colorWipe(strip, Color(0,0,0), 10)
+        """
+
+        self.exec_script(script)
+
+
+    def cam_powercycle(self, delay=1):
+        self.powercycle(pin=11, delay=delay)
+
+
+    def cam_unplug(self, delay=1):
+        self.powercycle(pin=15, delay=delay)
+
+
+    def __init__(self, *args, **kwargs):
+        self.ip =  args[0]
+
 
 

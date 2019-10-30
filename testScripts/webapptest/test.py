@@ -58,15 +58,43 @@ class GO:
 
         return cam_info
 
+    def get_mcam_status(self, cam):
+        status = {}
+        for mcam in cam.sensors:
+            status[mcam] = json.loads(self.api.GetDetailedStatus("/aqt/camera/" + cam.cam_id + "/" + mcam))
+
+        return status
+
+    def get_mcam_params(self, cam):
+        params = {}
+        for mcam in cam.sensors:
+            params[mcam] = json.loads(self.api.GetParameters("/aqt/camera/" + cam.cam_id + "/" + mcam))
+
+        return params
+
+    def set_mcam_status(self, cam, d):
+        status = {}
+        for mcam in cam.sensors:
+            status[mcam] = self.api.SetDetailedStatus("/aqt/camera/" + cam.cam_id + "/" + mcam, str(d))
+
+        return status
+
+    def set_mcam_params(self, cam, d):
+        params = {}
+        for mcam in cam.sensors:
+            params[mcam] = self.api.SetParameters("/aqt/camera/" + cam.cam_id + "/" + mcam, str(d))
+
+        return params
+
 
 class TestQApp(BaseTest):
     browser = "chrome"
 
-    env = Environment(render_ip="10.0.0.189", cam_ip="10.1.11.10")
+    env = Environment(render_ip="10.1.1.177", cam_ip="10.1.12.9")
 
-    cam_id = '11'
+    cam_id = '12'
     cam_name = '/aqt/camera/' + cam_id
-    system_name = "camera11"
+    system_name = "camera12"
 
     api = None
     cam = None
@@ -1312,7 +1340,19 @@ class TestQApp(BaseTest):
 
         time.sleep(1)
 
+        if self.cpage.global_auto_chkb.is_selected():
+            self.cpage.global_auto_chkb(act="uncheck")
+            self.cpage.auto_disable_btn()
+
+        self.cpage.exposure_time_chkb(act="uncheck")
+        self.cpage.analog_gain_chkb(act="uncheck")
+
+        self.cpage.exposure_time_txt(value="10")
+        self.cpage.analog_gain_txt(value="10")
+        self.cpage.digital_gain_txt(value="10")
+
         self.cpage.global_auto_chkb(act="check")
+        time.sleep(2)
 
         cam_info = self.go.get_cam_info(self.cam_id)
 
@@ -1379,7 +1419,7 @@ class TestQApp(BaseTest):
         assert cam_info["digital_gain"] == expected["digital_gain"]
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
@@ -1417,35 +1457,21 @@ class TestQApp(BaseTest):
         assert cam_info["digital_gain"] == expected["digital_gain"]
 
 
+    #@pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login", "api")
+    @storeresult
     def test_case_2006(self):
-        expected = {
-            "exposure_time_milliseconds": 33,
-            "analog_gain": 22,
-            "digital_gain": 10
-
-        }
-
         self.cpage = self.cpage.menu_cam_settings()
-        time.sleep(1)
 
-        if self.cpage.global_auto_chkb.is_selected():
-            self.cpage.global_auto_chkb(act="uncheck")
-            self.cpage.auto_disable_btn()
-            time.sleep(2)
+        time.sleep(2)
 
-        self.cpage.exposure_time_chkb(act="uncheck")
-        self.cpage.analog_gain_chkb(act="uncheck")
+        scop = self.db.query_one({"id": self.cam_id}, "acos", "scops")
+        gain_limit = scop["autofocus_gain_limit"]
 
-        self.cpage.exposure_time_txt(value=expected["exposure_time_milliseconds"])
-        self.cpage.analog_gain_txt(value=expected["analog_gain"])
-        self.cpage.digital_gain_txt(value=expected["digital_gain"])
+        focus_arr = {k: v["focus"] for k, v in self.go.get_mcam_params(self.env.cam).items()}
 
-        self.cpage.global_auto_chkb(act="check")
+        self.go.set_mcam_params(self.env.cam, {"focus": 0})
+        time.sleep(2)
 
-        time.sleep(5)
-
-        cam_info = self.go.get_cam_info(self.cam_id)
-
-        assert cam_info["exposure_time_milliseconds"] != expected["exposure_time_milliseconds"]
-        assert cam_info["analog_gain"] != expected["analog_gain"]
-        assert cam_info["digital_gain"] == expected["digital_gain"]
+        assert True
