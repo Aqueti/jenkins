@@ -52,6 +52,7 @@ class BasePage:
                         for i in range(times):
                             page_obj.__add_to_log(page_obj.__get_description(self))
                             self.click()
+                            time.sleep(0.25)
                     elif "rightclick" in kwargs.values():
                         actionChains = ActionChains(page_obj.driver)
                         actionChains.context_click(self).perform()

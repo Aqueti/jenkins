@@ -58,6 +58,16 @@ class GO:
 
         return cam_info
 
+    def get_params(self, name):
+        ret = json.loads(self.api.GetParameters(name))
+
+        return ret
+
+    def set_params(self, name, d):
+        ret = self.api.SetParameters(name, d)
+
+        return ret
+
     def get_mcam_status(self, cam):
         status = {}
         for mcam in cam.sensors:
@@ -75,14 +85,14 @@ class GO:
     def set_mcam_status(self, cam, d):
         status = {}
         for mcam in cam.sensors:
-            status[mcam] = self.api.SetDetailedStatus("/aqt/camera/" + cam.cam_id + "/" + mcam, str(d))
+            status[mcam] = self.api.SetDetailedStatus("/aqt/camera/" + cam.cam_id + "/" + mcam, d)
 
         return status
 
     def set_mcam_params(self, cam, d):
         params = {}
         for mcam in cam.sensors:
-            params[mcam] = self.api.SetParameters("/aqt/camera/" + cam.cam_id + "/" + mcam, str(d))
+            params[mcam] = self.api.SetParameters("/aqt/camera/" + cam.cam_id + "/" + mcam, d)
 
         return params
 
@@ -90,11 +100,11 @@ class GO:
 class TestQApp(BaseTest):
     browser = "chrome"
 
-    env = Environment(render_ip="10.1.1.177", cam_ip="10.1.12.9")
+    env = Environment(render_ip="10.1.1.204", cam_ip="10.1.77.10")
 
-    cam_id = '12'
+    cam_id = '77'
     cam_name = '/aqt/camera/' + cam_id
-    system_name = "camera12"
+    system_name = "alxcam"
 
     api = None
     cam = None
@@ -218,6 +228,10 @@ class TestQApp(BaseTest):
         self.api = AQT.AquetiAPI("test_api", AQT.U8Vector(), AQT.StringVector(["aqt://" + self.system_name]))
         self.cam = AQT.Camera(self.api, self.cam_name)
         self.go = GO(self.api)
+
+        if self.api.GetStatus() != 0:
+            self.failure_exception("api is offline")
+            exit(1)
 
         yield
 
@@ -1464,14 +1478,71 @@ class TestQApp(BaseTest):
     def test_case_2006(self):
         self.cpage = self.cpage.menu_cam_settings()
 
-        time.sleep(2)
+        self.cpage.global_auto_chkb(act="check")
+        self.cpage.auto_stream_settings_btn()
+        self.cpage.day_night_mode_chkb(act="check")
+        self.cpage.close_dialog()
 
         scop = self.db.query_one({"id": self.cam_id}, "acos", "scops")
-        gain_limit = scop["autofocus_gain_limit"]
+
+        gain_limit = float(scop["auto_focus_gain_limit"])
+
+        self.go.set_params(self.cam_name, json.dumps({"analog_gain": gain_limit + 2 }))
+
+        time.sleep(0.5)
+        self.cpage.global_auto_chkb(act="check")
+
+        self.env.raspi.cam_powercycle()
+        while not self.env.cam.is_online():
+            time.sleep(3)
+
+        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam)]
+
+        while True:
+            param_arr = self.go.get_mcam_params(self.env.cam)
+
+            c_focus_arr = [param["focus"] for param in param_arr]
+            gain_arr = [param["analog_gain"] for param in param_arr]
+
+            if gain_arr[0] > gain_limit:
+                assert f_focus_arr ==  c_focus_arr
+            else:
+                assert f_focus_arr != c_focus_arr
+                break
+
+            time.sleep(3)
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login", "api")
+    @storeresult
+    def test_case_2010(self):   # just one sensor is focused
+        self.cpage = self.cpage.menu_cam_microcameras()
+
+        time.sleep(2)
+
+        self.go.set_mcam_params(self.env.cam, '{"focus": 0}')
+
+        self.cpage.mcam_camera_dd(act="click")
+        self.cpage.get_dd_elem(self.cam_name)(act="click")
+
+        self.cpage.mcam_microcamera_dd(act="click")
+        self.cpage.get_dd_elem(self.env.cam.sensors[self.env.cam.num_of_sensors//2])(act="click")
+
+        self.cpage.focus_coarse_btn()
+
+        focus = ""
+        while self.cpage.focus_txt.get_attribute("value") != focus:
+            focus = self.cpage.focus_txt.get_attribute("value")
+            time.sleep(2)
 
         focus_arr = {k: v["focus"] for k, v in self.go.get_mcam_params(self.env.cam).items()}
 
-        self.go.set_mcam_params(self.env.cam, {"focus": 0})
-        time.sleep(2)
+        for k, v in focus_arr.items():
+            if k != self.env.cam.sensors[self.env.cam.num_of_sensors//2]:
+                assert v == 0
+            else:
+                assert v != 0
 
-        assert True
+

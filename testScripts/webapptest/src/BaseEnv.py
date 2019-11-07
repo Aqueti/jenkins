@@ -46,7 +46,7 @@ class Component(object):
                 return self.status[2]
 
     def get_ssh_str(self, ip, cmd, uname="nvidia"):
-        return "ssh " + uname + "@" + ip + " '" + cmd + "'"
+        return "ssh -o ConnectTimeout=1 " + uname + "@" + ip + " '" + cmd + "'"
 
     def exec_cmd(self, cmd):
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -126,6 +126,16 @@ class Camera(Component):
                 return self.status[key]
 
         return self.status[2]
+
+    def is_online(self, **kwargs):
+        cmd = "ping -c 1 -W 1 "
+        ret = self.exec_cmd(cmd=cmd)
+
+        for k, v in ret.items():
+            if any(s in v for s in ["0 received", "timed out"]):
+                return False
+
+        return True
 
     def copy_remote_file(self, **kwargs):
         if "tegra" in kwargs:

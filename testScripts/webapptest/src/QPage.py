@@ -36,7 +36,7 @@ class BaseCont:
         if title == "Camera":
             time.sleep(0.5)
 
-        return self.find_by(xpath="//input[@aria-label='" + str(title) + "']//ancestor::div[@class='v-select__slot']", elem=self.active_elem)
+        return self.find_by(xpath="//div[@role='combobox']//div[.//label[text()='" + str(title) + "']]//input")
 
     def get_dd_elems(self):
         return self.find_by(xpath="//div[@class='v-list__tile__title']/ancestor::div[@role='listitem']", elem=self.active_panel)
@@ -1151,6 +1151,12 @@ class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
 
     @property
     def focus_fine_btn(self): return self.find_by(id="focus_fine_btn")
+
+    @property
+    def mcam_camera_dd(self): return self.find_by(id="camera_select")
+
+    @property
+    def mcam_microcamera_dd(self): return self.find_by(id="microcamera_select")
 
     page_url = QAdminPage.base_url + "camera_microcameras/none"
     page_title = "qadmin"

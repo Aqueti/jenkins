@@ -14,7 +14,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class DB:
-    server_ip = "10.1.1.177"
+    server_ip = "10.1.1.204"
     server2_ip = "10.1.1.176"
 
     dbs = ["acos", "acos_local"]
