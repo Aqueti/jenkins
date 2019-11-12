@@ -209,9 +209,9 @@ if "--norestart" not in sys.argv:
 
     if cam_ip != '':
         for i in range(start_ip, num_of_tegras + start_ip):
-            os.system("ssh nvidia@" + cam_ip + str(i) + "'sudo pkill -9 AquetiDaemon'")   # sudo reboot
+            os.system("ssh nvidia@" + cam_ip + str(i) + " 'sudo pkill -9 AquetiDaemon'")   # sudo reboot
 
-    if 'asis' in files.keys():
+    if any(s in files.keys() for s in ('daemon_x86-app', 'asis')):
         os.system("sudo service asisd restart")
 
 print("***** Done *****")
