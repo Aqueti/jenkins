@@ -29,8 +29,10 @@ class BaseCont:
     def close_dialog(self):
         e = self.active_panel
 
-        self.exec_js("arguments[0].setAttribute('style', 'display: none;');", e)
-        self.exec_js("arguments[0].classList.remove('menuable__content__active');", e)
+        #self.exec_js("arguments[0].setAttribute('style', 'display: none;');", e)
+        #self.exec_js("arguments[0].classList.remove('menuable__content__active');", e)
+
+        ActionChains(self.driver).move_by_offset(25, 25).double_click().perform()
 
     def get_dd(self, title):
         if title == "Camera":
@@ -206,8 +208,7 @@ class QStreamBox(BaseCont):
                                               elem=self.active_dialog)
 
     @property
-    def framerate_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Framerate')]",
-                                                elem=self.active_dialog)
+    def framerate_dd(self): return self.find_by(id="//div[@class='v-select__slot' and contains(., 'Framerate')]", elem=self.active_dialog)
 
     @property
     def projection_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Projection')]",
@@ -987,52 +988,52 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def night_threshold_txt(self): return self.find_by(xpath="//input[@id='night_mode_threshold_text_field']", elem=self.active_panel)
 
     @property
-    def day_threshold_slider(self): return self.find_by(xpath="//input[@id='day_night_threshold_text_field'][1]", elem=self.active_panel)
+    def day_threshold_slider(self): return self.find_by(xpath="(//input[@id='day_night_threshold_text_field'])[1]", elem=self.active_panel)
 
     @property
-    def night_threshold_slider(self): return self.find_by(xpath="//input[@id='day_night_threshold_text_field'][last()]", elem=self.active_panel)
+    def night_threshold_slider(self): return self.find_by(xpath="(//input[@id='day_night_threshold_text_field'])[last()]", elem=self.active_panel)
 
     @property
-    def day_sharpening_txt(self): return self.find_by(xpath="//input[@id='sharpening_threshold_text_field'][1]", elem=self.active_panel)
+    def day_sharpening_txt(self): return self.find_by(xpath="(//input[@id='sharpening_threshold_text_field'])[1]", elem=self.active_panel)
 
     @property
-    def night_sharpening_txt(self): return self.find_by(xpath="//input[@id='sharpening_threshold_text_field'][last()]", elem=self.active_panel)
+    def night_sharpening_txt(self): return self.find_by(xpath="(//input[@id='sharpening_threshold_text_field'])[last()]", elem=self.active_panel)
 
     @property
-    def day_sharpening_slider(self): return self.find_by(xpath="//input[@id='sharpening_threshold_slider'][1]", elem=self.active_panel)
+    def day_sharpening_slider(self): return self.find_by(xpath="(//input[@id='sharpening_threshold_slider'])[1]", elem=self.active_panel)
 
     @property
-    def night_sharpening_slider(self): return self.find_by(xpath="//input[@id='sharpening_threshold_slider'][last()]", elem=self.active_panel)
+    def night_sharpening_slider(self): return self.find_by(xpath="(//input[@id='sharpening_threshold_slider'])[last()]", elem=self.active_panel)
 
     @property
-    def day_denoising_txt(self): return self.find_by(xpath="//input[@id='denoising_threshold_text_field'][1]", elem=self.active_panel)
+    def day_denoising_txt(self): return self.find_by(xpath="(//input[@id='denoising_threshold_text_field'])[1]", elem=self.active_panel)
 
     @property
-    def night_denoising_txt(self): return self.find_by(xpath="//input[@id='denoising_threshold_text_field'][last()]", elem=self.active_panel)
+    def night_denoising_txt(self): return self.find_by(xpath="(//input[@id='denoising_threshold_text_field'])[last()]", elem=self.active_panel)
 
     @property
-    def day_denoising_slider(self): return self.find_by(xpath="//input[@id='denoising_threshold_slider'][1]", elem=self.active_panel)
+    def day_denoising_slider(self): return self.find_by(xpath="(//input[@id='denoising_threshold_slider'])[1]", elem=self.active_panel)
 
     @property
-    def night_denoising_slider(self): return self.find_by(xpath="//input[@id='denoising_threshold_slider'][last()]", elem=self.active_panel)
+    def night_denoising_slider(self): return self.find_by(xpath="(//input[@id='denoising_threshold_slider'])[last()]", elem=self.active_panel)
 
     @property
-    def day_saturation_txt(self): return self.find_by(xpath="//input[@id='saturation_threshold_text_field'][1]", elem=self.active_panel)
+    def day_saturation_txt(self): return self.find_by(xpath="(//input[@id='saturation_threshold_text_field'])[1]", elem=self.active_panel)
 
     @property
-    def night_saturation_txt(self): return self.find_by(xpath="//input[@id='saturation_threshold_text_field'][last()]", elem=self.active_panel)
+    def night_saturation_txt(self): return self.find_by(xpath="(//input[@id='saturation_threshold_text_field'])[last()]", elem=self.active_panel)
 
     @property
-    def day_saturation_slider(self): return self.find_by(xpath="//input[@id='saturation_threshold_slider'][1]", elem=self.active_panel)
+    def day_saturation_slider(self): return self.find_by(xpath="(//input[@id='saturation_threshold_slider'])[1]", elem=self.active_panel)
 
     @property
-    def night_saturation_slider(self): return self.find_by(xpath="//input[@id='saturation_threshold_slider'][last()]", elem=self.active_panel)
+    def night_saturation_slider(self): return self.find_by(xpath="(//input[@id='saturation_threshold_slider'])[last()]", elem=self.active_panel)
 
     @property
-    def day_fps_dd(self): return self.find_by(xpath="//input[@id='framerate_select'][1]", elem=self.active_panel)
+    def day_fps_dd(self): return self.find_by(xpath="(//input[@id='framerate_select'])[1]", elem=self.active_panel)
 
     @property
-    def night_fps_dd(self): return self.find_by(xpath="//input[@id='framerate_select'][last()]", elem=self.active_panel)
+    def night_fps_dd(self): return self.find_by(xpath="(//input[@id='framerate_select'])[last()]", elem=self.active_panel)
 # ----
 
     @property
@@ -1060,7 +1061,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def digital_gain_txt(self): return self.find_by(id="digital_gain_text_field")
 
     @property
-    def fps_dd(self): return self.find_by(id="framerate_select")
+    def fps_dd(self): return self.find_by(xpath="(//input[@id='framerate_select'])[last()]")
 
     @property
     def whitebalance_dd(self): return self.find_by(id="whitebalance_select")

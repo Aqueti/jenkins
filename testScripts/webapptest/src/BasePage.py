@@ -7,6 +7,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.command import Command
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import ElementNotVisibleException
 import hashlib
 import random
 import time
@@ -76,7 +77,7 @@ class BasePage:
         def click(self, *args, **kwargs):
             try:
                 self._execute(Command.CLICK_ELEMENT)
-            except ElementClickInterceptedException:
+            except (ElementClickInterceptedException, ElementNotVisibleException) as e:
                 page_obj.exec_js("return arguments[0].click()", self)
 
         def is_checked(self):

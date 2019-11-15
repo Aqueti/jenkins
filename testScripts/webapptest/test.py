@@ -96,6 +96,15 @@ class GO:
 
         return params
 
+    def is_cam_connected(self, name):
+        params = self.get_params(name)
+
+        for k, v in params["mcam_state"].items():
+            if v != "CONNECTED":
+                return False
+
+        return True
+
 
 class TestQApp(BaseTest):
     browser = "chrome"
@@ -1471,7 +1480,7 @@ class TestQApp(BaseTest):
         assert cam_info["digital_gain"] == expected["digital_gain"]
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
@@ -1487,6 +1496,7 @@ class TestQApp(BaseTest):
 
         gain_limit = float(scop["auto_focus_gain_limit"])
 
+        self.go.set_mcam_params(self.env.cam, json.dumps({"focus": 0}))
         self.go.set_params(self.cam_name, json.dumps({"analog_gain": gain_limit + 2 }))
 
         time.sleep(0.5)
@@ -1496,8 +1506,10 @@ class TestQApp(BaseTest):
         while not self.env.cam.is_online():
             time.sleep(3)
 
-        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam)]
+        while not self.go.is_cam_connected(self.env.cam.cam_name):
+            time.sleep(15)
 
+        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam)]
         while True:
             param_arr = self.go.get_mcam_params(self.env.cam)
 
@@ -1507,7 +1519,9 @@ class TestQApp(BaseTest):
             if gain_arr[0] > gain_limit:
                 assert f_focus_arr ==  c_focus_arr
             else:
-                assert f_focus_arr != c_focus_arr
+                time.sleep(30)
+                for i in range(len(f_focus_arr)):
+                    assert f_focus_arr[i] != c_focus_arr[i]
                 break
 
             time.sleep(3)
@@ -1544,5 +1558,103 @@ class TestQApp(BaseTest):
                 assert v == 0
             else:
                 assert v != 0
+
+
+    #@pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login", "api")
+    @storeresult
+    def test_case_2011(self):   # framerate
+        self.cpage = self.cpage.menu_cam_settings()
+
+        time.sleep(2)
+
+        self.cpage.auto_stream_settings_btn()
+        self.cpage.day_night_mode_chkb(act="uncheck")
+        self.cpage.close_dialog()
+
+        for framerate in ["5", "10", "15", "20", "25", "30"]:
+            self.cpage.fps_dd(act="click")
+            self.cpage.get_dd_elem(framerate)(act="click")
+
+            time.sleep(5)
+
+            self.env.cam.get_from_log(value="compression")
+
+            assert True
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("api")
+    @storeresult
+    def test_case_3000(self):   # performance
+        timeControl = AQT.TimeState(self.go.api)
+        vs = AQT.ViewState(self.go.api)
+        iss = AQT.ImageSubsetState(self.go.api)
+        ps = AQT.PoseState(self.go.api)
+        sp = AQT.StreamProperties()
+
+        res = {"4k": (3840, 2160), "1080p": (1920, 1080), "720p": (1280, 720), "480p": (640, 480)}
+
+        # pairs (pairwise used)
+
+        arr = [
+            (AQT.aqt_STREAM_TYPE_H265, 300, res["4k"]),
+            (AQT.aqt_STREAM_TYPE_H264, 300, res["4k"]),
+            (AQT.aqt_STREAM_TYPE_H265, 300, res["1080p"]),
+            (AQT.aqt_STREAM_TYPE_H264, 300, res["1080p"]),
+            (AQT.aqt_STREAM_TYPE_JPEG, 300, res["1080p"])
+        ]
+
+        result = {}
+        for sp_type, sp_fps, sp_res in arr:
+            sp.Type(sp_type)
+            sp.FrameRate(sp_fps)
+            sp.Width(sp_res[0])
+            sp.Height(sp_res[1])
+
+            stream = AQT.RenderStream(self.go.api, vs, timeControl, iss, ps, sp)
+
+            stream.AddCamera(self.cam_name)
+            stream.SetStreamingState(True)
+            time.sleep(2)
+
+            v_arr = {"zoom": 0, "pan_d": 0, "tilt_d": 0, "hfov": 0, "vfov": 0}
+            frame_cnt = 0
+            s_time = int(dt.datetime.now().strftime("%s"))
+            e_time = s_time
+            while (e_time - s_time) < 30:
+                frame = stream.GetNextFrame()
+
+                if stream.GetStatus() == AQT.aqt_STATUS_OKAY:
+                    e_time = int(dt.datetime.now().strftime("%s"))
+
+                    frame_cnt += 1
+
+                    frame.ReleaseData()
+
+                    vs.Zoom(v_arr["zoom"])
+                    vs.PanDegrees(v_arr["pan_d"])
+                    vs.TiltDegrees(v_arr["tilt_d"])
+                    vs.HorizontalFOVDegrees(v_arr["hfov"])
+                    vs.VerticalFOVDegrees(v_arr["vfov"])
+
+                    for k in v_arr.keys():
+                        v_arr[k] += 0.1
+
+            result[(sp_type, sp_fps, sp_res)] = frame_cnt / (e_time - s_time)
+
+            print('\ntype:{} fps:{} res:{} : {}\n'.format(sp_type, sp_fps, sp_res, result[(sp_type, sp_fps, sp_res)]))
+
+            stream.SetStreamingState(False)
+            stream.RemoveCamera(self.cam_name)
+
+            del stream
+            time.sleep(3)
+
+
+        for k, v in result.items():
+            assert v > 30
 
 

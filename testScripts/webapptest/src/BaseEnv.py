@@ -174,6 +174,19 @@ class Camera(Component):
 
         return ret
 
+    def get_logs(self, **kwargs):
+        pass
+
+    def get_from_log(self, **kwargs):
+        if kwargs["value"] == "compression":
+            cmd = "cat /var/log/syslog | grep -i 'setting compression quality to' | tail -1"
+        elif kwargs["value"] == "fps":
+            cmd = "cat /var/log/syslog | grep -i 'fps:' | tail -1"
+
+        ret = self.exec_cmd(cmd=cmd)
+
+        print()
+
     def get_sensor_id(self, **kwargs):
         ret = self.get_config(**kwargs)
 
