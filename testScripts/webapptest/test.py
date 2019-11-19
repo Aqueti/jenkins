@@ -1560,7 +1560,7 @@ class TestQApp(BaseTest):
                 assert v != 0
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
@@ -1577,11 +1577,12 @@ class TestQApp(BaseTest):
             self.cpage.fps_dd(act="click")
             self.cpage.get_dd_elem(framerate)(act="click")
 
-            time.sleep(5)
+            time.sleep(7)
 
-            self.env.cam.get_from_log(value="compression")
+            logs = self.env.cam.get_from_log(value="fps")
 
-            assert True
+            for ip, log in logs.items():
+                assert ("fps: " + framerate) in log
 
 
     @pytest.mark.skip(reason="")
@@ -1657,4 +1658,93 @@ class TestQApp(BaseTest):
         for k, v in result.items():
             assert v > 30
 
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("api")
+    @storeresult
+    def test_case_3001(self): #stored data ranges
+        def tv2ts(tv):
+            return tv.tv_sec * 10**6 + tv.tv_usec
+
+        def ts2tv(ts):
+            tv = AQT.timeval()
+            tv.tv_sec = ts // 10 ** 6
+            tv.tv_usec = ts % 10 ** 6
+
+            return tv
+
+        def add_tv(tv1 , tv2):
+            return ts2tv(tv2ts(tv1) + tv2ts(tv2))
+
+        def sub_tv(tv1 , tv2):
+            return ts2tv(tv2ts(tv1) - tv2ts(tv2))
+
+        def div_tv(tv1 , tv2):
+            if isinstance(tv2, int):
+                return ts2tv(tv2ts(tv1) // tv2)
+
+        def gt_tv(tv1 , tv2):
+            return tv2ts(tv1) > tv2ts(tv2)
+
+        def lt_tv(tv1 , tv2):
+            return tv2ts(tv1) < tv2ts(tv2)
+
+        def ge_tv(tv1 , tv2):
+            return gt_tv(tv1, tv2) or eq_tv(tv1, tv2)
+
+        def le_tv(tv1 , tv2):
+            return lt_tv(tv1 , tv2) or eq_tv(tv1 , tv2)
+
+        def eq_tv(tv1 , tv2):
+            return tv2ts(tv1) == tv2ts(tv2)
+
+        def str_tv(tv):
+            return str(tv2ts(tv))
+
+        AQT.timeval.__add__ = add_tv
+        AQT.timeval.__sub__ = sub_tv
+        AQT.timeval.__floordiv__ = div_tv
+        AQT.timeval.__gt__ = gt_tv
+        AQT.timeval.__lt__ = lt_tv
+        AQT.timeval.__ge__ = ge_tv
+        AQT.timeval.__le__ = le_tv
+        AQT.timeval.__eq__ = eq_tv
+        AQT.timeval.__str__ = str_tv
+
+        flag = True   # False
+
+        cam = AQT.Camera(self.go.api, self.cam_name)
+
+        ranges = cam.GetStoredDataRanges(flag)
+
+        start_ts = ranges[0].Start()
+        end_ts = start_ts
+
+        for range in ranges:
+            if start_ts > range.Start():
+                start_ts = range.Start()
+            if end_ts < range.End():
+                end_ts = range.End()
+
+        tv1 = start_ts
+        tv2 = start_ts
+
+        step = (end_ts - start_ts) // 10
+
+        res = []
+        while tv2 <= end_ts:
+            tv2 = tv1 + step
+
+            ival = AQT.Interval(tv1, tv2)
+
+            ranges = cam.GetStoredDataRanges(flag, ival)
+            for range in ranges:
+                assert range.End() >= tv1 and range.Start() <= tv2
+
+            res.append(len(ranges))
+
+            tv1 = tv2
+
+        assert sum(res) >= len(cam.GetStoredDataRanges(flag))
 

@@ -1,6 +1,7 @@
 import subprocess
 import json
 from abc import ABCMeta, abstractmethod
+from src.decorators import *
 
 
 class Environment:
@@ -52,6 +53,11 @@ class Component(object):
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
+
+    def exec_cmd_async(self, cmd):
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+
+        return proc
 
 
 class Camera(Component):
@@ -161,7 +167,13 @@ class Camera(Component):
         st = {}
         for ip in ip_list:
             cmd = self.get_ssh_str(ip, kwargs['cmd'])
-            st.update( {ip : super(Camera, self).exec_cmd(cmd)} )
+            st.update({ip: self.exec_cmd_async(cmd)})
+
+            # st.update( {ip : super(Camera, self).exec_cmd(cmd)} )
+
+        for ip in ip_list:
+            out, err = st[ip].communicate()
+            st.update({ip: out.decode("utf-8")})
 
         return st
 
@@ -179,13 +191,13 @@ class Camera(Component):
 
     def get_from_log(self, **kwargs):
         if kwargs["value"] == "compression":
-            cmd = "cat /var/log/syslog | grep -i 'setting compression quality to' | tail -1"
+            cmd = "cat /var/log/syslog | grep -a 'setting compression quality to' | tail -1"
         elif kwargs["value"] == "fps":
-            cmd = "cat /var/log/syslog | grep -i 'fps:' | tail -1"
+            cmd = "cat /var/log/syslog | grep -a 'fps:' | tail -1"
 
         ret = self.exec_cmd(cmd=cmd)
 
-        print()
+        return ret
 
     def get_sensor_id(self, **kwargs):
         ret = self.get_config(**kwargs)
