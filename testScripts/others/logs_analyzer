@@ -1,0 +1,140 @@
+import AQT
+import sys
+import time
+import json
+import csv
+import os
+import datetime as dt
+import subprocess
+import ctypes
+import argparse
+
+
+def exec_cmd(cmd):
+	res = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+	return res.stdout.decode('utf-8') + res.stderr.decode('utf-8')
+
+def get_ssh_str(cmd, ip, username="nvidia"):
+	return "ssh " + username + "@" + ip + " '" + cmd + "'"
+
+def create_dir(path):
+	if not os.path.exists(path):
+		os.makedirs(path)
+
+def copy_logs(ip, username):	
+	cmd = "sudo rm /var/log/syslog.0*; sudo -u syslog cp /var/log/syslog /var/log/syslog.0; sudo chown syslog:adm /var/log/syslog.0"
+	exec_cmd(get_ssh_str(cmd, ip, username))
+
+	for i in range(2):
+		cmd = "sudo -u syslog gzip /var/log/syslog.{}".format(i)			
+		exec_cmd(get_ssh_str(cmd, ip, username))			
+
+	cmd = "scp " + username + "@" + ip + ":/var/log/syslog.*.gz {}".format(c_dir)
+	exec_cmd(cmd)
+
+
+home_path = os.path.expanduser("~") + "/stat"
+server_logs_path = home_path + "/servers"
+cam_logs_path = home_path + "/cams"
+
+servers_list = {"10.1.1.101": "mosaic", 
+				"10.1.1.158": "mosaic", 
+				"10.1.1.177": "aqueti", 
+				"10.1.1.189": "mosaic", 
+				"10.1.1.204": "jenkins", 
+				"10.1.1.228": "aqueti"}
+
+cams_list = {2: 10, 
+			 7: 10, 
+			 9: 9, 
+			 11: 10, 
+			 12: 9, 
+			 77: 10}
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--collect", help="Collects logs", required=False)
+parser.add_argument("-a", "--analyze", help="Analyzes logs", required=False)
+args = parser.parse_args()
+
+if all(v is None for v in vars(args).values()):
+    parser.print_help(sys.stdout)
+
+# collecting
+
+if args.collect == "collect":
+	for ip, username in servers_list.items():
+		print("server: {}".format(ip))
+
+		c_dir = server_logs_path + "/{}".format(ip)
+		create_dir(c_dir)
+
+		copy_logs(ip, username)
+
+
+	for cam, num_of_tegras in cams_list.items():
+		print("camera: {}".format(cam) )
+		
+		username = "nvidia"
+		for i in range(1, num_of_tegras + 1):
+			print("tegra: {}".format(i) )
+
+			c_dir = cam_logs_path + "/10.1.{}".format(cam) + "/{}".format(i)
+			create_dir(c_dir)
+
+			ip = "10.1.{}.{}".format(cam, i)
+
+			copy_logs(ip, username)
+
+# analyzing
+
+if args.analyze == "analyze":
+	def compress(f):
+		def wrapper(*args, **kwargs):
+			fpath = args[0]
+
+			if ".gz" in fpath:
+				fpath = fpath[:fpath.rindex(".")]
+				cmd = "gunzip " + fpath
+				exec_cmd(cmd)
+
+			rt = f(fpath)
+
+			cmd = "gzip " + fpath
+			exec_cmd(cmd)
+
+			return rt
+
+		return wrapper
+
+	@compress
+	def analyse(fpath):
+		print(fpath)
+		cmd = "cat " + fpath + " | grep -a 'Initializing AquetiDaemonProcess' | awk '{print$1, $2, $3}'"
+		rt = exec_cmd(cmd)
+
+		rs = []		
+		if rt == "":
+			return rs
+		
+		for row in rt.split("\n"):
+			if row == "":
+				continue
+
+			d = dt.datetime.strptime(row, '%b %d %H:%M:%S')
+			d = d.replace(int(time.strftime("%Y")))
+			rs.append(d)
+
+		return rs
+
+	for path, directories, files in os.walk(server_logs_path):
+		for file in sorted(files):
+			fpath = path + "/" + file
+
+			t_arr = analyse(fpath)
+
+			if len(t_arr) != 0:
+				with open("out.csv", "a+", newline="") as f:
+					writer = csv.writer(f)
+					for row in t_arr:
+						writer.writerow([row, os.path.basename(path)]) 
