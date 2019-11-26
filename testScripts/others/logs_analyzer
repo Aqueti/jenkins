@@ -15,28 +15,13 @@ def exec_cmd(cmd):
 
 	return res.stdout.decode('utf-8') + res.stderr.decode('utf-8')
 
-def get_ssh_str(cmd, ip, username="nvidia"):
-	return "ssh " + username + "@" + ip + " '" + cmd + "'"
-
-def create_dir(path):
-	if not os.path.exists(path):
-		os.makedirs(path)
-
-def copy_logs(ip, username):	
-	cmd = "sudo rm /var/log/syslog.0*; sudo -u syslog cp /var/log/syslog /var/log/syslog.0; sudo chown syslog:adm /var/log/syslog.0"
-	exec_cmd(get_ssh_str(cmd, ip, username))
-
-	for i in range(2):
-		cmd = "sudo -u syslog gzip /var/log/syslog.{}".format(i)			
-		exec_cmd(get_ssh_str(cmd, ip, username))			
-
-	cmd = "scp " + username + "@" + ip + ":/var/log/syslog.*.gz {}".format(c_dir)
-	exec_cmd(cmd)
+def get_ssh_str(cmd, ip, username):
+	return "ssh {}@{} '{}'".format(username, ip, cmd)
 
 
-home_path = os.path.expanduser("~") + "/stat"
-server_logs_path = home_path + "/servers"
-cam_logs_path = home_path + "/cams"
+home_path = os.path.join(os.path.expanduser("~"), "stats")
+server_logs_path = os.path.join(home_path, "servers")
+cam_logs_path = os.path.join(home_path, "cams")
 
 servers_list = {"10.1.1.101": "mosaic", 
 				"10.1.1.158": "mosaic", 
@@ -55,6 +40,7 @@ cams_list = {2: 10,
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--collect", help="Collects logs", required=False)
 parser.add_argument("-a", "--analyze", help="Analyzes logs", required=False)
+parser.add_argument("-v", "--visualize", help="Visualizes the result", required=False)
 args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
@@ -62,79 +48,110 @@ if all(v is None for v in vars(args).values()):
 
 # collecting
 
-if args.collect == "collect":
+if args.collect is not None:
+	def create_dir(path):
+		if not os.path.exists(path):
+			os.makedirs(path)
+
+	def copy_logs(ip, username, c_dir):	
+		cmd = "sudo rm /var/log/syslog.0*; sudo -u syslog cp /var/log/syslog /var/log/syslog.0; sudo chown syslog:adm /var/log/syslog.0"
+		exec_cmd(get_ssh_str(cmd, ip, username))
+
+		for i in range(2):
+			cmd = "sudo -u syslog gzip /var/log/syslog.{}".format(i)			
+			exec_cmd(get_ssh_str(cmd, ip, username))			
+
+		cmd = "scp {}@{}:/var/log/syslog.*.gz {}".format(username, ip, c_dir)
+		exec_cmd(cmd)
+
+
 	for ip, username in servers_list.items():
 		print("server: {}".format(ip))
 
-		c_dir = server_logs_path + "/{}".format(ip)
+		c_dir = "{}/{}".format(server_logs_path, ip)
 		create_dir(c_dir)
 
-		copy_logs(ip, username)
+		copy_logs(ip, username, c_dir)
 
 
 	for cam, num_of_tegras in cams_list.items():
-		print("camera: {}".format(cam) )
+		print("camera: 10.1.{}".format(cam))
 		
-		username = "nvidia"
 		for i in range(1, num_of_tegras + 1):
-			print("tegra: {}".format(i) )
+			#print("{}".format(i), end=" ")
 
-			c_dir = cam_logs_path + "/10.1.{}".format(cam) + "/{}".format(i)
+			c_dir = "{}/10.1.{}/{}".format(cam_logs_path, cam, i)
 			create_dir(c_dir)
-
-			ip = "10.1.{}.{}".format(cam, i)
-
-			copy_logs(ip, username)
+			
+			copy_logs("10.1.{}.{}".format(cam, i), "nvidia", c_dir)
 
 # analyzing
 
-if args.analyze == "analyze":
+if args.analyze is not None:
+	def add_to_csv(row):
+		with open("out.csv", "a+", newline="") as f:
+			writer = csv.writer(f, delimiter="\t")
+			writer.writerow(row)
+
 	def compress(f):
 		def wrapper(*args, **kwargs):
 			fpath = args[0]
 
 			if ".gz" in fpath:
 				fpath = fpath[:fpath.rindex(".")]
-				cmd = "gunzip " + fpath
+				cmd = "gunzip {}".format(fpath)
 				exec_cmd(cmd)
 
 			rt = f(fpath)
 
-			cmd = "gzip " + fpath
-			exec_cmd(cmd)
+			if ".gz" == os.path.splitext(fpath)[1]:
+				cmd = "gzip {}".format(fpath)
+				exec_cmd(cmd)
 
 			return rt
 
 		return wrapper
 
 	@compress
-	def analyse(fpath):
-		print(fpath)
-		cmd = "cat " + fpath + " | grep -a 'Initializing AquetiDaemonProcess' | awk '{print$1, $2, $3}'"
+	def analyze(fpath):
+		print("analyzing: {}".format(fpath))
+
+		cmd = "cat {} | grep -a 'Initializing AquetiDaemonProcess' | awk '{print$1, $2, $3}'".format(fpath)
 		rt = exec_cmd(cmd)
 
 		rs = []		
-		if rt == "":
-			return rs
-		
-		for row in rt.split("\n"):
-			if row == "":
-				continue
+		if rt != "":
+			for row in rt.split("\n"):
+				if row == "":
+					continue
 
-			d = dt.datetime.strptime(row, '%b %d %H:%M:%S')
-			d = d.replace(int(time.strftime("%Y")))
-			rs.append(d)
+				d = dt.datetime.strptime(row, '%b %d %H:%M:%S')
+				d = d.replace(int(time.strftime("%Y")))
+				rs.append(d)
 
 		return rs
 
-	for path, directories, files in os.walk(server_logs_path):
-		for file in sorted(files):
-			fpath = path + "/" + file
+	for log_path in (cam_logs_path, server_logs_path):
+		for path, directories, files in os.walk(log_path):
+			for file in sorted(files):
+				fpath = os.path.join(path, file)
 
-			t_arr = analyse(fpath)
+				t_arr = analyze(fpath)
 
-			if len(t_arr) != 0:
-				with open("out.csv", "a+", newline="") as f:
-					writer = csv.writer(f)
+				if len(t_arr) > 0:
 					for row in t_arr:
-						writer.writerow([row, os.path.basename(path)]) 
+						if log_path == server_logs_path:
+							add_to_csv([row, os.path.basename(path)])
+						elif log_path == cam_logs_path:
+							t_path = [i for i in path.split("/") if i != ""]
+							add_to_csv([row, "{}.{}".format(t_path[-2], t_path[-1])])
+
+# visualizing
+
+if args.visualize is not None:
+	import pandas as pd
+
+	f_path = args.visualize
+	if os. path. exists(f_path):
+		pd.read_csv(f_path, sep="\t") 
+
