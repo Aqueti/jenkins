@@ -175,18 +175,18 @@ if args.analyze is not None:
 
 				d = dt.datetime.strptime(row, '%b %d %H:%M:%S')
 				d = d.replace(int(time.strftime("%Y")))
-				if flag == "tegra":
-					d = d.replace(tzinfo=timezone.utc).astimezone(tz=None)
+				d = d if flag else d.replace(tzinfo=dt.timezone.utc).astimezone(tz=None)
+				
 				rs.append(d)
 
 		return rs
 
 	for log_path in (cam_logs_path, server_logs_path):
-		for path, directories, files in os.walk(log_path):
+		flag = True if log_path == server_logs_path else False
+		for path, directories, files in os.walk(log_path):			
 			for file in sorted(files):
 				fpath = os.path.join(path, file)
-
-				flag = "server" if path == server_logs_path else "tegra"
+				
 				t_arr = analyze(fpath, flag)
 
 				if len(t_arr) > 0:
