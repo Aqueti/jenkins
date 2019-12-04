@@ -51,7 +51,7 @@ def get_perf_info(date):
 				col_name = col.split(" ")[0].strip()
 				continue
 			elif i == 1:
-				if i == 1 and col_name in ("NET", "DSK"):
+				if col_name in ("NET", "DSK"):
 					if col_name not in c_info.keys():
 						c_info[col_name] = {}
 
@@ -144,13 +144,14 @@ if args.analyze is not None:
 	def compress(f):
 		def wrapper(*args, **kwargs):
 			fpath = args[0]
+			flag = args[1]
 
 			if ".gz" == os.path.splitext(fpath)[1]:
 				fpath = fpath[:fpath.rindex(".")]
 				cmd = "gunzip {}".format(fpath)
 				exec_cmd(cmd)
 
-			rt = f(fpath)
+			rt = f(fpath, flag)
 
 			if ".gz" == os.path.splitext(fpath)[1]:
 				cmd = "gzip {}".format(fpath)
@@ -176,14 +177,14 @@ if args.analyze is not None:
 				d = dt.datetime.strptime(row, '%b %d %H:%M:%S')
 				d = d.replace(int(time.strftime("%Y")))
 				d = d if flag else d.replace(tzinfo=dt.timezone.utc).astimezone(tz=None)
-				
+
 				rs.append(d)
 
 		return rs
 
 	for log_path in (cam_logs_path, server_logs_path):
 		flag = True if log_path == server_logs_path else False
-		for path, directories, files in os.walk(log_path):			
+		for path, directories, files in os.walk(log_path):
 			for file in sorted(files):
 				fpath = os.path.join(path, file)
 				
