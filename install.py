@@ -45,7 +45,7 @@ if "--cam" in sys.argv:
 
     if cam_id in [str(id) for id in (4, 9, 12)]:
         num_of_tegras = 9
-    elif cam_id in [str(id) for id in (66)]:
+    elif cam_id in [str(id) for id in [66]]:
         num_of_tegras = 3
     else:
         num_of_tegras = 10
