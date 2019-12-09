@@ -5,6 +5,8 @@ import os
 import time
 import urllib.request
 from lxml import etree
+import argparse
+
 
 def str_to_int(text):
     try:
@@ -23,100 +25,96 @@ def get_max(res):
 
     return max
 
-def print_help():
-    print("--cam\t\tcamera id")
-    print("--acos\t\tbranch_name/build_number")
-    print("--asis\t\tbranch_name/build_number")
-    print("--type\t\tdebug/release")
-    print("--noinstall\tjust download")
-    print("--norestart\tno daemon restart on render/tegras")
-    print()
-    print("example: ./install.py --cam 7 --acos dev/65 --asis master/95 --noinstall")
+def is_integer(v):
+    try:
+        int(v)
+        return True
+    except:
+        return False
 
-if "--help" in sys.argv:
-    print_help()
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--cam",  help="camera id", required=False)
+parser.add_argument("--acos", help="branch_name/build_number", required=False, default="dev")
+parser.add_argument("--asis", help="branch_name/build_number", required=False)
+parser.add_argument("--type", help="debug/release", required=False, default="release")
+parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
+parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
+args = parser.parse_args()
+
+
+if all(v is None for v in vars(args).values()):
+    parser.print_help(sys.stdout)
+    print("\nexample: ./install.py --cam 7 --acos beta/280 --asis dev/149 --noinstall\n")
     exit(0)
 
-if "--cam" in sys.argv:
-    cam_id = sys.argv[sys.argv.index("--cam") + 1]
+cam_ip = ''
+itype = 'release' if args.type is None else args.type
 
-    cam_ip = '10.1.' + cam_id + '.'
+if args.cam is not None:
+    if not is_integer(args.cam):
+        print("cam id should be integer")
+        exit(1)
+
+    cam_ip = '10.1.{}.'.format(args.cam)
+
     start_ip = 1
 
-    if cam_id in [str(id) for id in (4, 9, 12)]:
+    if args.cam in [str(id) for id in [4, 9, 12]]:
         num_of_tegras = 9
-    elif cam_id in [str(id) for id in [66]]:
+    elif args.cam in [str(id) for id in [66]]:
         num_of_tegras = 3
     else:
         num_of_tegras = 10
-else:
-    print("cam isn't specified\n")
-    cam_ip = ''
 
-type = 'release'
-if "--type" in sys.argv:
-    type = sys.argv[sys.argv.index("--type") + 1]
 
 res = []
 files = {}
-projs = ["acos"] + (["asis"] if "--asis" in sys.argv else [])
-
-for proj in projs:    
-
+for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else [])):
     base_url = "http://10.0.0.10/repositories/" + proj
-        
-    branch_name = 'dev'
-    build = ""
-    if ("--" + proj) in sys.argv:
-        if len(sys.argv) > sys.argv.index("--" + proj) + 1:
-            if "--" not in sys.argv[sys.argv.index("--" + proj) + 1]:
-                arr = sys.argv[sys.argv.index("--" + proj) + 1].split("/")
-                branch_name = arr[0]
-                build = arr[1] if len(arr) > 1 else ""
 
-                if build != "":
-                    try:
-                        build = str(int(build))
-                    except:
-                        print("build should be integer")
-                        exit(0)
+    if getattr(args, proj) is not None:
+        arr = getattr(args, proj).split("/") 
+        branch_name, build = (arr[0], arr[1] if len(arr) > 1 else -1)
+
+        if not is_integer(build):
+            print("build should be integer")
+            exit(1)
+    else:
+        branch_name, build = ("dev", -1)
 
     try:
         urllib.request.urlopen(base_url)
     except:
         print("server is unavailable")
-        exit(0)
+        exit(1)
 
     try:
         urllib.request.urlopen(base_url + '/' + branch_name)
     except:
         print("branch not found")
-        exit(0)
+        exit(1)
 
-    if build == "":
-
-        page = urllib.request.urlopen(base_url + '/' + branch_name)
-            
+    if build == -1:
+        page = urllib.request.urlopen(base_url + '/' + branch_name)            
         tree = etree.HTML(page.read())
-
         bres = tree.xpath('//h2//a')
-
         build = get_max(bres)
 
     try:
         page = urllib.request.urlopen(base_url + '/' + branch_name + '/' + str(build))
     except Exception:
         print("build not found")
-        exit(0)
+        exit(1)
 
     tree = etree.HTML(page.read())
 
-    folder_path = "builds/" + branch_name + '/' + str(build) + '/'
-    os.system("mkdir -p " + folder_path)
+    folder_path = "builds/{}/{}/".format(branch_name, str(build))
+    os.system("mkdir -p {}".format(folder_path))
     
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
-            if type == 'debug':
+            if itype == 'debug':
                 if 'debug' not in e.text:
                     continue
             else:
@@ -152,64 +150,62 @@ for proj in projs:
 
 if len(res) == 0:
     print('no deb packages found')
-    exit(0)
+    exit(1)
 
 if len(files.keys()) == 0:
     print('No files available')
-    exit(0)
+    exit(1)
 
-if "--noinstall" in sys.argv:
+if args.noinstall:
     print('Files downloaded')
     exit(0)
 
+
 if cam_ip != '':
-    for i in range(start_ip, num_of_tegras + start_ip):
-        tegra_ip = cam_ip + str(i)
+    for tegra_ip in [cam_ip + str(i + start_ip) for i in range(num_of_tegras)]:
+        d_str = "".join(["-" for i in range(16)])
+        print("\n{}\n{}\n{}\n".format(d_str, tegra_ip, d_str))
 
-        print('*************')
-        print(tegra_ip)
-        print('*************')
+        for package in ['aci', 'daemon_aarch64']:
+            cmd = "scp {} nvidia@{}:./".format(files[package], tegra_ip)
+            os.system(cmd)
+            pack_name = "aci" if package == "aci" else "aquetidaemon"
+            cmd = "ssh nvidia@{} 'sudo dpkg -r {}'".format(tegra_ip, pack_name)
+            os.system(cmd)
+            cmd = "ssh nvidia@{} 'sudo dpkg -i {}'".format(tegra_ip, files[package][files[package].rindex('/') + 1:])
+            os.system(cmd)
 
-        if 'aci' in files.keys():
-            os.system("scp " + files["aci"] + " nvidia@" + tegra_ip + ":./")            
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aci'")  
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["aci"][files["aci"].rindex('/') + 1:] + "'")
-        
-        if 'daemon_aarch64' in files.keys():
-            os.system("scp " + files["daemon_aarch64"] + " nvidia@" + tegra_ip + ":./")            
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -r aquetidaemon'") 
-            os.system("ssh nvidia@" + tegra_ip + " 'sudo dpkg -i " + files["daemon_aarch64"][files["daemon_aarch64"].rindex('/') + 1:] + "'")
+        cmd = "ssh nvidia@{} 'rm *.deb 2>/dev/null'".format(tegra_ip)
+        os.system(cmd)
 
-        os.system("ssh nvidia@" + tegra_ip + " 'rm *.deb 2>/dev/null'")
 
-os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
-os.system("sudo dpkg -r aquetidaemon-daemon")
-os.system("sudo dpkg -r aquetidaemon-application")
-os.system("sudo dpkg -r aquetiapi")
-os.system("sudo dpkg -r calibrationtools")
+if 'daemon_x86-app' in files.keys():
+    os.system("sudo pkill -9 AquetiDaemon; sudo service Aqueti-Daemon stop")
+
+    os.system("sudo dpkg -r aquetidaemon-daemon")
+    os.system("sudo dpkg -r aquetidaemon-application")
+    os.system("sudo dpkg -i " + files["daemon_x86-app"])
+    os.system("sudo dpkg -i " + files["daemon_x86-d"])
+if 'api' in files.keys():
+    os.system("sudo dpkg -r aquetiapi")
+    os.system("sudo dpkg -i " + files["api"])
+if 'ctools' in files.keys():
+    os.system("sudo dpkg -r calibrationtools")
+    os.system("sudo dpkg -i " + files["ctools"])
 
 if 'asis' in files.keys():
     os.system("sudo dpkg -r asis")
-
-if 'api' in files.keys():    
-    os.system("sudo dpkg -i " + files["api"])
-if 'ctools' in files.keys():        
-    os.system("sudo dpkg -i " + files["ctools"])
-if 'daemon_x86-app' in files.keys():        
-    os.system("sudo dpkg -i " + files["daemon_x86-app"])
-    os.system("sudo dpkg -i " + files["daemon_x86-d"])    
-if 'asis' in files.keys():        
     os.system("sudo dpkg -i " + files["asis"])
 
-if "--norestart" not in sys.argv:
+if not args.norestart:
     print("\nRestarting service\n")
 
     if 'daemon_x86-app' in files.keys():
-        os.system("sudo pkill -9 AquetiDaemon")
+        os.system("sudo pkill -9 Aqueti; sudo service Aqueti-Daemon restart")
 
     if cam_ip != '':
         for i in range(start_ip, num_of_tegras + start_ip):
-            os.system("ssh nvidia@" + cam_ip + str(i) + " 'sudo pkill -9 AquetiDaemon'")   # sudo reboot
+            os.system("ssh nvidia@" + cam_ip + str(i) + " 'sudo pkill -9 AquetiDaemon'")
 
     if any(s in files.keys() for s in ('daemon_x86-app', 'asis')):
         os.system("sudo service asisd restart")
