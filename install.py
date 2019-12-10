@@ -32,16 +32,20 @@ def is_integer(v):
     except:
         return False
 
+def custom_action(c_arg):
+    class CustomAction(argparse.Action):
+        def __call__(self, parser, args, values, option_string=None):
+            setattr(args, self.dest, values)
+    return CustomAction
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
 parser.add_argument("--acos", help="branch_name/build_number", required=False, default="dev")
-parser.add_argument("--asis", help="branch_name/build_number", required=False)
-parser.add_argument("--type", help="debug/release", required=False, default="release")
+parser.add_argument("--asis", help="branch_name/build_number", required=False, action=custom_action("dev"))
+parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
 args = parser.parse_args()
-
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
@@ -49,8 +53,6 @@ if all(v is None for v in vars(args).values()):
     exit(0)
 
 cam_ip = ''
-itype = 'release' if args.type is None else args.type
-
 if args.cam is not None:
     if not is_integer(args.cam):
         print("cam id should be integer")
@@ -114,7 +116,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
     
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
-            if itype == 'debug':
+            if args.debug:
                 if 'debug' not in e.text:
                     continue
             else:
