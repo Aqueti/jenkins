@@ -47,6 +47,7 @@ parser.add_argument("--noinstall", help="just download", required=False, action=
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
 args = parser.parse_args()
 
+
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
     print("\nexample: ./install.py --cam 7 --acos beta/280 --asis dev/149 --noinstall\n")
@@ -115,13 +116,14 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
     os.system("mkdir -p {}".format(folder_path))
     
     for e in tree.xpath('//a'):
-        if ".deb" in e.text:
-            if args.debug:
-                if 'debug' not in e.text:
-                    continue
-            else:
-                if 'debug' in e.text:
-                    continue
+        if ".deb" in e.text:  
+            if "x86_64" in e.text:          
+                if args.debug:
+                    if 'debug' not in e.text:
+                        continue
+                else:
+                    if 'debug' in e.text:
+                        continue
             
             if "Daemon" in e.text:
                 if "x86_64" in e.text:
@@ -212,4 +214,4 @@ if not args.norestart:
     if any(s in files.keys() for s in ('daemon_x86-app', 'asis')):
         os.system("sudo service asisd restart")
 
-print("***** Done *****")
+print("----- Done -----")
