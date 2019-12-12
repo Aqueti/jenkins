@@ -1,4 +1,10 @@
 #!/bin/bash
 
-sudo docker save -o asis-image_dev.tar asis_asis asis_janus asis_nginx asis_stuntman
-sudo gzip asis-image_dev.tar
+BRANCH_NAME=$1
+
+conts=`sudo docker images asis_access_control* --format "{{.Repository}}"`
+e_conts=`echo ${conts}`
+
+sudo docker save -o asis-image.tar ${e_conts}
+
+sudo gzip asis-image.tar
