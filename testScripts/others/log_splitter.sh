@@ -1,5 +1,5 @@
 f_name=$1
-SIZE=16
+SIZE=24
 
 if [[ -z "$f_name" ]]; then
   echo "no file specified"
