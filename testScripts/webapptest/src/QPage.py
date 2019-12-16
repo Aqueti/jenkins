@@ -549,7 +549,7 @@ class QPage(BasePage, LoginForm):
     def user_settings_btn(self): return self.find_by(xpath="//i[contains(., 'settings')]//ancestor::button", elem=self.active_panel)
 
     @property
-    def logout_btn(self): return self.active_panel.find_by(xpath="//i[contains(., 'input')]//ancestor::button", elem=self.active_panel)
+    def logout_btn(self): return self.find_by(xpath="//p[contains(., 'Logout')]/parent::div")   # ="//i[contains(., 'input')]//ancestor::button", elem=self.active_panel
 
 ## user_settings_btn
 
