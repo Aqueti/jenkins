@@ -220,7 +220,7 @@ class TestQApp(BaseTest):
                     self.failure_exception("Failed to create render stream")
                     exit(1)
 
-            time.sleep(1)
+            time.sleep(3)
 
     @pytest.fixture()
     def qview(self):
@@ -266,6 +266,56 @@ class TestQApp(BaseTest):
     def db(self):
         pass
 
+    @pytest.fixture()
+    def types(self):
+        def tv2ts(tv):
+            return tv.tv_sec * 10**6 + tv.tv_usec
+
+        def ts2tv(ts):
+            tv = AQT.timeval()
+            tv.tv_sec = ts // 10 ** 6
+            tv.tv_usec = ts % 10 ** 6
+
+            return tv
+
+        def add_tv(tv1 , tv2):
+            return ts2tv(tv2ts(tv1) + tv2ts(tv2))
+
+        def sub_tv(tv1 , tv2):
+            return ts2tv(tv2ts(tv1) - tv2ts(tv2))
+
+        def div_tv(tv1 , tv2):
+            if isinstance(tv2, int):
+                return ts2tv(tv2ts(tv1) // tv2)
+
+        def gt_tv(tv1 , tv2):
+            return tv2ts(tv1) > tv2ts(tv2)
+
+        def lt_tv(tv1 , tv2):
+            return tv2ts(tv1) < tv2ts(tv2)
+
+        def ge_tv(tv1 , tv2):
+            return gt_tv(tv1, tv2) or eq_tv(tv1, tv2)
+
+        def le_tv(tv1 , tv2):
+            return lt_tv(tv1 , tv2) or eq_tv(tv1 , tv2)
+
+        def eq_tv(tv1 , tv2):
+            return tv2ts(tv1) == tv2ts(tv2)
+
+        def str_tv(tv):
+            return str(tv2ts(tv))
+
+        AQT.timeval.__add__ = add_tv
+        AQT.timeval.__sub__ = sub_tv
+        AQT.timeval.__floordiv__ = div_tv
+        AQT.timeval.__gt__ = gt_tv
+        AQT.timeval.__lt__ = lt_tv
+        AQT.timeval.__ge__ = ge_tv
+        AQT.timeval.__le__ = le_tv
+        AQT.timeval.__eq__ = eq_tv
+        AQT.timeval.__str__ = str_tv
+
 
     def find_diff(self, path):
         db_name = "acos"
@@ -289,7 +339,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "db")
     @storeresult
-    def test_case_111(self):
+    def test_case_110(self): # All known scops are listed
         web_scops = self.cpage.get_lside_scops_names()
         db_scops = self.db.query({"type": "mantis"})
 
@@ -298,11 +348,59 @@ class TestQApp(BaseTest):
         for db_scop in db_scops:
             assert ("/aqt/camera/" + db_scop['id']) in web_scops
 
+
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
-    def test_case_112(self):
+    def test_case_111(self): # scop is added to stream automatically
+        renders = self.api.GetAvailableRenderers()
+        render = renders[0]
+
+        render_info = json.loads(self.api.GetDetailedStatus(render.Name()))
+        streams = render_info["render_streams"]
+
+        assert len(streams) > 0
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_112(self): # the last selected scop is selected again after refreshing the page
+        def get_scops():
+            renders = self.api.GetAvailableRenderers()
+            render = renders[0]
+
+            render_info = json.loads(self.api.GetDetailedStatus(render.Name()))
+            streams = render_info["render_streams"]
+
+            if len(streams) == 0:
+                return []
+            else:
+                stream_info = json.loads(self.api.GetDetailedStatus(render.Name() + '/' + streams[0]))
+                return stream_info["SCOP_list"]
+
+        cam_names = self.cpage.get_lside_scops_names()
+
+        self.cpage.get_lside_add_cam_btn(cam_names[-1])(act="click")
+        time.sleep(7)
+
+        s_list = get_scops()
+
+        self.cpage.reload()
+        time.sleep(5)
+
+        e_list = get_scops()
+
+        assert sorted(s_list) == sorted(e_list)
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qview", "login", "api")
+    @storeresult
+    def test_case_113(self): # added scop corresponds to selected one
         cam_names = self.cpage.get_lside_scops_names()
 
         for cam_name in sorted(cam_names, reverse=True):
@@ -325,40 +423,14 @@ class TestQApp(BaseTest):
             for scop_name in scop_list:
                 assert cam_name == "/aqt/camera/" + scop_name
 
-    @pytest.mark.skip(reason="")
-    @pytest.mark.regression
-    @pytest.mark.usefixtures("qview", "login", "api")
-    @storeresult
-    def test_case_113(self):
-        self.cpage.get_lside_scop()(act='click')
-
-        if not self.cam.IsRecording():
-            self.cpage.get_lside_recording_btn()(act='click')
-            time.sleep(1)
-            assert self.cam.IsRecording()
-
-        if self.cam.IsRecording():
-            self.cpage.get_lside_recording_btn()(act='click')
-            time.sleep(1)
-            assert not self.cam.IsRecording()
 
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
-    def test_case_114(self):
+    def test_case_114(self): # fine focus works
         self.cpage.get_lside_scop()(act='click')
         # self.api.SetParameters(self.cam_name, json.dumps({"fineAutofocus": True}))
-
-        status_arr = []
-        s_time = dt.datetime.now()
-        while (dt.datetime.now() - s_time).total_seconds() < 3:
-            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
-            status_arr.append(status["focus_status"])
-
-            time.sleep(0.25)
-
-        assert "BUSY" not in status_arr
 
         self.cpage.get_lside_fine_focus_btn()(act='click')
 
@@ -372,22 +444,13 @@ class TestQApp(BaseTest):
 
         assert "BUSY" in status_arr
 
+
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
-    def test_case_115(self):
+    def test_case_115(self): # coarse focus works
         self.cpage.get_lside_scop()(act='click')
-
-        status_arr = []
-        s_time = dt.datetime.now()
-        while (dt.datetime.now() - s_time).total_seconds() < 3:
-            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
-            status_arr.append(status["focus_status"])
-
-            time.sleep(0.25)
-
-        assert "BUSY" not in status_arr
 
         self.cpage.get_lside_coarse_focus_btn()(act='click')
 
@@ -401,29 +464,6 @@ class TestQApp(BaseTest):
 
         assert "BUSY" in status_arr
 
-    @pytest.mark.skip(reason="")
-    @pytest.mark.regression
-    @pytest.mark.usefixtures("qview", "login")
-    @storeresult
-    def test_case_116(self):
-        scop_name = self.cpage.get_lside_scops_names()[-1]
-        self.cpage.get_lside_scop(scop_name=scop_name)(act='click')
-
-        time.sleep(0.5)
-
-        self.cpage.get_lside_advanced_btn(scop_name=scop_name)(act='click')
-
-        time.sleep(2)
-
-        assert len(self.driver.window_handles) == 2
-
-        self.driver.switch_to_window(self.driver.window_handles[1])
-
-        qacm = QAdminCameraMicrocameras(self)
-
-        scop_name2 = qacm.cam_select_div.text
-
-        assert scop_name == scop_name2
 
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
@@ -447,7 +487,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
-    def test_case_121(self): #logout
+    def test_case_121(self): # logout
         self.cpage.user_icon()
 
         self.cpage.logout_btn()
@@ -458,7 +498,7 @@ class TestQApp(BaseTest):
         self.cpage.logout_btn()
         self.cpage.get_dialog_btn("Logout")()
 
-        assert isinstance(self.cpage.form, WebElement)
+        assert isinstance(self.cpage.active_dialog, WebElement)
 
 
     @pytest.mark.skip(reason="")
@@ -469,7 +509,7 @@ class TestQApp(BaseTest):
         self.cpage.login(username="user", password="12345678", system=self.system_name)
         self.cpage.logout()
 
-        while not isinstance(self.cpage.form, WebElement):
+        while not isinstance(self.cpage.active_dialog, WebElement):
             time.sleep(1)
 
         self.cpage.login(username="user", password="12345678", system=self.system_name)
@@ -1661,59 +1701,10 @@ class TestQApp(BaseTest):
 
     @pytest.mark.skip(reason="")
     @pytest.mark.regression
-    @pytest.mark.usefixtures("api")
+    @pytest.mark.usefixtures("api", "types")
+    @pytest.mark.parametrize("flag", [True, False])
     @storeresult
-    def test_case_3001(self): #stored data ranges
-        def tv2ts(tv):
-            return tv.tv_sec * 10**6 + tv.tv_usec
-
-        def ts2tv(ts):
-            tv = AQT.timeval()
-            tv.tv_sec = ts // 10 ** 6
-            tv.tv_usec = ts % 10 ** 6
-
-            return tv
-
-        def add_tv(tv1 , tv2):
-            return ts2tv(tv2ts(tv1) + tv2ts(tv2))
-
-        def sub_tv(tv1 , tv2):
-            return ts2tv(tv2ts(tv1) - tv2ts(tv2))
-
-        def div_tv(tv1 , tv2):
-            if isinstance(tv2, int):
-                return ts2tv(tv2ts(tv1) // tv2)
-
-        def gt_tv(tv1 , tv2):
-            return tv2ts(tv1) > tv2ts(tv2)
-
-        def lt_tv(tv1 , tv2):
-            return tv2ts(tv1) < tv2ts(tv2)
-
-        def ge_tv(tv1 , tv2):
-            return gt_tv(tv1, tv2) or eq_tv(tv1, tv2)
-
-        def le_tv(tv1 , tv2):
-            return lt_tv(tv1 , tv2) or eq_tv(tv1 , tv2)
-
-        def eq_tv(tv1 , tv2):
-            return tv2ts(tv1) == tv2ts(tv2)
-
-        def str_tv(tv):
-            return str(tv2ts(tv))
-
-        AQT.timeval.__add__ = add_tv
-        AQT.timeval.__sub__ = sub_tv
-        AQT.timeval.__floordiv__ = div_tv
-        AQT.timeval.__gt__ = gt_tv
-        AQT.timeval.__lt__ = lt_tv
-        AQT.timeval.__ge__ = ge_tv
-        AQT.timeval.__le__ = le_tv
-        AQT.timeval.__eq__ = eq_tv
-        AQT.timeval.__str__ = str_tv
-
-        flag = True   # False
-
+    def test_case_3001(self, flag): #stored data ranges
         cam = AQT.Camera(self.go.api, self.cam_name)
 
         ranges = cam.GetStoredDataRanges(flag)
