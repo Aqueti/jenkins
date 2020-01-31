@@ -14,8 +14,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
 class DB:
-    server_ip = "10.1.1.204"
-    server2_ip = "10.1.1.176"
+    server_ip = "10.0.0.204"
+    db_server_ip = "10.0.0.176"
 
     dbs = ["acos", "acos_local"]
     col_names = ["scops", "models", "reservations", "tracks", "render_parameters", "files"]
@@ -46,11 +46,12 @@ class BaseTest(): # unittest.TestCase
     script_dir = None
     cur_dir = None
 
+    server_ip = "10.0.0.204"
+
     home_dir = expanduser("~")
     base_dir = home_dir + "/Downloads/tests/"
     script_dir = os.path.dirname(os.path.abspath(__file__))
     script_dir = script_dir[:script_dir.rindex('/')]
-    chrome_path = script_dir + "/drivers/chromedriver"
 
     doc = OrderedDict()
 
@@ -60,6 +61,21 @@ class BaseTest(): # unittest.TestCase
     @property
     def screenshot_path(self):
         return '{0}/{1}_{2}.png'.format(self.cur_dir, self.doc["test_name"], datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+
+    @property
+    def driver_path(self):
+        driver_path = "drivers/"
+
+        if self.browser == "chrome":
+            driver_path += "chromedriver"
+        elif self.browser == "firefox":
+            driver_path += "geckodriver"
+        elif self.browser == "ie":
+            driver_path += "IEDriverServer"
+        else:
+            pass
+
+        return os.path.join(self.script_dir, driver_path)
 
     @property
     def failure_exception(self, *args, **kwargs):
@@ -101,19 +117,43 @@ class BaseTest(): # unittest.TestCase
 
         return wrapper
 
+    def setUp(self):
+        caps = {'browserName': os.getenv('BROWSER', 'chrome')}
+        self.browser = webdriver.Remote(
+            command_executor='http://localhost:4444/wd/hub',
+            desired_capabilities=caps
+        )
+
     def setup_method(self, method):
+        self.browser = os.getenv('BROWSER', 'chrome')
+
         if self.browser == "chrome":
             opts = ChromeOptions()
             opts.add_experimental_option("detach", True)
             opts.add_experimental_option("w3c", False)
             caps = DesiredCapabilities.CHROME
-            caps["pageLoadStrategy"] = "normal"  # none
-            self.driver = webdriver.Chrome(options=opts, desired_capabilities=caps,  executable_path=self.chrome_path)  # chrome_options=opts
+            caps = {"browserName": "chrome", 'version': '', 'platform': 'ANY', "pageLoadStrategy": "normal"}
+
+            #self.driver = webdriver.Chrome(options=opts, desired_capabilities=caps, executable_path=self.driver_path)  # chrome_options=opts
+
+            self.driver = webdriver.Remote(options=opts, desired_capabilities=caps, command_executor="http://{}:4444/wd/hub".format(self.server_ip))
+
         elif self.browser == "ff":
             caps = DesiredCapabilities.FIREFOX
-            self.driver = webdriver.Firefox()
+            caps = {"pageLoadStrategy": "normal", "browserName": "firefox"}
+            #self.driver = webdriver.Firefox(desired_capabilities=caps, executable_path=self.driver_path)
+
+            self.driver = webdriver.Remote(desired_capabilities=caps, command_executor="http://{}:4444/wd/hub".format(self.server_ip))
+
+        elif self.browser == "ie":
+            caps = DesiredCapabilities.INTERNETEXPLORER
+            caps = {"pageLoadStrategy": "normal", "browserName": "iexplorer"}
+            #self.driver = webdriver.Ie(desired_capabilities=caps, executable_path=self.driver_path)
+
+            self.driver = webdriver.Remote(desired_capabilities=caps, command_executor="http://{}:4444/wd/hub".format(self.server_ip))
         else:
             pass
+
 
         if self.driver is not None:
             self.driver.maximize_window()
@@ -153,7 +193,7 @@ class BaseTest(): # unittest.TestCase
 
         self.add_to_log("\nExec time: " + str(datetime.timedelta(seconds=self.doc["duration"])) + "\nRESULT: " + result + "\n\n")
 
-        with suppress(Exception): DB(DB.server2_ip).mc["qa"]["auto"].insert_one(self.doc)
+        with suppress(Exception): DB(DB.db_server_ip).mc["qa"]["auto"].insert_one(self.doc)
 
         if self.driver is not None:
             self.driver.quit()

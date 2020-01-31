@@ -47,9 +47,8 @@ class BasePage:
                     page_obj._(self, str(kwargs["value"]))
                 elif "act" in kwargs.keys():
                     if "click" in kwargs.values():
-                        times = 1
-                        if "times" in kwargs.keys():
-                            times = kwargs["times"]
+                        times = kwargs["times"] if "times" in kwargs.keys() else 1
+
                         for i in range(times):
                             page_obj.__add_to_log(page_obj.__get_description(self))
                             self.click()

@@ -1,5 +1,6 @@
 import math
 import time
+import datetime as dt
 
 from src.BasePage import *
 
@@ -54,6 +55,10 @@ class BaseCont:
                 if "index" in kwargs.keys():
                     if len(dds) > kwargs["index"]:
                         return dds[kwargs["index"]]
+                elif "value" in kwargs.keys():
+                    for dd in dds:
+                        if dd.text == kwargs["value"]:
+                            return dd
             else:
                 for dd in dds:
                     a = self.find_by(xpath="//a", elem=dd)
@@ -152,12 +157,12 @@ class LoginForm(BaseCont):
     def password_txt(self): return self.find_by(css="input[aria-label='Password']", elem=self.active_dialog)
 
     @property
-    def system_txt(self): return self.find_by(css="input[aria-label='System']", elem=self.active_dialog)
+    def system_dd(self): return self.find_by(css="input[aria-label='System']", elem=self.active_dialog)
 
     def login(self, *args, **kwargs):
         self.username_txt(value=kwargs['username'])
         self.password_txt(value=kwargs['password'])
-        self.system_txt(value=kwargs['system'] + Keys.ESCAPE)
+        #self.system_txt(value=kwargs['system'] + Keys.ESCAPE)
 
         if 'language' in kwargs.keys():
             self.get_dd("Language")(act="click")
@@ -170,12 +175,19 @@ class LoginForm(BaseCont):
         else:
             self.get_dialog_btn("Submit")(act="click")
 
+            self.system_dd(act="click")
+
+            self.get_dd_elem(value=kwargs['system'])(act="click")
+
+            self.close_dialog()
+
+
 class QStreamBox(BaseCont):
     @property
     def video_area(self): return self.find_by(xpath="(//video)[1]/ancestor::div[contains(@class, 'container')][last()]")
 
     @property
-    def video_box(self): return self.find_by(xpath="//video[1]", elem=self.video_area)
+    def video_box(self): return self.find_by(xpath="(//video)[1]", elem=self.video_area)
 
     @property
     def video_controls_panel(self): return self.find_by(xpath="//nav[contains(@class, 'v-toolbar--dense')]", elem=self.video_area)
@@ -183,16 +195,22 @@ class QStreamBox(BaseCont):
 # Right-click menu
 
     @property
-    def customize_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Customize Stream"))
+    def customize_stream_btn(self): return self.get_list_elem("Customize Stream")
 
     @property
-    def change_camera_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Change Camera"))
+    def calibrate_stream_btn(self): return self.get_list_elem("Calibrate Stream")
 
     @property
-    def refresh_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Refresh Stream"))
+    def change_camera_btn(self): return self.get_list_elem("Change Camera")
 
     @property
-    def delete_stream_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Delete Stream"))
+    def refresh_stream_btn(self): return self.get_list_elem("Refresh Stream")
+
+    @property
+    def delete_stream_btn(self): return self.get_list_elem("Delete Stream")
+
+    @property
+    def change_camera_btn(self): return self.get_list_elem("Change Camera")
 
     @property
     def video_controls_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Video Controls"))
@@ -216,6 +234,23 @@ class QStreamBox(BaseCont):
 
     @property
     def letterbox_chkb(self): return self.find_by(xpath="//input[@aria-label='Letterbox']/parent::div", elem=self.active_dialog)
+
+# calibrate_stream_btn
+
+    @property
+    def geometry_progress_bar(self): return self.find_by(xpath="//div[contains(@class, 'v-list__tile__action') and contains(., ' / 4')]", elem=self.active_panel)
+
+    @property
+    def calibrate_geometry_btn(self): return self.get_list_elem("Calibrate Geometry Now")
+
+    @property
+    def save_geometry_btn(self): return self.get_list_elem("Save Current Geometry")
+
+    @property
+    def set_to_saved_geometry_btn(self): return self.get_list_elem("Set to Saved Geometry")
+
+    @property
+    def reset_geometry_btn(self): return self.get_list_elem("Reset Geometry to Factory Default")
 
 # video_controls_btn
 
@@ -333,26 +368,6 @@ class QStreamBox(BaseCont):
 
     @property
     def arrow_right_btn(self): return self.find_by(xpath="//i[text()='arrow_forward']/ancestor::button", elem=self.panning_panel)
-
-# stream_calibration_btn
-
-    @property
-    def stream_calibration_btn(self): return self.find_by(xpath="//i[contains(., 'blur_circular')]/ancestor::button", elem=self.video_controls_panel)
-
-    @property
-    def gen_new_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'blur_on')]/ancestor::button", elem=self.active_panel)
-
-    @property
-    def geometry_progress_bar(self): return self.find_by(xpath="//div[contains(@class, 'v-list__tile__action') and contains(., ' / 4')]", elem=self.active_panel)
-
-    @property
-    def save_cur_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'save_alt')]/ancestor::button", elem=self.active_panel)
-
-    @property
-    def set_to_saved_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'swap_vert')]/ancestor::button", elem=self.active_panel)
-
-    @property
-    def reset_geometry_btn(self): return self.find_by(xpath="//i[contains(., 'refresh')]/ancestor::button", elem=self.active_panel)
 
 
 class QAdminSidebar:
