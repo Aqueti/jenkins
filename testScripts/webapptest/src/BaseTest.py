@@ -118,14 +118,10 @@ class BaseTest(): # unittest.TestCase
         return wrapper
 
     def setUp(self):
-        caps = {'browserName': os.getenv('BROWSER', 'chrome')}
-        self.browser = webdriver.Remote(
-            command_executor='http://localhost:4444/wd/hub',
-            desired_capabilities=caps
-        )
+        pass
 
     def setup_method(self, method):
-        self.browser = os.getenv('BROWSER', 'chrome')
+        self.browser = os.getenv('BROWSER', 'ffpage is opened')
 
         if self.browser == "chrome":
             opts = ChromeOptions()
@@ -140,6 +136,7 @@ class BaseTest(): # unittest.TestCase
 
         elif self.browser == "ff":
             caps = DesiredCapabilities.FIREFOX
+
             caps = {"pageLoadStrategy": "normal", "browserName": "firefox"}
             #self.driver = webdriver.Firefox(desired_capabilities=caps, executable_path=self.driver_path)
 
@@ -147,7 +144,7 @@ class BaseTest(): # unittest.TestCase
 
         elif self.browser == "ie":
             caps = DesiredCapabilities.INTERNETEXPLORER
-            caps = {"pageLoadStrategy": "normal", "browserName": "iexplorer"}
+            caps = {"browserName": "iexplorer"}
             #self.driver = webdriver.Ie(desired_capabilities=caps, executable_path=self.driver_path)
 
             self.driver = webdriver.Remote(desired_capabilities=caps, command_executor="http://{}:4444/wd/hub".format(self.server_ip))
