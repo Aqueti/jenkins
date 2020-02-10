@@ -175,11 +175,14 @@ class LoginForm(BaseCont):
         else:
             self.get_dialog_btn("Submit")(act="click")
 
-            self.system_dd(act="click")
+            try:
+                self.system_dd(act="click")
 
-            self.get_dd_elem(value=kwargs['system'])(act="click")
+                self.get_dd_elem(value=kwargs['system'])(act="click")
 
-            self.close_dialog()
+                self.close_dialog()
+            except:
+                pass
 
 
 class QStreamBox(BaseCont):

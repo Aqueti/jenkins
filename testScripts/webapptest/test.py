@@ -333,7 +333,7 @@ class TestQApp(BaseTest):
 
 #QView
 
-    @pytest.mark.skip(reason="")
+    #@pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "db")
     @storeresult
@@ -549,7 +549,7 @@ class TestQApp(BaseTest):
             assert is_opened(self.cpage.right_sidebar)
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
