@@ -199,7 +199,7 @@ if 'ctools' in files.keys():
 
 if 'asis' in files.keys():
     os.system("sudo dpkg -r asis")
-    os.system("sudo dpkg -i " + files["asis"])
+    #os.system("sudo dpkg -i " + files["asis"])
 
 if not args.norestart:
     print("\nRestarting service\n")
