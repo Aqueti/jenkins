@@ -229,14 +229,16 @@ class QStreamBox(BaseCont):
                                               elem=self.active_dialog)
 
     @property
-    def framerate_dd(self): return self.find_by(id="//div[@class='v-select__slot' and contains(., 'Framerate')]", elem=self.active_dialog)
+    def framerate_dd(self): return self.find_by(id="//div[@class='v-select__slot' and contains(., 'Framerate')]",
+                                                elem=self.active_dialog)
 
     @property
     def projection_dd(self): return self.find_by(xpath="//div[@class='v-select__slot' and contains(., 'Projection')]",
                                                  elem=self.active_dialog)
 
     @property
-    def letterbox_chkb(self): return self.find_by(xpath="//input[@aria-label='Letterbox']/parent::div", elem=self.active_dialog)
+    def letterbox_chkb(self): return self.find_by(xpath="//input[@aria-label='Letterbox']/parent::div",
+                                                  elem=self.active_dialog)
 
 # calibrate_stream_btn
 
@@ -269,11 +271,7 @@ class QStreamBox(BaseCont):
     @property
     def display_controls_chkb(self): return self.find_by(xpath="//input[@aria-label='Display Video Controls']/parent::div", elem=self.active_dialog)
 
-
 # controls
-
-    @property
-    def recording_btn(self): return self.find_by(xpath="//i[text()='adjust']/ancestor::button", elem=self.video_controls_panel)
 
     @property
     def play_btn(self): return self.find_by(xpath="//i[text()='play_arrow']/ancestor::button", elem=self.video_controls_panel)
@@ -305,13 +303,16 @@ class QStreamBox(BaseCont):
     @property
     def multi_stream_btn(self): return self.find_by(xpath="//i[text()='view_column']/ancestor::button", elem=self.video_controls_panel)
 
-# create_tag_btn
+    @property
+    def recording_btn(self): return self.find_by(xpath="//i[text()='adjust']/ancestor::button", elem=self.video_controls_panel)
+
+# avi_export_btn
 
     @property
-    def create_tag_btn(self): return self.find_by(xpath="//i[text()='loyalty']/ancestor::button", elem=self.video_controls_panel)
+    def avi_export_btn(self): return self.find_by(xpath="//i[text()='camera_roll']/ancestor::button", elem=self.video_controls_panel)
 
     @property
-    def description_txt(self): return self.find_by(xpath="//input[@aria-label='Description']", elem=self.active_panel)
+    def avi_export_chkb(self): return self.find_by(xpath="//input[@aria-label='Export AVI']", elem=self.video_controls_panel)
 
 # stream_settings_btn
 
@@ -334,25 +335,33 @@ class QStreamBox(BaseCont):
     def set_btn(self): return self.find_by(id="set_parameters_btn", elem=self.active_panel)
 
     @property
-    def remove_btn(self): return self.find_by(id="remove_parameters_btn", elem=self.active_panel)
+    def reset_btn(self): return self.find_by(id="remove_parameters_btn", elem=self.active_panel)
+
+    @property
+    def tone_map_type_dd(self): return self.get_dd("Tone Map Type")
 
 # go_to_time_btn
 
     @property
     def go_to_time_btn(self): return self.find_by(xpath="//i[text()='access_time']/ancestor::button", elem=self.video_controls_panel)
 
-# timeline_settings_btn
+# timeline_settings_btn (three dots)
 
     @property
     def timeline_settings_btn(self): return self.find_by(xpath="//i[text()='more_vert']/ancestor::button", elem=self.video_controls_panel)
+
+    @property
+    def track_cur_time_chkb(self): return self.find_by(xpath="//input", elem=self.get_list_elem("Track Current Time"))
+
+    @property
+    def show_ptz_controls_chkb(self): return self.find_by(xpath="//input", elem=self.get_list_elem("Show PTZ Controls"))
 
 # show_timeline_btn
 
     @property
     def show_timeline_btn(self): return self.find_by(xpath="//i[text()='keyboard_arrow_up']/ancestor::button", elem=self.video_controls_panel)
 
-    @property
-    def panning_panel(self): return self.find_by(xpath="//div[@class='layout column' and .//button]", elem=self.video_area)
+# ptz panel
 
     @property
     def zoom_in_btn(self): return self.find_by(xpath="//i[text()='zoom_in']/ancestor::button", elem=self.panning_panel)
@@ -561,24 +570,46 @@ class QPage(BasePage, LoginForm):
 # user_icon
 
     @property
-    def change_password_btn(self): return self.find_by(xpath="//i[contains(., 'autorenew')]//ancestor::button", elem=self.active_panel)
+    def change_password_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Change Password"))
 
     @property
-    def user_settings_btn(self): return self.find_by(xpath="//i[contains(., 'settings')]//ancestor::button", elem=self.active_panel)
+    def user_settings_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("User Settings"))
 
     @property
-    def logout_btn(self): return self.find_by(xpath="//p[contains(., 'Logout')]/parent::div")   # ="//i[contains(., 'input')]//ancestor::button", elem=self.active_panel
+    def logout_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Logout"))
 
-## user_settings_btn
-
-    @property
-    def stream_on_page_load_chkb(self): return self.find_by(xpath="//input[@aria-label='Create a render stream on page load']/parent::div", elem=self.active_dialog)
+    # change_password_btn
 
     @property
-    def corner_rd(self): return self.find_by(xpath="//input[@aria-label='Corner']/parent::div", elem=self.active_dialog)
+    def current_password_txt(self): return self.find_by(xpath="//input[@aria-label='Current Password']", elem=self.active_dialog)
 
     @property
-    def middle_rd(self): return self.find_by(xpath="//input[@aria-label='Middle']/parent::div", elem=self.active_dialog)
+    def new_password_txt(self): return self.find_by(xpath="//input[@aria-label='New Password']", elem=self.active_dialog)
+
+    @property
+    def confirm_password_txt(self): return self.find_by(xpath="//input[@aria-label='Confirm Password']", elem=self.active_dialog)
+
+    # user_settings_btn # GENERAL
+
+    @property
+    def us_general_tab(self): return self.find_by(xpath="//div[@id='general_tab']//a", elem=self.active_dialog)
+
+    @property
+    def us_render_tab(self): return self.find_by(xpath="//div[@id='render_tab']//a", elem=self.active_dialog)
+
+    @property
+    def us_system_dd(self): return self.get_dd("System")
+
+    # user_settings_btn # RENDER
+
+    @property
+    def stream_on_page_load_chkb(self): return self.find_by(xpath="//input[@aria-label='Create a render stream on page load']", elem=self.active_dialog)
+
+    @property
+    def corner_rd(self): return self.find_by(xpath="//input[@aria-label='Corner']", elem=self.active_dialog)
+
+    @property
+    def middle_rd(self): return self.find_by(xpath="//input[@aria-label='Middle']", elem=self.active_dialog)
 
     @property
     def live_latency_slider(self): return self.find_by(xpath="//input[@aria-label='Live Latency']", elem=self.active_dialog)
@@ -592,16 +623,16 @@ class QPage(BasePage, LoginForm):
 # dots_icon
 
     @property
-    def stream_keybindings_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Stream Keybindings"))
+    def stream_keybindings_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Stream Keybindings"))
 
     @property
-    def submit_issue_btn(self): return self.find_by(xpath="//i[text()='report_problem']/ancestor::button", elem=self.active_panel)
+    def submit_issue_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Issue Submission"))
 
     @property
-    def qadmin_btn(self): return self.find_by(xpath="//i[text()='person']/ancestor::a", elem=self.active_panel)
+    def qadmin_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("QAdmin"))
 
     @property
-    def help_manual_btn(self): return self.find_by(xpath="//button", elem=self.get_list_elem("Help Manual"))
+    def help_manual_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Help Manual"))
 
     @property
     def language_dd(self): return self.find_by(xpath="//i[text()='language']//ancestor::div[@role='listitem']//div[contains(@class, 'v-select__slot')]", elem=self.active_panel)
@@ -619,17 +650,6 @@ class QPage(BasePage, LoginForm):
     @property
     def si_description_txt(self):
         return self.find_by(css="textarea[aria-label='Description']", elem=self.active_dialog)
-
-# change_password_btn
-
-    @property
-    def current_password_txt(self): return self.find_by(xpath="//input[@aria-label='Current Password']", elem=self.active_dialog)
-
-    @property
-    def new_password_txt(self): return self.find_by(xpath="//input[@aria-label='New Password']", elem=self.active_dialog)
-
-    @property
-    def confirm_password_txt(self): return self.find_by(xpath="//input[@aria-label='Confirm Password']", elem=self.active_dialog)
 
 
     def submit_issue(self, *args, **kwargs):
@@ -795,17 +815,11 @@ class QViewPage(QPage, QStreamBox):
     def get_lside_selected_scop_name(self):
         return self.get_lside_scop().get_attribute("innerText")
 
-    def get_lside_recording_btn(self, scop_name=""):
-        return self.find_by(xpath="//i[text()='adjust']/ancestor::button", elem=self.get_lside_scop(scop_name))
-
     def get_lside_fine_focus_btn(self, scop_name=""):
         return self.find_by(xpath="//i[text()='center_focus_strong']/ancestor::button", elem=self.get_lside_scop(scop_name))
 
     def get_lside_coarse_focus_btn(self, scop_name=""):
         return self.find_by(xpath="//i[text()='center_focus_weak']/ancestor::button", elem=self.get_lside_scop(scop_name))
-
-    def get_lside_advanced_btn(self, scop_name=""):
-        return self.find_by(xpath="//i[text()='tune']/ancestor::a", elem=self.get_lside_scop(scop_name))
 
     def get_avi_download_btn(self, row):
         return self.find_by(xpath="//i[text()='cloud_download']", elem=row)
