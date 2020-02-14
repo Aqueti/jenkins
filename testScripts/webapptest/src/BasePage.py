@@ -8,6 +8,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.command import Command
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import ElementNotVisibleException
+from src.decorators import *
 import hashlib
 import random
 import time
@@ -40,6 +41,15 @@ class BasePage:
         page_obj = self
 
         def call(self, *args, **kwargs):
+            @async
+            def highlight(elem):
+                page_obj.exec_js("arguments[0].style.cssText += 'border: 3px solid yellow; overflow: auto;'", elem)
+                time.sleep(0.3)
+                page_obj.exec_js("arguments[0].style.cssText = arguments[0].style.cssText.replace('border: 3px solid yellow; overflow: auto;', '');", elem)
+                time.sleep(0.1)
+
+            highlight(self)
+
             if len(kwargs) == 0:
                 page_obj._(self)
             else:
@@ -195,6 +205,7 @@ class BasePage:
                 self.test.failure_exception(err_msg)
 
         return elems
+
 
     def __human_type(self, elem, text):
         for char in text:
