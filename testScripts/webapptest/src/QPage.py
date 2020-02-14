@@ -35,6 +35,12 @@ class BaseCont:
 
         ActionChains(self.driver).move_by_offset(25, 25).double_click().perform()
 
+    def get_link(self, title, elem=None):
+        if elem is None:
+            elem = self.find_by(xpath="//ul[contains(@class, 'v-breadcrumbs')]")
+
+        return self.find_by(xpath="//a[contains(text(), '" + title + "')]", elem=elem)
+
     def get_dd(self, title):
         if title == "Camera":
             time.sleep(0.5)
@@ -180,7 +186,7 @@ class LoginForm(BaseCont):
 
                 self.get_dd_elem(value=kwargs['system'])(act="click")
 
-                self.close_dialog()
+                self.get_dialog_btn("Close")(act="click")
             except:
                 pass
 
@@ -839,6 +845,9 @@ class QViewPage(QPage, QStreamBox):
             QPage.__call__()
 
 class QAdminPage(QPage, QAdminSidebar):
+    @property
+    def breadcrumbs_bar(self): return self.find_by(xpath="//ul[contains(@class, 'v-breadcrumbs')]")
+
     def __init__(self, *args):
         QPage.__init__(self, *args)
 
@@ -1200,6 +1209,9 @@ class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
 
 class QAdminStorage(QAdminPage):
     page_url = QAdminPage.base_url + "storage"
+    page_title = "qadmin"
+
+    page_url = QAdminPage.base_url + "camera_microcameras/none"
     page_title = "qadmin"
 
     def __init__(self, *args):
