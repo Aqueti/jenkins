@@ -65,6 +65,8 @@ if args.cam is not None:
 
     if args.cam in [str(id) for id in [4, 9, 12]]:
         num_of_tegras = 9
+    elif args.cam in [str(id) for id in [70001]]:
+        num_of_tegras = 2
     elif args.cam in [str(id) for id in [66]]:
         num_of_tegras = 3
     else:
