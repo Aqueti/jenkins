@@ -333,7 +333,7 @@ class TestQApp(BaseTest):
 
 #QView
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "db")
     @storeresult
@@ -1237,6 +1237,71 @@ class TestQApp(BaseTest):
             assert os.path.getsize(file) == 67108864
 
 #QAdmin
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login")
+    @storeresult
+    def test_case_2201(self): # number of devs/cams/storages/renders are correct
+        if not isinstance(self.cpage.left_sidebar, WebElement):
+            self.cpage.left_sidebar_btn()
+
+        self.cpage = self.cpage.menu_dashboard()
+
+        assert isinstance(self.cpage.d_system_lnk, WebElement)
+        assert isinstance(self.cpage.d_camera_lnk, WebElement)
+        assert isinstance(self.cpage.d_storage_lnk, WebElement)
+        assert isinstance(self.cpage.d_render_lnk, WebElement)
+
+        vers = self.cpage.get_span("Version:")
+        t_vers = []
+        for ver in vers:
+            t_vers.append(ver.text)
+
+        assert len(set(t_vers[1:])) == 1
+
+        tmp, devs = self.cpage.get_span("Devices:").text.split()
+        tmp, cams = self.cpage.get_span("Cameras:").text.split()
+        tmp, stors = self.cpage.get_span("Storages:").text.split()
+        tmp, rends = self.cpage.get_span("Renders:").text.split()
+
+        assert int(cams) >= 1
+        assert int(stors) == 1
+        assert int(rends) == 1
+
+
+    @pytest.mark.skip(reason="")
+    @pytest.mark.regression
+    @pytest.mark.usefixtures("qadmin", "login")
+    @storeresult
+    def test_case_2202(self):  # all links are ok
+        if not isinstance(self.cpage.left_sidebar, WebElement):
+            self.cpage.left_sidebar_btn()
+
+        self.cpage = self.cpage.menu_dashboard()
+
+        self.cpage.d_system_lnk()
+
+        assert QAdminDashboard.page_url == self.cpage.curl
+
+        self.cpage.d_camera_lnk()
+
+        assert QAdminCamera.page_url == self.cpage.curl
+
+        self.cpage.get_link("Dashboard")(act="click")
+
+        self.cpage.d_storage_lnk()
+
+        assert QAdminStorage.page_url == self.cpage.curl
+
+        self.cpage.get_link("Dashboard")(act="click")
+
+        self.cpage.d_render_lnk()
+
+        assert QAdminRender.page_url == self.cpage.curl
+
+        self.cpage.get_link("Dashboard")(act="click")
+
 
     @pytest.mark.skip(reason="")
     @pytest.mark.regression

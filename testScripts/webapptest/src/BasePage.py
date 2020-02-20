@@ -20,6 +20,15 @@ class BasePage:
         return self.driver.current_url
 
     @property
+    def curl(self):
+        s = self.driver.current_url
+        s = s[s.index("://") + 3:]
+        s = s[s.index("/"):]
+
+        return s
+
+
+    @property
     def title(self):
         return self.driver.title
 
@@ -43,9 +52,9 @@ class BasePage:
         def call(self, *args, **kwargs):
             @async
             def highlight(elem):
-                page_obj.exec_js("arguments[0].style.cssText += 'border: 3px solid yellow; overflow: auto;'", elem)
+                page_obj.exec_js("arguments[0].style.cssText += 'border: 1px solid yellow; overflow: auto;'", elem)
                 time.sleep(0.3)
-                page_obj.exec_js("arguments[0].style.cssText = arguments[0].style.cssText.replace('border: 3px solid yellow; overflow: auto;', '');", elem)
+                page_obj.exec_js("arguments[0].style.cssText = arguments[0].style.cssText.replace('border: 1px solid yellow; overflow: auto;', '');", elem)
                 time.sleep(0.1)
 
             highlight(self)

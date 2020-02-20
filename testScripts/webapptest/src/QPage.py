@@ -35,6 +35,9 @@ class BaseCont:
 
         ActionChains(self.driver).move_by_offset(25, 25).double_click().perform()
 
+    def get_span(self, title):
+        return self.find_by(xpath="//span/span[contains(., '" + title + "')]")
+
     def get_link(self, title, elem=None):
         if elem is None:
             elem = self.find_by(xpath="//ul[contains(@class, 'v-breadcrumbs')]")
@@ -848,6 +851,9 @@ class QAdminPage(QPage, QAdminSidebar):
     @property
     def breadcrumbs_bar(self): return self.find_by(xpath="//ul[contains(@class, 'v-breadcrumbs')]")
 
+    page_url = "/admin/#/"
+    page_title = "QAdmin"
+
     def __init__(self, *args):
         QPage.__init__(self, *args)
 
@@ -860,28 +866,28 @@ class QAdminPage(QPage, QAdminSidebar):
 
 class QAdminDashboard(QAdminPage):
     @property
-    def d_system_lnk(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'System')]")
+    def d_system_lnk(self): return self.find_by(xpath="//div[contains(@class,'layout row')]//button[contains(.,'System')]")
 
     @property
-    def d_camera_lnk(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Camera')]")
+    def d_camera_lnk(self): return self.find_by(xpath="//div[contains(@class,'layout row')]//a[contains(.,'Camera')]")
 
     @property
-    def d_storage_lnk(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Storage')]")
+    def d_storage_lnk(self): return self.find_by(xpath="//div[contains(@class,'layout row')]//a[contains(.,'Storage')]")
 
     @property
-    def d_render_lnk(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Render')]")
+    def d_render_lnk(self): return self.find_by(xpath="//div[contains(@class,'layout row')]//a[contains(.,'Render')]")
 
     @property
-    def system_status_pic(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'System')]/../div//span")
+    def system_status_pic(self): return self.find_by(xpath="/../div//span", elem=self.d_system_lnk)
 
     @property
-    def camera_status_pic(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Camera')]/../div//span")
+    def camera_status_pic(self): return self.find_by(xpath="/../div//span", elem=self.d_camera_lnk)
 
     @property
-    def storage_status_pic(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Storage')]/../div//span")
+    def storage_status_pic(self): return self.find_by(xpath="/../div//span", elem=self.d_storage_lnk)
 
     @property
-    def render_status_pic(self): return self.find_by(xpath="//div[contains(@class,'container')]//a[contains(.,'Render')]/../div//span")
+    def render_status_pic(self): return self.find_by(xpath="/../div//span", elem=self.d_render_lnk)
 
     @property
     def system_devices(self): return self.find_by(xpath="(//div[contains(@class,'container')]//a[contains(.,'System')]/../span)[1]")
@@ -922,7 +928,7 @@ class QAdminDashboard(QAdminPage):
 
         return QAdminRender(self.test)
 
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -970,16 +976,14 @@ class QAdminCamera(QAdminPage):
         else:
             return False
 
-    page_url = QAdminPage.base_url + "camera"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "camera"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
 
 
 class QAdminCameraReservations(QAdminPage, QStreamBox):
-    page_url = QAdminPage.base_url + "camera_reservations/none"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "camera_reservations/none"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1153,9 +1157,6 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     @property
     def focus_dd(self): return self.find_by(id="focus_select")
 
-
-    page_title = "qadmin"
-
     def move_digital_gain_slider(self, value):
         while True:
             c_value = float(self.digital_gain_txt.get_attribute("value"))
@@ -1166,10 +1167,10 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
                 else:
                     self.digital_gain_slider(value="-1;4")
 
+    page_url = QAdminPage.page_url + "camera_settings/none"
+
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
-
-        self.page_url = self.base_url + "camera_settings/none"
 
 
 class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
@@ -1201,18 +1202,13 @@ class QAdminCameraMicrocameras(QAdminPage, QStreamBox):
     def mcam_microcamera_dd(self): return self.find_by(id="microcamera_select")
 
     page_url = QAdminPage.base_url + "camera_microcameras/none"
-    page_title = "qadmin"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
 
 
 class QAdminStorage(QAdminPage):
-    page_url = QAdminPage.base_url + "storage"
-    page_title = "qadmin"
-
-    page_url = QAdminPage.base_url + "camera_microcameras/none"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "storage"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1243,8 +1239,7 @@ class QAdminStorageSettings(QAdminPage):
     @property
     def maximum_disk_usage_txt(self): return self.find_by(id="maximum_disk_usage_text_field")
 
-    page_url = QAdminPage.base_url + "storage_settings/none"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "storage_settings/none"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1269,8 +1264,7 @@ class QAdminRender(QAdminPage):
     def device_lnk(self, render_id):
         return self.find_by(xpath="//li[contains(@class,'v-expansion-panel__container')]//*[contains(.,'/aqt/render/" + render_id + "')]//div[contains(@class,'v-card__title v-card__title--primary')]//a[contains(@id,'device')]")
 
-    page_url = QAdminPage.base_url + "render"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "render"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1295,8 +1289,7 @@ class QAdminRenderSettings(QAdminPage):
     @property
     def tight_prefetch_chkb(self): return self.find_by(xpath="//input[@id='tight_prefetch_switch']/../div[contains(@class,'v-input--selection-controls__ripple')]")
 
-    page_url = QAdminPage.base_url + "render_settings/none"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "render_settings/none"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1330,8 +1323,7 @@ class QAdminRenderStreams(QAdminPage):
     def delete_render_stream_btn(self):
         return self.find_by(id="render_stream_delete")
 
-    page_url = QAdminPage.base_url + "render_streams/none"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "render_streams/none"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1395,16 +1387,14 @@ class QAdminDevice(QAdminPage):
     @property
     def device_shutdown_cancel_btn(self): return self.find_by(id="device_shutdown_cancel")
 
-    page_url = QAdminPage.base_url + "system"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "system"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
 
 
 class QAdminReservations(QAdminPage):
-    page_url = QAdminPage.base_url + "reservations"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "reservations"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1417,8 +1407,7 @@ class QAdminLogs(QAdminPage):
     def get_column(self, col_name):
         return self.find_by(xpath="//th[@role='columnheader' and contains(.,'" + col_name + "')]")
 
-    page_url = QAdminPage.base_url + "logs"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "logs"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)
@@ -1451,8 +1440,7 @@ class QAdminUsers(QAdminPage):
         pass
 
 
-    page_url = QAdminPage.base_url + "users"
-    page_title = "qadmin"
+    page_url = QAdminPage.page_url + "users"
 
     def __init__(self, *args):
         QAdminPage.__init__(self, *args)

@@ -121,7 +121,7 @@ class BaseTest(): # unittest.TestCase
         pass
 
     def setup_method(self, method):
-        self.browser = os.getenv('BROWSER', 'ffpage is opened')
+        self.browser = os.getenv('BROWSER', 'ff')
 
         if self.browser == "chrome":
             opts = ChromeOptions()
