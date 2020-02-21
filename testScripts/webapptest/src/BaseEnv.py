@@ -12,7 +12,7 @@ class Environment:
     def __init__(self, **args):
         self.render = Render(args["render_ip"])
         self.cam = Camera(args["cam_ip"])
-        self.raspi = RaspberryPi("10.1.1.200")   # args["cam_ip"]
+        self.raspi = RaspberryPi(args["raspi_ip"])
 
 
 class Component(object):
@@ -133,16 +133,6 @@ class Camera(Component):
 
         return self.status[2]
 
-    def is_online(self, **kwargs):
-        cmd = "ping -c 1 -W 1 "
-        ret = self.exec_cmd(cmd=cmd)
-
-        for k, v in ret.items():
-            if any(s in v for s in ["0 received", "timed out"]):
-                return False
-
-        return True
-
     def copy_remote_file(self, **kwargs):
         if "tegra" in kwargs:
             if "to_tegra" in kwargs:
@@ -229,25 +219,33 @@ class Camera(Component):
 
 class Render(Component):
     def start(self):
-        cmd = "sh -c 'sudo service Aqueti-Daemon start'"
+        cmd = "sudo service Aqueti-Daemon start"
         return self.exec_cmd(cmd)
 
     def stop(self):
-        cmd = "sh -c 'sudo service Aqueti-Daemon stop'"
+        cmd = "sudo service Aqueti-Daemon stop"
         return self.exec_cmd(cmd)
 
     def restart(self):
-        cmd = "sh -c 'sudo service Aqueti-Daemon restart'"
+        cmd = "sudo service Aqueti-Daemon restart"
         return self.exec_cmd(cmd)
 
     def get_status(self):
-        cmd = "sh -c 'sudo service Aqueti-Daemon status | grep Active'"
+        cmd = "sudo service Aqueti-Daemon status | grep Active"
         rs = self.exec_cmd(cmd)
 
         return self.is_active(rs)
 
+    def exec_cmd(self, **kwargs):
+        cmd = self.get_ssh_str(self.ip, kwargs['cmd'], self.username)
+
+        out = self.exec_cmd(cmd).decode("utf-8")
+
+        return out
+
     def __init__(self, ip):
         self.ip = ip
+        self.username = "astepenko"
 
 
 class RaspberryPi(Component):

@@ -27,7 +27,6 @@ class BasePage:
 
         return s
 
-
     @property
     def title(self):
         return self.driver.title
@@ -108,6 +107,10 @@ class BasePage:
 
         def is_focused(self):
             pass
+
+        def is_enabled(self):
+            if "sharpening_slider" in self.get_attribute("class"):
+                return True
 
         WebElement.__call__ = call
         WebElement.click = click
@@ -309,7 +312,7 @@ class BasePage:
             self.driver.switch_to.default_content()
 
     def exec_js(self, js, elem=None):
-        self.driver.execute_script(js, elem)
+        return self.driver.execute_script(js, elem)
 
     def reload(self):
         self.exec_js("location.reload();")

@@ -53,8 +53,11 @@ class GO:
 
             return renderer_info
 
-    def get_cam_info(self, cam_id):
-        cam_info = json.loads(self.api.GetDetailedStatus("/aqt/camera/" + str(cam_id)))
+    def get_cam_info(self, cam):
+        if "/aqt/camera/" not in cam:
+            cam = "/aqt/camera/{}".format(cam)
+
+        cam_info = json.loads(self.api.GetDetailedStatus(str(cam)))
 
         return cam_info
 
@@ -97,7 +100,7 @@ class GO:
         return params
 
     def is_cam_connected(self, name):
-        params = self.get_params(name)
+        params = self.get_cam_info(name)
 
         for k, v in params["mcam_state"].items():
             if v != "CONNECTED":
@@ -107,7 +110,7 @@ class GO:
 
 
 class TestQApp(BaseTest):
-    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10")
+    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10", raspi_ip="10.1.1.200")
 
     cam_id = '77'
     cam_name = '/aqt/camera/' + cam_id
@@ -1344,11 +1347,17 @@ class TestQApp(BaseTest):
 
         self.cpage.image_tab()
 
-        assert not self.cpage.sharpening_slider.is_enabled()
+        if self.cpage.exec_js("return !!window.chrome"):
+            assert not self.cpage.sharpening_slider.is_enabled()
+            assert not self.cpage.denoising_slider.is_enabled()
+            assert not self.cpage.saturation_slider.is_enabled()
+        else:
+            assert self.cpage.sharpening_slider.get_attribute("tabindex") == "-1"
+            assert self.cpage.denoising_slider.get_attribute("tabindex") == "-1"
+            assert self.cpage.saturation_slider.get_attribute("tabindex") == "-1"
+
         assert not self.cpage.sharpening_txt.is_enabled()
-        assert not self.cpage.denoising_slider.is_enabled()
         assert not self.cpage.denoising_txt.is_enabled()
-        assert not self.cpage.saturation_slider.is_enabled()
         assert not self.cpage.saturation_txt.is_enabled()
 
 
@@ -1370,8 +1379,13 @@ class TestQApp(BaseTest):
 
         assert not self.cpage.day_threshold_txt.is_enabled()
         assert not self.cpage.night_threshold_txt.is_enabled()
-        assert not self.cpage.day_threshold_slider.is_enabled()
-        assert not self.cpage.night_threshold_slider.is_enabled()
+
+        if self.cpage.exec_js("return !!window.chrome"):
+            assert self.cpage.day_threshold_slider.is_enabled()
+            assert self.cpage.night_threshold_slider.is_enabled()
+        else:
+            assert self.cpage.day_threshold_slider.get_attribute("tabindex") != "-1"
+            assert self.cpage.night_threshold_slider.get_attribute("tabindex") != "-1"
 
         self.cpage.close_dialog()
 
@@ -1395,11 +1409,17 @@ class TestQApp(BaseTest):
 
         self.cpage.image_tab()
 
-        assert self.cpage.sharpening_slider.is_enabled()
+        if self.cpage.exec_js("return !!window.chrome"):
+            assert self.cpage.sharpening_slider.is_enabled()
+            assert self.cpage.denoising_slider.is_enabled()
+            assert self.cpage.saturation_slider.is_enabled()
+        else:
+            assert self.cpage.sharpening_slider.get_attribute("tabindex") != "-1"
+            assert self.cpage.denoising_slider.get_attribute("tabindex") != "-1"
+            assert self.cpage.saturation_slider.get_attribute("tabindex") != "-1"
+
         assert self.cpage.sharpening_txt.is_enabled()
-        assert self.cpage.denoising_slider.is_enabled()
         assert self.cpage.denoising_txt.is_enabled()
-        assert self.cpage.saturation_slider.is_enabled()
         assert self.cpage.saturation_txt.is_enabled()
 
 
@@ -1409,7 +1429,7 @@ class TestQApp(BaseTest):
     @storeresult
     def test_case_2003(self):
         expected = {
-            'analog_gain': 0,
+            'analog_gain': 10,
             'auto_analog_gain_enabled': False,
             'auto_digital_gain_enabled': False,
             'auto_exposure_enabled': False,
@@ -1484,7 +1504,7 @@ class TestQApp(BaseTest):
         self.cpage.digital_gain_txt(value="10")
 
         self.cpage.global_auto_chkb(act="check")
-        time.sleep(2)
+        time.sleep(3)
 
         cam_info = self.go.get_cam_info(self.cam_id)
 
@@ -1585,11 +1605,11 @@ class TestQApp(BaseTest):
         cam_info = self.go.get_cam_info(self.cam_id)
 
         assert cam_info["exposure_time_milliseconds"] != expected["exposure_time_milliseconds"]
-        assert cam_info["analog_gain"] != expected["analog_gain"]
-        assert cam_info["digital_gain"] == expected["digital_gain"]
+        assert cam_info["analog_gain"] == expected["analog_gain"]
+        assert cam_info["digital_gain"] != expected["digital_gain"]
 
 
-    @pytest.mark.skip(reason="")
+    #@pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
@@ -1612,8 +1632,8 @@ class TestQApp(BaseTest):
         self.cpage.global_auto_chkb(act="check")
 
         self.env.raspi.cam_powercycle()
-        while not self.env.cam.is_online():
-            time.sleep(3)
+        #while not self.env.cam.is_online():
+        #    time.sleep(3)
 
         while not self.go.is_cam_connected(self.env.cam.cam_name):
             time.sleep(15)

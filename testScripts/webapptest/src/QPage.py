@@ -1123,19 +1123,19 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
 # Image
 
     @property
-    def sharpening_slider(self): return self.find_by(id="sharpening_slider")
+    def sharpening_slider(self): return self.find_by(xpath="//input[@id='sharpening_slider']", param="invisible")
 
     @property
     def sharpening_txt(self): return self.find_by(id="sharpening_text_field")
 
     @property
-    def denoising_slider(self): return self.find_by(id="denoising_slider")
+    def denoising_slider(self): return self.find_by(xpath="//input[@id='denoising_slider']", param="invisible")
 
     @property
     def denoising_txt(self): return self.find_by(id="denoising_text_field")
 
     @property
-    def saturation_slider(self): return self.find_by(id="saturation_slider")
+    def saturation_slider(self): return self.find_by(xpath="//input[@id='saturation_slider']", param="invisible")
 
     @property
     def saturation_txt(self): return self.find_by(id="saturation_text_field")
