@@ -18,6 +18,7 @@ from src.BaseEnv import *
 from src.QPage import *
 from src.BaseTest import BaseTest
 from src.decorators import *
+from src.go import *
 
 try:
     import AQT
@@ -25,88 +26,6 @@ except ImportError:
     print('no AQT lib found')
     exit(1)
 
-
-class GO:
-    cams = None
-    renderers = None
-
-    def __init__(self, *args, **kwargs):
-        self.api = args[0]
-        self.__call__(*args, **kwargs)
-
-    def __call__(self, *args, **kwargs):
-        self.cams = self.api.GetAvailableCameras()
-        self.renderers = self.api.GetAvailableRenderers()
-
-    def get_stream_info(self, r_index=0, s_index=0):
-        if self.renderers is not None:
-            renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
-
-            if len(renderer_info["render_streams"]) > s_index:
-                stream_info = json.loads(self.api.GetDetailedStatus("/aqt/render/" + renderer_info["id"] + '/' + renderer_info["render_streams"][s_index]))
-
-                return stream_info
-
-    def get_renderer_info(self, r_index=0):
-        if self.renderers is not None:
-            renderer_info = json.loads(self.api.GetDetailedStatus(self.renderers[r_index].Name()))
-
-            return renderer_info
-
-    def get_cam_info(self, cam):
-        if "/aqt/camera/" not in cam:
-            cam = "/aqt/camera/{}".format(cam)
-
-        cam_info = json.loads(self.api.GetDetailedStatus(str(cam)))
-
-        return cam_info
-
-    def get_params(self, name):
-        ret = json.loads(self.api.GetParameters(name))
-
-        return ret
-
-    def set_params(self, name, d):
-        ret = self.api.SetParameters(name, d)
-
-        return ret
-
-    def get_mcam_status(self, cam):
-        status = {}
-        for mcam in cam.sensors:
-            status[mcam] = json.loads(self.api.GetDetailedStatus("/aqt/camera/" + cam.cam_id + "/" + mcam))
-
-        return status
-
-    def get_mcam_params(self, cam):
-        params = {}
-        for mcam in cam.sensors:
-            params[mcam] = json.loads(self.api.GetParameters("/aqt/camera/" + cam.cam_id + "/" + mcam))
-
-        return params
-
-    def set_mcam_status(self, cam, d):
-        status = {}
-        for mcam in cam.sensors:
-            status[mcam] = self.api.SetDetailedStatus("/aqt/camera/" + cam.cam_id + "/" + mcam, d)
-
-        return status
-
-    def set_mcam_params(self, cam, d):
-        params = {}
-        for mcam in cam.sensors:
-            params[mcam] = self.api.SetParameters("/aqt/camera/" + cam.cam_id + "/" + mcam, d)
-
-        return params
-
-    def is_cam_connected(self, name):
-        params = self.get_cam_info(name)
-
-        for k, v in params["mcam_state"].items():
-            if v != "CONNECTED":
-                return False
-
-        return True
 
 
 class TestQApp(BaseTest):
@@ -122,10 +41,10 @@ class TestQApp(BaseTest):
 
     def get_params(self):
         time.sleep(7)
-        return json.loads(self.api.GetParameters(self.cam_name))
+        return json.loads(self.go.api.GetParameters(self.cam_name))
 
     def set_params(self, json_str):
-        self.api.SetParameters(self.cam_name, json_str)
+        self.go.api.SetParameters(self.cam_name, json_str)
         time.sleep(3)
 
     def restore_defaults(self):
@@ -235,11 +154,9 @@ class TestQApp(BaseTest):
 
     @pytest.fixture()
     def api(self):
-        self.api = AQT.AquetiAPI("test_api", AQT.U8Vector(), AQT.StringVector(["aqt://" + self.system_name]))
-        self.cam = AQT.Camera(self.api, self.cam_name)
-        self.go = GO(self.api)
+        self.go = GO(self.system_name, self.cam_name)
 
-        if self.api.GetStatus() != 0:
+        if self.go.api.GetStatus() != 0:
             self.failure_exception("api is offline")
             exit(1)
 
@@ -355,10 +272,10 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_111(self): # scop is added to stream automatically
-        renders = self.api.GetAvailableRenderers()
+        renders = self.go.api.GetAvailableRenderers()
         render = renders[0]
 
-        render_info = json.loads(self.api.GetDetailedStatus(render.Name()))
+        render_info = json.loads(self.go.api.GetDetailedStatus(render.Name()))
         streams = render_info["render_streams"]
 
         assert len(streams) > 0
@@ -370,16 +287,16 @@ class TestQApp(BaseTest):
     @storeresult
     def test_case_112(self): # the last selected scop is selected again after refreshing the page
         def get_scops():
-            renders = self.api.GetAvailableRenderers()
+            renders = self.go.api.GetAvailableRenderers()
             render = renders[0]
 
-            render_info = json.loads(self.api.GetDetailedStatus(render.Name()))
+            render_info = json.loads(self.go.api.GetDetailedStatus(render.Name()))
             streams = render_info["render_streams"]
 
             if len(streams) == 0:
                 return []
             else:
-                stream_info = json.loads(self.api.GetDetailedStatus(render.Name() + '/' + streams[0]))
+                stream_info = json.loads(self.go.api.GetDetailedStatus(render.Name() + '/' + streams[0]))
                 return stream_info["SCOP_list"]
 
         cam_names = self.cpage.get_lside_scops_names()
@@ -408,16 +325,16 @@ class TestQApp(BaseTest):
             self.cpage.get_lside_add_cam_btn(cam_name)(act="click")
             time.sleep(7)
 
-            renders = self.api.GetAvailableRenderers()
+            renders = self.go.api.GetAvailableRenderers()
             render = renders[0]
 
-            render_info = json.loads(self.api.GetDetailedStatus(render.Name()))
+            render_info = json.loads(self.go.api.GetDetailedStatus(render.Name()))
             streams = render_info["render_streams"]
 
             assert len(streams) > 0
 
             stream = streams[0]
-            stream_info = json.loads(self.api.GetDetailedStatus(render.Name() + '/' + stream))
+            stream_info = json.loads(self.go.api.GetDetailedStatus(render.Name() + '/' + stream))
 
             scop_list = stream_info["SCOP_list"]
 
@@ -431,14 +348,14 @@ class TestQApp(BaseTest):
     @storeresult
     def test_case_114(self): # fine focus works
         self.cpage.get_lside_scop()(act='click')
-        # self.api.SetParameters(self.cam_name, json.dumps({"fineAutofocus": True}))
+        # self.go.api.SetParameters(self.cam_name, json.dumps({"fineAutofocus": True}))
 
         self.cpage.get_lside_fine_focus_btn()(act='click')
 
         status_arr = []
         s_time = dt.datetime.now()
         while (dt.datetime.now() - s_time).total_seconds() < 3:
-            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
+            status = json.loads(self.go.api.GetDetailedStatus(self.cam_name))
             status_arr.append(status["focus_status"])
 
             time.sleep(0.25)
@@ -458,7 +375,7 @@ class TestQApp(BaseTest):
         status_arr = []
         s_time = dt.datetime.now()
         while (dt.datetime.now() - s_time).total_seconds() < 3:
-            status = json.loads(self.api.GetDetailedStatus(self.cam_name))
+            status = json.loads(self.go.api.GetDetailedStatus(self.cam_name))
             status_arr.append(status["focus_status"])
 
             time.sleep(0.25)
@@ -1626,29 +1543,35 @@ class TestQApp(BaseTest):
         gain_limit = float(scop["auto_focus_gain_limit"])
 
         self.go.set_mcam_params(self.env.cam, json.dumps({"focus": 0}))
-        self.go.set_params(self.cam_name, json.dumps({"analog_gain": gain_limit + 2 }))
+        self.go.set_params(self.cam_name, json.dumps({"gain": gain_limit + 2 }))
 
         time.sleep(0.5)
         self.cpage.global_auto_chkb(act="check")
 
         self.env.raspi.cam_powercycle()
-        #while not self.env.cam.is_online():
-        #    time.sleep(3)
 
-        while not self.go.is_cam_connected(self.env.cam.cam_name):
+        while not self.env.is_connected(param="cam"):
             time.sleep(15)
 
-        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam)]
+        self.go.recreate()
+
+        while not self.go.is_connected(cam=self.env.cam.cam_name):
+            time.sleep(15)
+
+        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam).values()]
+
+        while not self.env.cam.is_connected():
+            time.sleep(15)
+
         while True:
-            param_arr = self.go.get_mcam_params(self.env.cam)
+            param_arr = self.go.get_mcam_params(self.env.cam).values()
 
             c_focus_arr = [param["focus"] for param in param_arr]
-            gain_arr = [param["analog_gain"] for param in param_arr]
+            gain_arr = [param["gain"] for param in param_arr]
 
             if gain_arr[0] > gain_limit:
-                assert f_focus_arr ==  c_focus_arr
+                assert f_focus_arr == c_focus_arr
             else:
-                time.sleep(30)
                 for i in range(len(f_focus_arr)):
                     assert f_focus_arr[i] != c_focus_arr[i]
                 break

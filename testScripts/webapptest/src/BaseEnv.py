@@ -9,10 +9,23 @@ class Environment:
         self.render.restart()
         self.cam.restart()
 
-    def __init__(self, **args):
-        self.render = Render(args["render_ip"])
-        self.cam = Camera(args["cam_ip"])
-        self.raspi = RaspberryPi(args["raspi_ip"])
+    def is_connected(self, *args, **kwargs):
+        res = True
+        if "cam" in kwargs.values():
+            for mcam_ip in self.cam.ip:
+                cmd = "ping -c 1 -W 1 {}".format(mcam_ip)
+                rt = self.render.exec_cmd(cmd=cmd)
+
+                if "1 received" not in rt:
+                    res = False
+                    break
+
+        return res
+
+    def __init__(self, *args, **kwargs):
+        self.render = Render(kwargs["render_ip"])
+        self.cam = Camera(kwargs["cam_ip"])
+        self.raspi = RaspberryPi(kwargs["raspi_ip"])
 
 
 class Component(object):
@@ -206,6 +219,15 @@ class Camera(Component):
 
         return ids
 
+    def is_connected(self):
+        cmd = "sudo netstat -np | grep Aqueti | wc -l"
+        rt = self.exec_cmd(cmd=cmd)
+
+        for res in rt.values():
+            if res.strip() not in ["6", "7"]:
+                return False
+
+        return True
 
     def __init__(self, cam_ip):
         self.num_of_tegras = int(cam_ip[cam_ip.rfind('.') + 1:])
@@ -236,10 +258,10 @@ class Render(Component):
 
         return self.is_active(rs)
 
-    def exec_cmd(self, **kwargs):
+    def exec_cmd(self, *args, **kwargs):
         cmd = self.get_ssh_str(self.ip, kwargs['cmd'], self.username)
 
-        out = self.exec_cmd(cmd).decode("utf-8")
+        out = super(Render, self).exec_cmd(cmd)
 
         return out
 
