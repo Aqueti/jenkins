@@ -1,12 +1,21 @@
+import math
+import random
+import re
+import subprocess
 import json
 import datetime as dt
 import os
 import ctypes
 import time
-import AQT
 
 from datetime import datetime, timedelta
 from src.decorators import *
+
+try:
+    import AQT
+except ImportError:
+    print('no AQT lib found')
+    exit(1)
 
 
 class GO2:
@@ -197,15 +206,16 @@ class GO:
 
         return cam_info
 
-    def get_params(self, name):
-        ret = json.loads(self.api.GetParameters(name))
+    def get_params(self, cam_name):
+        ret = json.loads(self.api.GetParameters(cam_name))
 
         return ret
 
-    def set_params(self, name, d):
-        ret = self.api.SetParameters(name, d)
+    def set_params(self, cam_name, d):
+        ret = self.api.SetParameters(cam_name, d)
 
         return ret
+
 
     def get_mcam_status(self, cam):
         status = {}

@@ -55,8 +55,10 @@ class BaseCont:
 
     def get_dd_elem(self, *args, **kwargs):
         if len(args) > 0:
-            title = args[0]
-            return self.find_by(xpath="//div[@class='v-list__tile__title' and text()='" + str(title) + "']/ancestor::div[@role='listitem']", elem=self.active_panel)
+            title = str(args[0])
+
+            #return self.find_by(xpath="//div[@class='v-list__tile__title' and text()='" + title + "']/ancestor::div[@role='listitem']", elem=self.active_panel)
+            return self.find_by(xpath="//div[@class='v-list-item__title' and contains(.,'" + title + "')]", elem=self.active_panel)
         else:
             dds = self.get_dd_elems()
 

@@ -1,31 +1,15 @@
-import datetime as dt
-import json
-import math
-import os
-import random
-import re
-import subprocess
-import time
 import cv2
 import numpy as np
-from PIL import Image
-from skimage.measure import compare_ssim
 import io
 import pytest
 
-from src.AquetiPage import *
+from PIL import Image
+from skimage.measure import compare_ssim
+
 from src.BaseEnv import *
 from src.QPage import *
 from src.BaseTest import BaseTest
-from src.decorators import *
 from src.go import *
-
-try:
-    import AQT
-except ImportError:
-    print('no AQT lib found')
-    exit(1)
-
 
 
 class TestQApp(BaseTest):
@@ -45,7 +29,7 @@ class TestQApp(BaseTest):
 
     def set_params(self, json_str):
         self.go.api.SetParameters(self.cam_name, json_str)
-        time.sleep(3)
+        time.sleep(2)
 
     def restore_defaults(self):
         json_str = '''
@@ -1227,7 +1211,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login")
     @storeresult
-    def test_case_2001(self):
+    def test_case_2001(self): #gui elems availability when 'Global Auto' is on
         self.cpage = self.cpage.menu_cam_settings()
 
         time.sleep(2)
@@ -1282,7 +1266,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login")
     @storeresult
-    def test_case_2002(self):
+    def test_case_2002(self): #gui elems availability when 'Global Auto' is off
         self.cpage = self.cpage.menu_cam_settings()
 
         time.sleep(2)
@@ -1344,7 +1328,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
-    def test_case_2003(self):
+    def test_case_2003(self): #autogain/autoexposure after enabling 'Global Auto'
         expected = {
             'analog_gain': 10,
             'auto_analog_gain_enabled': False,
@@ -1436,7 +1420,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
-    def test_case_2004(self):
+    def test_case_2004(self): #autogain/autoexposure behavior
         expected = {
             "exposure_time_milliseconds": 33,
             "analog_gain": 22,
@@ -1492,7 +1476,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
-    def test_case_2005(self):
+    def test_case_2005(self): #autogain/autoexposure
         expected = {
             "exposure_time_milliseconds": 33,
             "analog_gain": 22,
@@ -1526,11 +1510,11 @@ class TestQApp(BaseTest):
         assert cam_info["digital_gain"] != expected["digital_gain"]
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
-    def test_case_2006(self):
+    def test_case_2006(self): #autofocus after powecycling
         self.cpage = self.cpage.menu_cam_settings()
 
         self.cpage.global_auto_chkb(act="check")
@@ -1538,15 +1522,15 @@ class TestQApp(BaseTest):
         self.cpage.day_night_mode_chkb(act="check")
         self.cpage.close_dialog()
 
+        #self.cpage.global_auto_chkb(act="uncheck")
+        #self.cpage.auto_disable_btn()
+
         scop = self.db.query_one({"id": self.cam_id}, "acos", "scops")
 
         gain_limit = float(scop["auto_focus_gain_limit"])
 
-        self.go.set_mcam_params(self.env.cam, json.dumps({"focus": 0}))
-        self.go.set_params(self.cam_name, json.dumps({"gain": gain_limit + 2 }))
-
-        time.sleep(0.5)
-        self.cpage.global_auto_chkb(act="check")
+        #self.go.set_mcam_params(self.env.cam, json.dumps({"focus": 0}))
+        #self.go.set_params(self.cam_name, json.dumps({"gain": gain_limit + 2 }))
 
         self.env.raspi.cam_powercycle()
 
@@ -1558,25 +1542,23 @@ class TestQApp(BaseTest):
         while not self.go.is_connected(cam=self.env.cam.cam_name):
             time.sleep(15)
 
-        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam).values()]
-
         while not self.env.cam.is_connected():
             time.sleep(15)
 
-        while True:
-            param_arr = self.go.get_mcam_params(self.env.cam).values()
+        self.go.set_mcam_params(self.env.cam, json.dumps({"focus": 0}))
+        time.sleep(3)
+        self.go.set_params(self.cam_name, json.dumps({"analog_gain": 1}))
 
-            c_focus_arr = [param["focus"] for param in param_arr]
-            gain_arr = [param["gain"] for param in param_arr]
+        f_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam).values() if param != {}]
 
-            if gain_arr[0] > gain_limit:
-                assert f_focus_arr == c_focus_arr
-            else:
-                for i in range(len(f_focus_arr)):
-                    assert f_focus_arr[i] != c_focus_arr[i]
+        start_ts = dt.datetime.now()
+        while (dt.datetime.now() - start_ts).seconds < 90:
+            c_focus_arr = [param["focus"] for param in self.go.get_mcam_params(self.env.cam).values() if param != {}]
+
+            if 0 not in c_focus_arr:
                 break
 
-            time.sleep(3)
+        assert f_focus_arr != c_focus_arr
 
 
     @pytest.mark.skip(reason="")
@@ -1612,7 +1594,7 @@ class TestQApp(BaseTest):
                 assert v != 0
 
 
-    @pytest.mark.skip(reason="")
+    #@pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult

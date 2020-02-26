@@ -1,17 +1,9 @@
-import AQT
-import ctypes
-import datetime as dt
-import json
-import os
 import random
-import time
-from datetime import datetime, timedelta
-
 import pytest
+
 from src.BaseEnv import *
 from src.BaseTest import BaseTest
 
-from src.decorators import *
 from src.go import *
 
 
@@ -21,7 +13,7 @@ class Test_API(BaseTest):
     go = None
 
     def setup_method(self):
-        self.go = GO()
+        self.go = GO2()
 
     def teardown_method(self):
         pass
