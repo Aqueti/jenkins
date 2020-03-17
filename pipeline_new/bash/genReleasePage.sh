@@ -9,9 +9,9 @@ echo "Building index.html for branch $BRANCH at `pwd`"
 
 DATE=`date`
 echo "<html>" > index.html
-echo "<title>Aqueti ACOS build for branch $BRANCH - $BUILD  Release: ($DATE)</title>" >> index.html
+echo "<title>Aqueti AquetiOS build for branch $BRANCH - $BUILD  Release: ($DATE)</title>" >> index.html
 echo "<body>" >> index.html
-echo "<h1>Aqueti ACOS build for branch $BRANCH - $BUILD  Release: ($DATE)</h1>" >> index.html
+echo "<h1>Aqueti AquetiOS build for branch $BRANCH - $BUILD  Release: ($DATE)</h1>" >> index.html
 
 echo "<h2>Packages</h2>" >> index.html
 
