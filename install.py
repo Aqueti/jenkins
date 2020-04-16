@@ -50,7 +50,7 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 7 --acos beta/280 --asis dev/149 --noinstall\n")
+    print("\nexample: ./install.py --cam 7 --acos master/405 --asis master/23 --noinstall\n")
     exit(0)
 
 cam_ip = ''
