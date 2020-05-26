@@ -216,4 +216,4 @@ if not args.norestart:
     if any(s in files.keys() for s in ('daemon_x86-app', 'asis')):
         os.system("sudo service asisd restart")
 
-print("----- Done -----")
+print("------ Done ------")
