@@ -40,7 +40,7 @@ def custom_action(c_arg):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
-parser.add_argument("--acos", help="branch_name/build_number", required=False, default="dev")
+parser.add_argument("--acos", help="branch_name/build_number", required=False, default="develop")
 parser.add_argument("--asis", help="branch_name/build_number", required=False, action=custom_action("dev"))
 parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
@@ -50,7 +50,7 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 7 --acos master/405 --asis master/23 --noinstall\n")
+    print("\nexample: ./install.py --cam 7 --acos develop/44 --asis dev/193 --noinstall\n")
     exit(0)
 
 cam_ip = ''
@@ -65,8 +65,6 @@ if args.cam is not None:
 
     if args.cam in [str(id) for id in [4, 9, 12]]:
         num_of_tegras = 9
-    elif args.cam in [str(id) for id in [70001]]:
-        num_of_tegras = 2
     elif args.cam in [str(id) for id in [66]]:
         num_of_tegras = 3
     else:
@@ -76,11 +74,12 @@ if args.cam is not None:
 res = []
 files = {}
 for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else [])):
-    base_url = "http://10.0.0.10/repositories/" + proj
+    m_proj = proj if proj != "acos" else "AquetiOS"
+    base_url = "http://10.0.0.10/repositories/" + m_proj
 
     if getattr(args, proj) is not None:
         arr = getattr(args, proj).split("/") 
-        branch_name, build = (arr[0], arr[1] if len(arr) > 1 else -1)
+        branch_name, build = (arr[0], arr[1] if len(arr) > 1 else -1)        
 
         if not is_integer(build):
             print("build should be integer")
@@ -95,6 +94,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
         exit(1)
 
     try:
+        print(base_url + '/' + branch_name)
         urllib.request.urlopen(base_url + '/' + branch_name)
     except:
         print("branch not found")
@@ -201,7 +201,7 @@ if 'ctools' in files.keys():
 
 if 'asis' in files.keys():
     os.system("sudo dpkg -r asis")
-    #os.system("sudo dpkg -i " + files["asis"])
+    os.system("sudo dpkg -i " + files["asis"])
 
 if not args.norestart:
     print("\nRestarting service\n")
@@ -216,4 +216,4 @@ if not args.norestart:
     if any(s in files.keys() for s in ('daemon_x86-app', 'asis')):
         os.system("sudo service asisd restart")
 
-print("------ Done ------")
+print("----- Done -----")
