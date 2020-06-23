@@ -172,11 +172,12 @@ if cam_ip != '':
         d_str = "".join(["-" for i in range(16)])
         print("\n{}\n{}\n{}\n".format(d_str, tegra_ip, d_str))
 
-        for package in ['aci', 'daemon_aarch64']:
-            cmd = "scp {} nvidia@{}:./".format(files[package], tegra_ip)
+        for package in ['aci', 'aquetidaemon-application', 'aquetidaemon']:
+            cmd = "ssh nvidia@{} 'sudo dpkg -r {}' 2>/dev/null".format(tegra_ip, package)
             os.system(cmd)
-            pack_name = "aci" if package == "aci" else "aquetidaemon"
-            cmd = "ssh nvidia@{} 'sudo dpkg -r {}'".format(tegra_ip, pack_name)
+            
+        for package in ['daemon_aarch64']:
+            cmd = "scp {} nvidia@{}:./".format(files[package], tegra_ip)
             os.system(cmd)
             cmd = "ssh nvidia@{} 'sudo dpkg -i {}'".format(tegra_ip, files[package][files[package].rindex('/') + 1:])
             os.system(cmd)
