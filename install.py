@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
 parser.add_argument("--acos", help="branch_name/build_number", required=False, default="develop")
 parser.add_argument("--asis", help="ubuntu", required=False, action=custom_action("master"))
-parser.add_argument("--ubuntu", help="ubuntu version", required=False, default="Ubuntu16.04")
+parser.add_argument("--os", help="ubuntu version", required=False, default="Ubuntu16.04")
 parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
@@ -51,7 +51,7 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 7 --acos develop/44 --asis master/193 --ubuntu Ubuntu18.04 --noinstall\n")
+    print("\nexample: ./install.py --cam 7 --acos develop/44 --asis master/193 --os Ubuntu18.04 --noinstall\n")
     exit(0)
 
 cam_ip = ''
@@ -119,7 +119,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
     os.system("mkdir -p {}".format(folder_path))
     
     for e in tree.xpath('//a'):
-        if ".deb" in e.text and args.ubuntu in e.text:
+        if ".deb" in e.text and args.os in e.text:
             if "x86_64" in e.text:          
                 if args.debug:
                     if 'debug' not in e.text:
