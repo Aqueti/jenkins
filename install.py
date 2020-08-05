@@ -42,7 +42,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
 parser.add_argument("--acos", help="branch_name/build_number", required=False, default="develop")
 parser.add_argument("--asis", help="ubuntu", required=False, action=custom_action("master"))
-parser.add_argument("--os", help="ubuntu version", required=False, default="Ubuntu16.04")
+parser.add_argument("--os", help="ubuntu version", required=False, default="Ubuntu16.04") #Ubuntu18.04
 parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
