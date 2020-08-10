@@ -1,0 +1,284 @@
+#!/usr/bin/env groovy
+
+pipeline {    
+  agent none
+   
+  options {
+    timeout(time: 1, unit: 'HOURS')
+  }
+  
+  environment {
+    PROJ_NAME = "AquetiOS"
+  }
+ 
+   stages {
+      stage('Parallel build') {           
+        failFast true
+        parallel {
+        stage('Compiler: build api and daemon') {
+          agent { label "compiler" }
+          steps {
+            sh 'printenv'
+            
+            sh 'git log --pretty=oneline --abbrev-commit > release_notes.txt'
+            stash includes: "release_notes.txt", name: 'release_notes'
+                        
+            sh "mkdir -p build_acos"
+            dir('build_acos') {
+                sh "cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DSET_MOD_VER=ON"
+                script {
+                  try { sh "make -j12" } catch (Exception e) { sh "make -j8" }
+                }
+              
+              dir('INSTALL/share/doc/aqueti/api') {
+                sh 'tar -czvf docs.tar.gz *'
+                stash includes: 'docs.tar.gz', name: 'docs'
+              }
+
+              dir('INSTALL/deb') {
+                script {
+                  try { stash includes: 'AquetiAPI*.deb', name: 'AquetiAPI' } catch (Exception e) { echo "" }  
+                  try { stash includes: 'AquetiDaemon-x86_64*.deb', name: 'AquetiDaemon_x86_64' } catch (Exception e) { echo "" }
+                  try { stash includes: 'AquetiCalibrationTools*.deb', name: 'CalibrationTools_x86_64' } catch (Exception e) { echo "" }
+                }  
+              }
+            }
+          }
+          
+          post {  
+            always {
+               echo ""
+               deleteDir()
+            }
+          }
+        }
+        
+        stage('Compiler: build daemon/debug') {
+          agent { label "compiler_2" }          
+          
+          steps {            
+            sh "mkdir -p build_acos"
+            dir('build_acos') {
+               sh "cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_TESTS:BOOL=ON -DSET_MOD_VER=ON" 
+               
+               script {                  
+                 try { sh "make -j12" } catch (Exception e) { sh "make -j8" }
+               }
+               
+               dir('INSTALL/deb') {
+                 sh "rename 's/^/debug_/' *.deb"
+                 script {
+                   try { stash includes: '*.deb', name: 'debug' } catch (Exception e) { echo "" }           
+                 }
+              }
+            }
+          }
+          
+          post {  
+            always {
+               echo ""
+               deleteDir()
+            }
+          }
+        }
+
+        stage('Compiler 18.04: build api and daemon') {
+          agent { label "compiler1804" }
+          steps {
+            sh 'printenv'
+            
+            sh 'git log --pretty=oneline --abbrev-commit > release_notes.txt'
+            stash includes: "release_notes.txt", name: 'release_notes'
+                        
+            sh "mkdir -p build_acos"
+            dir('build_acos') {
+                sh "cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DSET_MOD_VER=ON"
+                script {
+                  try { sh "make -j9" } catch (Exception e) { sh "make -j6" }
+                }
+              
+              dir('INSTALL/share/doc/aqueti/api') {
+                sh 'tar -czvf docs.tar.gz *'
+                stash includes: 'docs.tar.gz', name: 'docs'
+              }
+
+              dir('INSTALL/deb') {
+                script {
+                  try { stash includes: 'AquetiAPI*.deb', name: 'AquetiAPI_1804' } catch (Exception e) { echo "" }  
+                  try { stash includes: 'AquetiDaemon-x86_64*.deb', name: 'AquetiDaemon_x86_64_1804' } catch (Exception e) { echo "" }
+                  try { stash includes: 'AquetiCalibrationTools*.deb', name: 'CalibrationTools_x86_64_1804' } catch (Exception e) { echo "" }
+                }  
+              }
+            }
+          }
+          
+          post {  
+            always {
+               echo ""
+               deleteDir()
+            }
+          }
+        }
+
+        stage('Tegra: build daemon') {
+          agent { label "tegra_compiler" }
+        
+          steps {              
+            sh "mkdir -p build_aci"
+            
+            dir('build_aci') {
+               sh "cmake ../ -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_TESTS:BOOL=ON -DSET_MOD_VER=ON" 
+               
+               script {
+                  try { sh "make -j5" } catch (Exception e) { sh "make -j3" }
+                }
+              dir('INSTALL/deb') {
+                script {
+                  try { stash includes: '*.deb', name: 'aci' } catch (Exception e) { echo "" }
+                }
+              }
+            }            
+          }
+          
+          post {  
+            always {
+               echo ""
+               deleteDir()
+            }
+          }
+        }
+      }
+      }
+        
+      stage('Deploy') {
+         agent { label 'master' }
+         
+         steps {                 
+            echo "Deploy"
+            
+            git branch: 'master', url: 'https://github.com/Aqueti/jenkins.git' 
+            
+            sh "mkdir -p deploy/${env.BRANCH_NAME}/${env.BUILD_NUMBER}"
+            dir("deploy/${BRANCH_NAME}/${BUILD_NUMBER}") {
+              script {
+                try { unstash 'AquetiDaemon-aarch64' } catch (Exception e) { echo "" }
+                try { unstash 'AquetiDaemon_x86_64' } catch (Exception e) { echo "" }
+                try { unstash 'debug' } catch (Exception e) { echo "" }
+                try { unstash 'CalibrationTools_x86_64' } catch (Exception e) { echo "" }                
+                try { unstash 'AquetiAPI' } catch (Exception e) { echo "" }
+                
+                try { unstash 'AquetiDaemon_x86_64_1804' } catch (Exception e) { echo "" }
+                try { unstash 'AquetiAPI_1804' } catch (Exception e) { echo "" }
+                try { unstash 'CalibrationTools_x86_64_1804' } catch (Exception e) { echo "" }
+            
+                try { unstash 'onvif' } catch (Exception e) { echo "" }
+                try { unstash 'aci' } catch (Exception e) { echo "" }
+                try { unstash 'release_notes' } catch (Exception e) { echo "" }                             
+              }
+                
+              unstash 'docs'
+              sh 'mkdir Documentation'
+              sh 'tar -xzf docs.tar.gz -C Documentation'
+              sh 'rm docs.tar.gz'
+
+              sh "../../../pipeline_new/bash/genReleasePage.sh ${BRANCH_NAME} ${BUILD_NUMBER} ${PROJ_NAME}"
+              sh "../../../pipeline_new/bash/genMainPage.sh ${BRANCH_NAME} ${BUILD_NUMBER} ${PROJ_NAME}"
+            }
+           
+            dir("deploy/${BRANCH_NAME}/${BUILD_NUMBER}") {
+               script {
+                 try { sh "sudo rm /sharepoint/'Shared Documents'/software/dev/_latest_/* 2>/dev/null" } catch (Exception e) { echo "" }
+                 try { sh "cp *.deb /sharepoint/'Shared Documents'/software/dev/_latest_/" } catch (Exception e) { echo "" }
+               }
+            }
+           
+            sh "rm -rf deploy"
+         }
+      }
+     
+      stage('Setup test env') {
+         agent { label 'cam_server_2' }
+         when {
+           anyOf {
+             branch 'dev';
+             branch 'master';
+             branch 'beta'
+           }
+         }
+        
+         steps {
+           git branch: 'master', url: 'https://github.com/Aqueti/jenkins.git'
+           
+           /*
+           waitUntil {
+             script {
+               def r = sh script: "python3 install.py --acos ${BRANCH_NAME}/${BUILD_NUMBER} --cam 2 --debug", returnStatus: true
+               return (r == 0);
+             }                  
+           }
+          */
+         }
+         
+         post {  
+            always {
+               echo ""
+               deleteDir()
+            }
+         }
+      }
+      
+      stage('Run tests') {
+         agent { label 'cam_server_2' }
+         when {
+           anyOf {
+             branch 'dev';
+             branch 'master';
+             branch 'beta'
+           }
+         }
+        
+         steps {
+           git branch: 'master', url: 'https://github.com/Aqueti/jenkins.git'
+          
+           /*
+           script {
+               try { 
+                 sh "pytest --junitxml=path -s testScripts/webapptest/test.py --project ${PROJ_NAME} --branch ${BRANCH_NAME} --build ${BUILD_NUMBER}"
+               } catch (Exception e) { echo '' }                            
+           }
+           */
+         }
+         
+        post {  
+            always {
+               echo ""
+               deleteDir()
+            }
+        }
+      }
+    }
+
+  post { 
+    always {      
+      echo ""
+    }
+ 
+    success {       
+      emailext(
+        recipientProviders: [[$class: 'RequesterRecipientProvider']],
+        to: "astepenko@aqueti.com", 
+        subject: "SUCCESS: ${PROJ_NAME}/${BRANCH_NAME}/${BUILD_NUMBER}",
+        body: "Successfully built ${PROJ_NAME}/${BRANCH_NAME}/${BUILD_NUMBER}. Packages should be available at http://10.0.0.10/repositories/$PROJ_NAME/$BRANCH_NAME/$BUILD_NUMBER/index.html"
+      )
+    }
+    failure {
+      emailext (
+        recipientProviders: [[$class: 'RequesterRecipientProvider']],
+        to: "astepenko@aqueti.com",
+        subject: "FAILURE: ${PROJ_NAME}/${BRANCH_NAME}/${BUILD_NUMBER}",
+        body: "Failed to build ${PROJ_NAME}/${BRANCH_NAME}/${BUILD_NUMBER}")
+     }   
+   }
+}
+
+
