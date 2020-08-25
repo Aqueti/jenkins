@@ -4,9 +4,22 @@ import sys
 import os
 import time
 import urllib.request
-from lxml import etree
 import argparse
+import subprocess
+import platform
+import re
 
+try:
+    from lxml import etree
+except ValueError:
+    print("lxml was not found")
+    exit(1)
+
+
+def exec_cmd(cmd):
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
 
 def str_to_int(text):
     try:
@@ -38,11 +51,11 @@ def custom_action(c_arg):
             setattr(args, self.dest, values)
     return CustomAction
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
 parser.add_argument("--acos", help="branch_name/build_number", required=False, default="develop")
 parser.add_argument("--asis", help="ubuntu", required=False, action=custom_action("master"))
-parser.add_argument("--os", help="ubuntu version", required=False, default="Ubuntu16.04")
 parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
@@ -51,8 +64,10 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 7 --acos develop/67 --asis master_1804/10 --os Ubuntu18.04 --noinstall\n")
+    print("\nexample: ./install.py --cam 7 --acos develop/67 --asis master/10 --noinstall\n")
     exit(0)
+
+os_ver = "Ubuntu18.04" if "18.04" in platform.version() else "Ubuntu16.04"
 
 cam_ip = ''
 if args.cam is not None:
@@ -64,7 +79,7 @@ if args.cam is not None:
 
     start_ip = 1
 
-    if args.cam in [str(id) for id in [4, 9, 12]]:
+    if args.cam in [str(id) for id in [9, 12]]:
         num_of_tegras = 9
     elif args.cam in [str(id) for id in [66]]:
         num_of_tegras = 3
@@ -120,33 +135,33 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
     
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
-            if "ASIS" in e.text:
-                files["asis"] = folder_path + e.text
-            if args.os in e.text:
-                if "x86_64" in e.text:          
-                    if args.debug:
-                        if 'debug' not in e.text:
-                            continue
-                    else:
-                        if 'debug' in e.text:
-                            continue
-                
-                if "Daemon" in e.text:
-                    if "x86_64" in e.text:
-                        if '-application' in e.text:
-                            files["daemon_x86-app"] = folder_path + e.text
-                        elif '-daemon' in e.text:
-                            files["daemon_x86-d"] = folder_path + e.text
-                    else:
-                        files["daemon_aarch64"] = folder_path + e.text
-                elif "ACI" in e.text:
-                    files["aci"] = folder_path + e.text
-                elif "API" in e.text:
-                    files["api"] = folder_path + e.text
-                elif "CalibrationTools" in e.text:
-                    files["ctools"] = folder_path + e.text
-                else:
+            if all([v not in e.text for v in ("aarch64", "ASIS")]):
+                if os_ver not in e.text:
                     continue
+            if "x86_64" in e.text:
+                if args.debug:
+                    if 'debug' not in e.text:
+                        continue
+                else:
+                    if 'debug' in e.text:
+                        continue
+
+            if "Daemon" in e.text:
+                if "x86_64" in e.text:
+                    if '-application' in e.text:
+                        files["daemon_x86-app"] = folder_path + e.text
+                    elif '-daemon' in e.text:
+                        files["daemon_x86-d"] = folder_path + e.text
+                else:
+                    files["daemon_aarch64"] = folder_path + e.text
+            elif "API" in e.text:
+                files["api"] = folder_path + e.text
+            elif "CalibrationTools" in e.text:
+                files["ctools"] = folder_path + e.text
+            elif "ASIS" in e.text:
+                files["asis"] = folder_path + e.text
+            else:
+                continue
 
             if not os.path.isfile(folder_path + e.text):
                 print("saving file: " + folder_path + e.text)
