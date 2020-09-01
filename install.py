@@ -95,7 +95,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
 
     if getattr(args, proj) is not None:
         arr = getattr(args, proj).split("/") 
-        branch_name, build = (arr[0], arr[1] if len(arr) > 1 else -1)        
+        branch_name, build = arr[0], arr[1] if len(arr) > 1 else -1
 
         if not is_integer(build):
             print("build should be integer")
@@ -136,7 +136,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
             if all([v not in e.text for v in ("aarch64", "ASIS")]):
-                if os_ver not in e.text:
+                if os_ver not in e.text and "Ubuntu" in e.text:
                     continue
             if "x86_64" in e.text:
                 if args.debug:
