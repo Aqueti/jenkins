@@ -210,6 +210,7 @@ if 'daemon_x86-app' in files.keys():
     os.system("sudo dpkg -i " + files["daemon_x86-app"])
     os.system("sudo dpkg -i " + files["daemon_x86-d"])
 if 'api' in files.keys():
+    os.system("sudo dpkg -r aquetionvifserver")
     os.system("sudo dpkg -r aquetiapi")
     os.system("sudo dpkg -i " + files["api"])
 if 'ctools' in files.keys():
