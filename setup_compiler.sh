@@ -12,7 +12,7 @@ doxygen \
 graphviz \
 libusb-1.0-0-dev \
 libz3-dev \
-libxrandr \
+libxrandr2 \
 libxrandr-dev \
 libxinerama-dev \
 libxcursor-dev \
