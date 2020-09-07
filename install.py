@@ -55,7 +55,8 @@ def custom_action(c_arg):
 parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
 parser.add_argument("--acos", help="branch_name/build_number", required=False, default="develop")
-parser.add_argument("--asis", help="ubuntu", required=False, action=custom_action("master"))
+parser.add_argument("--asis", help="branch_name/build_number", required=False, action=custom_action("master"))
+parser.add_argument("--onvif", help="branch_name/build_number", required=False, action=custom_action("dev"))
 parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
@@ -64,13 +65,18 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 7 --acos develop/67 --asis master/10 --noinstall\n")
+    print("\nexample: ./install.py --cam 7 --acos develop/67 --asis master/10 --onvif dev --noinstall\n")
     exit(0)
 
 os_ver = "Ubuntu18.04" if "18.04" in platform.version() else "Ubuntu16.04"
 
+if args.onvif:
+    if os_ver != "Ubuntu18.04":
+        print("onvif is available for 18.04 only")
+        exit(1)
+
 cam_ip = ''
-if args.cam is not None:
+if args.cam:
     if not is_integer(args.cam):
         print("cam id should be integer")
         exit(1)
@@ -89,7 +95,7 @@ if args.cam is not None:
 
 res = []
 files = {}
-for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else [])):
+for proj in (["acos"] + (["asis"] if getattr(args, "asis") else []) + (["onvif"] if getattr(args, "onvif") else [])):
     m_proj = proj if proj != "acos" else "AquetiOS"
     base_url = "http://10.0.0.10/repositories/" + m_proj
 
@@ -135,7 +141,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") is not None else []))
     
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
-            if all([v not in e.text for v in ("aarch64", "ASIS")]):
+            if all([v not in e.text for v in ("aarch64", "ASIS", "Onvif")]):
                 if os_ver not in e.text and "Ubuntu" in e.text:
                     continue
             if "x86_64" in e.text:
@@ -216,6 +222,10 @@ if 'api' in files.keys():
 if 'ctools' in files.keys():
     os.system("sudo dpkg -r calibrationtools")
     os.system("sudo dpkg -i " + files["ctools"])
+
+if 'onvif' in files.keys():
+    os.system("sudo dpkg -r aquetionvifserver")
+    os.system("sudo dpkg -i " + files["onvif"])
 
 if 'asis' in files.keys():
     os.system("sudo dpkg -r asis")
