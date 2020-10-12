@@ -87,8 +87,6 @@ if args.cam:
 
     if args.cam in [str(id) for id in [9, 12]]:
         num_of_tegras = 9
-    elif args.cam in [str(id) for id in [66]]:
-        num_of_tegras = 3
     else:
         num_of_tegras = 10
 
