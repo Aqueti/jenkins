@@ -1,0 +1,61 @@
+#!/usr/bin/env groovy
+//Declarative Jenkins Pipeline
+//2017-07-19
+
+import java.time.*
+
+pipeline {
+   agent {label 'compiler'}
+   stages {
+      stage('build') {
+         steps {
+                  sh "echo building atl"
+         }
+      }
+      stage('Deploy') {
+         steps {
+            sh "echo deploying atl"
+         }
+      }
+   }
+
+   post {
+      // Always runs. And it runs before any of the other post conditions.
+//      always {
+//         // Let's wipe out the workspace before we finish!
+//         deleteDir()
+//      }
+    
+//         mail(
+//           to: "sfeller@aqueti.com, ${env.CHANGE_AUTHOR_EMAIL}", 
+//           subject: "FAILED! Jenkins build ${BUILD_NUMBER} for branch ${BRANCH
+//           body: "${BUILD_LOG}"
+//         )
+
+      success {
+         sh "echo Sending success e-mail"
+         emailext(
+            recipientProviders: [[$class: 'DevelopersRecipientProvider']],
+            to: "sfeller@aqueti.com, alex@aqueti.com",
+            subject: "Build ${BUILD_NUMBER} for the ${BRANCH_NAME} branch passed.",
+            body: "Successfully built acos branch ${BRANCH_NAME} build number ${BUILD_NUMBER}. Packages should be available at http://10.0.0.10/repositories/${BRANCH_NAME}/${BUILD_NUMBER}/index.html"
+         )
+      }
+
+      failure {
+         sh " echo Sending failure e-mail"
+         emailext (
+            recipientProviders: [[$class: 'CulpritsRecipientProvider']],
+            to: "sfeller@aqueti.com",
+            subject: 'FAILURE: build ${BUILD_NUMBER} of  ACOS branch ${BRANCH_NAME}  failed',
+            body: 'Failed to build acos branch ${BRANCH_NAME} build number ${BUILD_NUMBER}. Packages should be available at http://10.0.0.10/repositories/${BRANCH_NAME}/${BUILD_NUMBER}/index.html<br><br> ${BUILD_URL}'
+//         mail(
+//           to: "sfeller@aqueti.com, ${env.CHANGE_AUTHOR_EMAIL}", 
+//           subject: "FAILED! Jenkins build ${BUILD_NUMBER} for branch ${BRANCH_NAME}  failed!", 
+//           body: "${BUILD_LOG}"
+         )
+     }
+    }
+  }
+}
+
