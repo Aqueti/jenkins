@@ -83,7 +83,7 @@ pipeline {
         }
 
         stage('Compiler 18.04: build api and daemon') {
-          agent { label "compiler1804" }
+          agent { label "compiler_1804" }
           steps {
             sh 'printenv'
             
@@ -94,7 +94,7 @@ pipeline {
             dir('build_acos') {
                 sh "cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DSET_MOD_VER=ON"
                 script {
-                  try { sh "make -j9" } catch (Exception e) { sh "make -j6" }
+                  try { sh "make -j8" } catch (Exception e) { sh "make -j6" }
                 }
               
               dir('INSTALL/share/doc/aqueti/api') {
@@ -130,7 +130,7 @@ pipeline {
                sh "cmake ../ -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_TESTS:BOOL=ON -DSET_MOD_VER=ON" 
                
                script {
-                  try { sh "make -j5" } catch (Exception e) { sh "make -j3" }
+                  try { sh "make -j4" } catch (Exception e) { sh "make -j3" }
                 }
               dir('INSTALL/deb') {
                 script {
