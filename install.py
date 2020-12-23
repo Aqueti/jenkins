@@ -69,6 +69,7 @@ if all(v is None for v in vars(args).values()):
     exit(0)
 
 os_ver = "Ubuntu18.04" if "18.04" in platform.version() else "Ubuntu16.04"
+print("os:", os_ver)
 
 if args.onvif:
     if os_ver != "Ubuntu18.04":
