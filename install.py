@@ -140,7 +140,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") else []) + (["onvif"]
     
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
-            if all([v not in e.text for v in ("aarch64", "ASIS", "Onvif")]):
+            if all([v not in e.text for v in ("aarch64", "Onvif")]):
                 if os_ver not in e.text and "Ubuntu" in e.text:
                     continue
             if "x86_64" in e.text:
