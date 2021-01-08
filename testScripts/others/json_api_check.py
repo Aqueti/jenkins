@@ -8,32 +8,6 @@ class TestBase:
     pass
 
 
-# class TestAPIBasic(TestBase):
-#     #@pytest.mark.skip(reason="")
-# 	def test_connection_noparams(self):
-# 		api = AQT.AquetiAPI()
-
-# 		assert api.GetStatus() == 0
-
-# 	def test_connection_params(self):
-# 		config_path = "/etc/aqueti/daemonConfiguration.json"
-# 		if os.psth.isfile(config_path):
-# 			with open(config_path, 'r', encoding="utf-8") as f:
-# 				config = json.load(f)
-
-# 			api = AQT.AquetiAPI("", AQT.U8Vector(), AQT.StringVector("aqt://{}".format(config['directoryOfServices']['system'])))
-
-# 			assert api.GetStatus() == 0
-
-# 	def test_multiple_connections(self):
-# 		N = 10
-
-# 		api_arr = []
-# 		for i in range(N):
-# 			api_arr.append(AQT.AquetiAPI())			
-# 			assert api_arr[-1].GetStatus() == 0
-
-
 class TestJsonAPI(TestBase):
 	FRAMERATES = [5, 10, 15, 20, 25, 30]
 	WB_MODES = ['AUTO', 'CLOUDY', 'FIXED', 'FLUORESCENT', 'HORIZON', 'INCANDESCENT', 'SHADE', 'SUNLIGHT', 'TUNGSTEN']	
