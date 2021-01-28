@@ -65,7 +65,7 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 7 --acos develop/67 --asis master/10 --onvif dev --noinstall\n")
+    print("\nexample: ./install.py --cam 7 --acos develop/99 --asis master/195 --onvif develop --noinstall\n")
     exit(0)
 
 os_ver = "Ubuntu18.04" if "18.04" in platform.version() else "Ubuntu16.04"
