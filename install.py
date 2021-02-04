@@ -68,11 +68,11 @@ if all(v is None for v in vars(args).values()):
     print("\nexample: ./install.py --cam 7 --acos develop/99 --asis master/195 --onvif develop --noinstall\n")
     exit(0)
 
-os_ver = "Ubuntu18.04" if "18.04" in platform.version() else "Ubuntu16.04"
+os_ver = "18.04" if "18.04" in platform.version() else "16.04"
 print("os:", os_ver)
 
 if args.onvif:
-    if os_ver != "Ubuntu18.04":
+    if os_ver != "18.04":
         print("onvif is available for 18.04 only")
         exit(1)
 
@@ -141,7 +141,7 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") else []) + (["onvif"]
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
             if all([v not in e.text for v in ("aarch64", "Onvif")]):
-                if os_ver not in e.text and "Ubuntu" in e.text:
+                if os_ver not in e.text and any(v in e.text for v in ["16.04", "18.04", "20.04"]):
                     continue
             if "x86_64" in e.text:
                 if args.debug:
