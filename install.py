@@ -68,7 +68,7 @@ if all(v is None for v in vars(args).values()):
     print("\nexample: ./install.py --cam 12 --acos master/109 --asis master --onvif master\n")
     exit(0)
 
-os_ver = "18.04" if "18.04" in platform.version() else "16.04"
+os_ver = "18.04" if "18.04" in platform.version() else "20.04" if "20.04" in platform.version() else "16.04"
 print("os:", os_ver)
 
 if args.onvif:
