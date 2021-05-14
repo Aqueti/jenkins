@@ -12,10 +12,6 @@ for ip in servers:
   ssh_conns[ip].set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
   server, port, username, password = ip, "22", "aqueti", None
-
-  ssh_conns[ip].connect(server, port, username=username, password=password, timeout=999999999)
-
-  server, port, username, password = ip, "22", "aqueti", None
   ssh_conns[ip].connect(server, port, username=username, password=password, timeout=999999999)
 
 
