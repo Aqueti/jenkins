@@ -3,10 +3,10 @@
 
 sudo apt install x11vnc
 sudo x11vnc -storepasswd "aqueti" /etc/x11vnc.pass
-sudo chown aqueti:aqueti /etc/x11vnc.pass
+sudo chown aqueti:aqueti /etc/x11vnc.pass #mosaic
 sudo chmod 775 /etc/x11vnc.pass
 
 #if /etc/X11/xorg.conf doesn't exist create new one and reboot a server
 
 #To run x11vnc exec in terminal:
-#x11vnc -rfbauth /etc/x11vnc.pass -noxdamage -shared -dontdisconnect -noxfixes -repeat -auth guess
+#sudo x11vnc -rfbauth /etc/x11vnc.pass -noxdamage -shared -dontdisconnect -noxfixes -repeat -auth guess
