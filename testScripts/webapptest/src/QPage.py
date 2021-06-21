@@ -51,14 +51,12 @@ class BaseCont:
         return self.find_by(xpath="//div[@role='combobox']//div[.//label[text()='" + str(title) + "']]//input")
 
     def get_dd_elems(self):
-        return self.find_by(xpath="//div[@class='v-list__tile__title']/ancestor::div[@role='listitem']", elem=self.active_panel)
+        return self.find_by(xpath="//div[@role='option']", elem=self.active_panel)
 
     def get_dd_elem(self, *args, **kwargs):
         if len(args) > 0:
             title = str(args[0])
-
-            #return self.find_by(xpath="//div[@class='v-list__tile__title' and text()='" + title + "']/ancestor::div[@role='listitem']", elem=self.active_panel)
-            return self.find_by(xpath="//div[@class='v-list-item__title' and contains(.,'" + title + "')]", elem=self.active_panel)
+            return self.find_by(xpath="//div[@role='option' and contains(.,'" + title + "')][0]", elem=self.active_panel)
         else:
             dds = self.get_dd_elems()
 
@@ -162,13 +160,13 @@ class BaseCont:
 
 class LoginForm(BaseCont):
     @property
-    def username_txt(self): return self.find_by(css="input[aria-label='Username']", elem=self.active_dialog)
+    def username_txt(self): return self.find_by(xpath="//label[contains(text(),'Username')]/following-sibling::input[@type='text']", elem=self.active_dialog)
 
     @property
-    def password_txt(self): return self.find_by(css="input[aria-label='Password']", elem=self.active_dialog)
+    def password_txt(self): return self.find_by(xpath="//label[contains(text(),'Password')]/following-sibling::input[@type='password']", elem=self.active_dialog)
 
     @property
-    def system_dd(self): return self.find_by(css="input[aria-label='System']", elem=self.active_dialog)
+    def system_dd(self): return self.find_by(xpath="//label[contains(text(), 'System')]/following-sibling::input[@type='text']", elem=self.active_dialog)
 
     def login(self, *args, **kwargs):
         self.username_txt(value=kwargs['username'])
@@ -186,14 +184,15 @@ class LoginForm(BaseCont):
         else:
             self.get_dialog_btn("Submit")(act="click")
 
-            try:
-                self.system_dd(act="click")
 
-                self.get_dd_elem(value=kwargs['system'])(act="click")
+        try:
+            self.system_dd(act="click")
 
-                self.get_dialog_btn("Close")(act="click")
-            except:
-                pass
+            self.get_dd_elem(value=kwargs['system'])(act="click")
+
+            self.get_dialog_btn("Close")(act="click")
+        except:
+            pass
 
 
 class QStreamBox(BaseCont):
@@ -395,10 +394,19 @@ class QStreamBox(BaseCont):
 
 class QAdminSidebar:
     @property
-    def dashboard_lnk(self): return self.find_by(xpath="(//aside//div[contains(.,'Dashboard')])[last()]")
+    def left_sidebar(self): return self.find_by(xpath="(//nav)[1]")
+
+    @property
+    def shrink_sidebar_btn(self): return self.find_by(xpath="//i[contains(., 'chevron_left') or contains(., 'chevron_right')]/parent::button", elem=self.top_panel)
+
+    @property
+    def dashboard_lnk(self): return self.find_by(xpath="//a[@href='#/']")
 
     @property
     def camera_lnk(self): return self.find_by(id="camera_page")
+
+    @property
+    def camera_expand_icon(self): return self.find_by(xpath="//a[@id='camera_page']/following-sibling::div", elem=self.left_sidebar)
 
     @property
     def cam_reservations_lnk(self): return self.find_by(id="camera_reservations_page")
@@ -410,13 +418,16 @@ class QAdminSidebar:
     def cam_microcameras_lnk(self): return self.find_by(id="camera_microcamera_page")
 
     @property
-    def storage_lnk(self): return self.find_by(id="storage_page")
+    def storage_expand_icon(self): return self.find_by(xpath="//a[@id='storage_page']/following-sibling::div", elem=self.left_sidebar)
 
     @property
     def storage_settings_lnk(self): return self.find_by(id="storage_settings_page")
 
     @property
     def render_lnk(self): return self.find_by(id="render_page")
+
+    @property
+    def render_expand_icon(self): return self.find_by(xpath="//a[@id='render_page']/following-sibling::div", elem=self.left_sidebar)
 
     @property
     def render_settings_lnk(self): return self.find_by(id="render_settings_page")
@@ -439,6 +450,17 @@ class QAdminSidebar:
     @property
     def users_lnk(self): return self.find_by(id="users_page")
 
+    @property
+    def user_expand_icon(self): return self.find_by(xpath="//a[@id='users_page']/following-sibling::div", elem=self.left_sidebar)
+
+    def is_shrunk(self):
+        return "chevron_left" in self.shrink_sidebar_btn.innerText
+
+    def open_left_sidebar(self):
+        if self.left_sidebar is None:
+            if self.is_shrunk():
+                self.shrink_sidebar_btn()
+            self.left_sidebar()
 
     def menu_dashboard(self):
         self.dashboard_lnk()
@@ -446,26 +468,26 @@ class QAdminSidebar:
         return QAdminDashboard(self.test)
 
     def menu_camera(self):
-        self.camera_lnk()
+        self.camera_expand_icon()
 
-        while not self.cam_reservations_lnk.is_displayed():
-            time.sleep(0.5)
+        #while not self.cam_reservations_lnk.is_displayed():
+        #   time.sleep(0.5)
 
         return QAdminCamera(self.test)
 
     def menu_storage(self):
         self.storage_lnk()
 
-        while not self.storage_settings_lnk.is_displayed():
-            time.sleep(0.5)
+        #while not self.storage_settings_lnk.is_displayed():
+        #   time.sleep(0.5)
 
         return QAdminStorage(self.test)
 
     def menu_render(self):
         self.render_lnk()
 
-        while not self.render_settings_lnk.is_displayed():
-            time.sleep(0.5)
+        #while not self.render_settings_lnk.is_displayed():
+        #   time.sleep(0.5)
 
         return QAdminRender(self.test)
 
@@ -500,7 +522,8 @@ class QAdminSidebar:
         return QAdminCameraReservations(self.test)
 
     def menu_cam_settings(self):
-        if not self.cam_settings_lnk.is_displayed():
+        #if not self.cam_settings_lnk.is_displayed():
+        if self.cam_settings_lnk is None:
             self.menu_camera()
             time.sleep(0.5)
 
@@ -556,32 +579,38 @@ class QAdminSidebar:
 
 class QPage(BasePage, LoginForm):
     @property
-    def top_panel(self): return self.find_by(xpath="//nav[.//img]")
+    def top_panel(self): return self.find_by(xpath="//header[@data-booted]")
 
     @property
-    def left_sidebar_btn(self): return self.find_by(xpath="(//button[contains(., 'menu')][1]", elem=self.top_panel)
+    def left_sidebar_btn(self): return self.find_by(xpath="(//button)[1]", elem=self.top_panel)
 
     @property
-    def dots_icon(self): return self.find_by(xpath="//button[contains(., 'more_vert')]", elem=self.top_panel)
+    def dots_icon(self): return self.find_by(xpath="(//button)[2]", elem=self.top_panel)
 
     @property
-    def versions_icon(self): return self.find_by(xpath="//span[contains(@class, 'v-chip__content')]", elem=self.top_panel)
+    def right_sidebar_btn(self): return self.find_by(xpath="(//button)[3]", elem=self.top_panel)
+
+    @property
+    def versions_icon(self): return self.find_by(xpath="(//span[contains(@class, 'v-chip__content')])[1]", elem=self.top_panel)
+
+    @property
+    def system_name_fld(self): return self.find_by(xpath="(//div)[4]", elem=self.top_panel)
 
     @property
     def ping_time_fld(self): return self.find_by(xpath="//span[contains(@class, 'v-tooltip')]", elem=self.top_panel)
 
     @property
-    def user_icon(self): return self.find_by(xpath="//i[contains(., 'account_circle')]/parent::div", elem=self.top_panel)
+    def user_icon(self): return self.find_by(xpath="(//button)[4]", elem=self.top_panel)
 
 # left_sidebar_btn
 
     @property
-    def left_sidebar(self): return self.find_by(xpath="//aside[1]")
+    def left_sidebar(self): return self.find_by(xpath="(//nav)[1]")
 
 # user_icon
 
-    @property
-    def change_password_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Change Password"))
+    #@property
+    #def change_password_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("Change Password"))
 
     @property
     def user_settings_btn(self): return self.find_by(xpath="(//div)[last()]", elem=self.get_list_elem("User Settings"))
@@ -793,7 +822,8 @@ class QViewPage(QPage, QStreamBox):
         return items
 
     def get_lside_scops(self):
-        scops = self.find_by(xpath="//div[@class='v-list__group' or @class='v-list__group v-list__group--active']", elem=self.left_sidebar)
+        scops = self.find_by(xpath="//div[@class='v-navigation-drawer__content']/div[contains(@class, 'v-list')]", elem=self.left_sidebar)
+        #scops = self.find_by(xpath="div[contains(@class, 'v-list-item__content')]", elem=self.left_sidebar)
 
         if scops is not None:
             if not isinstance(scops, list):

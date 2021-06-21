@@ -4,7 +4,7 @@ import io
 import pytest
 
 from PIL import Image
-from skimage.measure import compare_ssim
+#from skimage.measure import compare_ssim
 
 from src.BaseEnv import *
 from src.QPage import *
@@ -111,7 +111,7 @@ class TestQApp(BaseTest):
 
     @pytest.fixture
     def login(self, caplog):
-        self.cpage.login(username="user", password="12345678", system=self.system_name)
+        self.cpage.login(username="administrator", password="administrator", system=self.system_name)
 
         time.sleep(5)
 

@@ -57,7 +57,7 @@ class GO2:
             if self.stream.GetStatus() == AQT.aqt_STATUS_OKAY:
                 break
 
-    @async
+    @async_
     def get_frames(self, delay=0.03):
         while True:
             self.get_next_frame()

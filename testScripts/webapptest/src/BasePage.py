@@ -49,7 +49,7 @@ class BasePage:
         page_obj = self
 
         def call(self, *args, **kwargs):
-            @async
+            @async_
             def highlight(elem):
                 page_obj.exec_js("arguments[0].style.cssText += 'border: 1px solid yellow; overflow: auto;'", elem)
                 time.sleep(0.3)
@@ -117,7 +117,7 @@ class BasePage:
         WebElement.is_checked = is_checked
         WebElement.is_focused = is_focused
 
-        self.TIMEOUT = 10
+        self.TIMEOUT = 5
 
         if "Context" in str(type(args[0])):
             self.driver = args[0].test.driver
@@ -135,7 +135,9 @@ class BasePage:
 
         IS_VISIBLE = True
         if "param" in kwargs.keys():
-            if kwargs["param"] == "invisible":
+            if kwargs["param"] == "visible":
+                IS_VISIBLE = True
+            elif kwargs["param"] == "invisible":
                 IS_VISIBLE = False
 
         try:

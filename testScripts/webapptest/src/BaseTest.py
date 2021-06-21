@@ -15,7 +15,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 class DB:
     server_ip = "10.0.0.204"
-    db_server_ip = "10.0.0.176"
+    db_server_ip = "10.0.0.204"
 
     dbs = ["acos", "acos_local"]
     col_names = ["scops", "models", "reservations", "tracks", "render_parameters", "files"]
@@ -64,7 +64,7 @@ class BaseTest(): # unittest.TestCase
 
     @property
     def driver_path(self):
-        driver_path = "drivers/"
+        driver_path = "drivers/linux/"
 
         if self.browser == "chrome":
             driver_path += "chromedriver"
@@ -127,6 +127,7 @@ class BaseTest(): # unittest.TestCase
             opts = ChromeOptions()
             opts.add_experimental_option("detach", True)
             opts.add_experimental_option("w3c", False)
+            opts.add_argument('ignore-certificate-errors')
             caps = DesiredCapabilities.CHROME
             caps = {"browserName": "chrome", 'version': '', 'platform': 'ANY', "pageLoadStrategy": "normal"}
 
@@ -168,14 +169,14 @@ class BaseTest(): # unittest.TestCase
         self.doc["build"] = pytest.config.getoption('--build')
         self.doc["timestamp"] = int(self.doc["start_time"].timestamp() * 1e3)
 
-        self.log_path = self.cur_dir + "/" + self.doc["test_name"] + ".txt"
+        self.log_path = self.cur_dir + "/" + self.doc["test_name"] + ".log"
 
         self.add_to_log("Suite:\t" + self.doc["suite_name"] + "\n" +
                         "Test:\t" + self.doc["test_name"] + "\n" +
                         "Date:\t" + self.doc["start_time"].strftime('%Y-%m-%d_%H:%M:%S') + "\n\n")
 
     def teardown_method(self, method):
-        with open(self.script_dir + '/pytest.log', 'r') as f:
+        with open(self.script_dir + '/logs/pytest.log', 'r') as f:
             log = f.read()
 
         self.doc["end_time"] = datetime.datetime.now()
