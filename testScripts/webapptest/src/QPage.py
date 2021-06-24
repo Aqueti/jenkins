@@ -56,7 +56,7 @@ class BaseCont:
     def get_dd_elem(self, *args, **kwargs):
         if len(args) > 0:
             title = str(args[0])
-            return self.find_by(xpath="//div[@role='option' and contains(.,'" + title + "')][0]", elem=self.active_panel)
+            return self.find_by(xpath="//div[@role='option' and contains(.,'" + title + "')][1]", elem=self.active_panel)
         else:
             dds = self.get_dd_elems()
 
@@ -582,13 +582,13 @@ class QPage(BasePage, LoginForm):
     def top_panel(self): return self.find_by(xpath="//header[@data-booted]")
 
     @property
-    def left_sidebar_btn(self): return self.find_by(xpath="(//button)[1]", elem=self.top_panel)
+    def left_sidebar_btn(self): return self.find_by(xpath="//button[contains(.//i, 'menu')][1]", elem=self.top_panel)
 
     @property
-    def dots_icon(self): return self.find_by(xpath="(//button)[2]", elem=self.top_panel)
+    def dots_icon(self): return self.find_by(xpath="//button[contains(.//i, 'more_vert')]", elem=self.top_panel)
 
     @property
-    def right_sidebar_btn(self): return self.find_by(xpath="(//button)[3]", elem=self.top_panel)
+    def right_sidebar_btn(self): return self.find_by(xpath="//button[contains(.//i, 'menu')][2]", elem=self.top_panel)
 
     @property
     def versions_icon(self): return self.find_by(xpath="(//span[contains(@class, 'v-chip__content')])[1]", elem=self.top_panel)
@@ -600,7 +600,10 @@ class QPage(BasePage, LoginForm):
     def ping_time_fld(self): return self.find_by(xpath="//span[contains(@class, 'v-tooltip')]", elem=self.top_panel)
 
     @property
-    def user_icon(self): return self.find_by(xpath="(//button)[4]", elem=self.top_panel)
+    def notifications_fld(self): return self.find_by(xpath="//button[contains(.//i, 'notifications')]", elem=self.top_panel)
+
+    @property
+    def user_icon(self): return self.find_by(xpath="//div[contains(.//i, 'account_circle')]", elem=self.top_panel)
 
 # left_sidebar_btn
 
@@ -723,7 +726,7 @@ class QViewPage(QPage, QStreamBox):
 
     @property
     def right_sidebar(self):
-        return self.find_by(xpath="//aside[last()]")
+        return self.find_by(xpath="(//nav)[last()]")
 
     @property
     def rside_avi_lnk(self):
@@ -822,9 +825,8 @@ class QViewPage(QPage, QStreamBox):
         return items
 
     def get_lside_scops(self):
-        scops = self.find_by(xpath="//div[@class='v-navigation-drawer__content']/div[contains(@class, 'v-list')]", elem=self.left_sidebar)
-        #scops = self.find_by(xpath="div[contains(@class, 'v-list-item__content')]", elem=self.left_sidebar)
-
+        scops = self.find_by(xpath="//div[@class='v-navigation-drawer__content']/div[contains(@class, 'v-list')]/div", elem=self.left_sidebar)
+               
         if scops is not None:
             if not isinstance(scops, list):
                 scops = [scops]
@@ -845,28 +847,31 @@ class QViewPage(QPage, QStreamBox):
                 if scop.get_attribute("innerText").split()[0].strip() == scop_name.lower():
                     return scop
             else:
-                if 'darken-2' not in self.find_by(xpath="//div[contains(@class, 'v-list__group__header')]//button", elem=scop).get_attribute('class'):
+                if self.find_by(xpath="//button[@style]", elem=scop) is not None:
                     return scop
 
         return scops[0]
 
+    def get_lside_scop_menu(self, scop_name=""):
+        return self.find_by(xpath="//button[contains(.//span, 'vert')]", elem=self.get_lside_scop(scop_name))
+
     def get_lside_add_cam_btn(self, scop_name=""):
-        return self.find_by(xpath="//i[text()='cast']/ancestor::button", elem=self.get_lside_scop(scop_name))
+        return self.find_by(xpath="//button[contains(.//span, 'cast')]", elem=self.get_lside_scop(scop_name))
 
     def get_lside_selected_scop_name(self):
         return self.get_lside_scop().get_attribute("innerText")
 
+    def get_lside_change_nickname_btn(self, scop_name=""):
+        return self.find_by(xpath="//button[contains(.//span, 'outlined_flag')]", elem=self.active_panel)
+
     def get_lside_fine_focus_btn(self, scop_name=""):
-        return self.find_by(xpath="//i[text()='center_focus_strong']/ancestor::button", elem=self.get_lside_scop(scop_name))
+        return self.find_by(xpath="//button[contains(.//span, 'center_focus_strong')]", elem=self.active_panel)
 
     def get_lside_coarse_focus_btn(self, scop_name=""):
-        return self.find_by(xpath="//i[text()='center_focus_weak']/ancestor::button", elem=self.get_lside_scop(scop_name))
+        return self.find_by(xpath="//button[contains(.//span, 'center_focus_weak')]", elem=self.active_panel)
 
-    def get_avi_download_btn(self, row):
-        return self.find_by(xpath="//i[text()='cloud_download']", elem=row)
-
-    def get_avi_delete_btn(self, row):
-        return self.find_by(xpath="//i[text()='delete']", elem=row)
+    def get_lside_recording_btn(self, scop_name=""):
+        return self.find_by(xpath="//button[contains(.//span, 'adjust')]", elem=self.active_panel)
 
     def __init__(self, *args):
         QPage.__init__(self, *args)
@@ -1138,7 +1143,7 @@ class QAdminCameraSettings(QAdminPage, QStreamBox):
     def digital_gain_txt(self): return self.find_by(id="digital_gain_text_field")
 
     @property
-    def fps_dd(self): return self.find_by(xpath="(//input[@id='framerate_select'])[last()]")
+    def fps_dd(self): return self.find_by(xpath="(//input[@id='framerate_select'])[1]")
 
     @property
     def whitebalance_dd(self): return self.find_by(id="whitebalance_select")

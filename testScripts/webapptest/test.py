@@ -13,11 +13,14 @@ from src.go import *
 
 
 class TestQApp(BaseTest):
-    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.77.10", raspi_ip="10.1.1.200")
+    env = Environment(render_ip="10.0.0.204", cam_ip="10.1.2.10", raspi_ip="10.1.1.200")
 
-    cam_id = '77'
+    cam_id = '2'
     cam_name = '/aqt/camera/' + cam_id
     system_name = "alxcam"
+
+    username = "administrator"
+    password = "administrator"
 
     api = None
     cam = None
@@ -111,7 +114,7 @@ class TestQApp(BaseTest):
 
     @pytest.fixture
     def login(self, caplog):
-        self.cpage.login(username="administrator", password="administrator", system=self.system_name)
+        self.cpage.login(username=self.username, password=self.password, system=self.system_name)
 
         time.sleep(5)
 
@@ -302,7 +305,7 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
-    def test_case_113(self): # added scop corresponds to selected one
+    def test_case_113(self): # added scop corresponds to the selected one
         cam_names = self.cpage.get_lside_scops_names()
 
         for cam_name in sorted(cam_names, reverse=True):
@@ -331,7 +334,7 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_114(self): # fine focus works
-        self.cpage.get_lside_scop()(act='click')
+        self.cpage.get_lside_scop_menu()(act='click')
         # self.go.api.SetParameters(self.cam_name, json.dumps({"fineAutofocus": True}))
 
         self.cpage.get_lside_fine_focus_btn()(act='click')
@@ -352,7 +355,7 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview", "login", "api")
     @storeresult
     def test_case_115(self): # coarse focus works
-        self.cpage.get_lside_scop()(act='click')
+        self.cpage.get_lside_scop_menu()(act='click')
 
         self.cpage.get_lside_coarse_focus_btn()(act='click')
 
@@ -371,12 +374,12 @@ class TestQApp(BaseTest):
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview")
     @pytest.mark.parametrize("username, password, expected", [("test",  "1111",     True),
-                                                              ("test",  "12345678", True),
+                                                              ("test",  "administrator", True),
                                                               ("",      "",         True),
-                                                              ("user",  "",         True),
-                                                              ("",      "12345678", True),
-                                                              ("user",  "1234",     True),
-                                                              ("user",  "12345678", False)])
+                                                              ("administrator",  "",         True),
+                                                              ("",      "administrator", True),
+                                                              ("administrator",  "1234",     True),
+                                                              ("administrator",  "administrator", False)])
     @storeresult
     def test_case_120(self, username, password, expected):
         self.cpage.login(username=username, password=password, system=self.system_name)
@@ -408,13 +411,13 @@ class TestQApp(BaseTest):
     @pytest.mark.usefixtures("qview")
     @storeresult
     def test_case_122(self): #relogin after logout
-        self.cpage.login(username="user", password="12345678", system=self.system_name)
+        self.cpage.login(username=self.username, password=self.password, system=self.system_name)
         self.cpage.logout()
 
         while not isinstance(self.cpage.active_dialog, WebElement):
             time.sleep(1)
 
-        self.cpage.login(username="user", password="12345678", system=self.system_name)
+        self.cpage.login(username=self.username, password=self.password, system=self.system_name)
 
         time.sleep(2)
 
@@ -430,13 +433,7 @@ class TestQApp(BaseTest):
             if e is None:
                 return False
 
-            tag_name = e.get_attribute('tagName').lower()
-            if tag_name == "aside":
-                className = e.get_attribute('class')
-                if "v-navigation-drawer--open" in className:
-                    return True
-                return False
-            return False
+            return True
 
         if is_opened(self.cpage.left_sidebar):
             self.cpage.left_sidebar_btn()
@@ -453,19 +450,18 @@ class TestQApp(BaseTest):
             assert is_opened(self.cpage.right_sidebar)
 
 
-    @pytest.mark.skip(reason="")
+    #@pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qview", "login")
     @storeresult
     def test_case_201(self): # check model is added to db, new alg
         d_path = "/var/tmp/aqueti/modelgen"
-        cmd = "sudo rm -rf {}".format(d_path)
+        cmd = "sudo mv {} {}".format(d_path, d_path + dt.datetime.now().strftime('_%Y-%m-%d_%H:%M:%S'))
         self.exec_cmd(cmd)
 
-        def get_models():
-            return list(self.db.query({"scop": self.cam_id}, "acos", "models"))
+        models = list(self.db.query({"scop": self.cam_id}, self.db.dbs[0], 'models'))
 
-        s_cnt = len(get_models())
+        s_cnt = len(models)
 
         self.cpage.video_box(act="rightclick")
         self.cpage.calibrate_stream_btn()
@@ -1594,7 +1590,7 @@ class TestQApp(BaseTest):
                 assert v != 0
 
 
-    #@pytest.mark.skip(reason="")
+    @pytest.mark.skip(reason="")
     @pytest.mark.regression
     @pytest.mark.usefixtures("qadmin", "login", "api")
     @storeresult
@@ -1607,13 +1603,13 @@ class TestQApp(BaseTest):
         self.cpage.day_night_mode_chkb(act="uncheck")
         self.cpage.close_dialog()
 
-        for framerate in ["5", "10", "15", "20", "25", "30"]:
+        for framerate in ["10", "20", "30"]:
             self.cpage.fps_dd(act="click")
             self.cpage.get_dd_elem(framerate)(act="click")
 
             time.sleep(10)
 
-            logs = self.env.cam.get_from_log(value="fps")
+            logs = self.env.cam.get_from_log(value="fps", tegra=2)
 
             for ip, log in logs.items():
                 assert ("fps: " + framerate) in log

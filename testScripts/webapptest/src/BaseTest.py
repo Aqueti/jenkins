@@ -1,6 +1,7 @@
-import datetime
+import datetime as dt
 import logging
 import os
+import json
 import subprocess
 from collections import OrderedDict
 from contextlib import suppress
@@ -24,9 +25,19 @@ class DB:
         if server_ip == "":
             server_ip = self.server_ip
 
+        daemon_config = self.load_json("/etc/aqueti/daemonConfiguration.json")
+        self.dbs = [daemon_config["globalDatabase"]["name"], daemon_config["localDatabase"]["name"]]
+
         self.mc = pymongo.MongoClient("mongodb://" + server_ip + ":27017")
 
-    def query(self, query, db="acos", col="scops"):
+    def load_json(self, f_name):
+        with open(f_name, "r", encoding='utf-8') as f:
+            return json.load(f)
+
+    def query(self, query, db=None, col=None):
+        if db is None and col is None:
+            db, col = self.dbs[0], "scops"
+
         return list(self.mc[db][col].find(query))
 
     def query_one(self, query, db="acos", col="scops"):
@@ -60,7 +71,7 @@ class BaseTest(): # unittest.TestCase
 
     @property
     def screenshot_path(self):
-        return '{0}/{1}_{2}.png'.format(self.cur_dir, self.doc["test_name"], datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+        return '{0}/{1}_{2}.png'.format(self.cur_dir, self.doc["test_name"], dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
 
     @property
     def driver_path(self):
@@ -100,7 +111,7 @@ class BaseTest(): # unittest.TestCase
         self.db = DB()
         self.logger = logging.getLogger(__name__)
 
-        self.cur_dir = self.base_dir + self.__name__ + "/" + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        self.cur_dir = self.base_dir + self.__name__ + "/" + dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         if not os.path.exists(self.cur_dir):
             os.makedirs(self.cur_dir)
 
@@ -159,7 +170,7 @@ class BaseTest(): # unittest.TestCase
         self.doc["suite_name"] = self.__class__.__name__
         self.doc["test_name"] = method.__name__
         self.doc["case_id"] = 0 if "test_case" not in method.__name__ else int(method.__name__[method.__name__.rindex('_') + 1:])
-        self.doc["start_time"] = datetime.datetime.now()
+        self.doc["start_time"] = dt.datetime.now()
         self.doc["end_time"] = None
         self.doc["result"] = -1
 
@@ -179,7 +190,7 @@ class BaseTest(): # unittest.TestCase
         with open(self.script_dir + '/logs/pytest.log', 'r') as f:
             log = f.read()
 
-        self.doc["end_time"] = datetime.datetime.now()
+        self.doc["end_time"] = dt.datetime.now()
         self.doc["duration"] = int((self.doc["end_time"] - self.doc["start_time"]).total_seconds())
         self.doc["log"] = log
 
@@ -189,7 +200,7 @@ class BaseTest(): # unittest.TestCase
             result = "FAILED" if self.doc["result"] == 0 else "ERROR"
             with suppress(Exception): self.driver.save_screenshot(self.screenshot_path)
 
-        self.add_to_log("\nExec time: " + str(datetime.timedelta(seconds=self.doc["duration"])) + "\nRESULT: " + result + "\n\n")
+        self.add_to_log("\nExec time: " + str(dt.timedelta(seconds=self.doc["duration"])) + "\nRESULT: " + result + "\n\n")
 
         with suppress(Exception): DB(DB.db_server_ip).mc["qa"]["auto"].insert_one(self.doc)
 

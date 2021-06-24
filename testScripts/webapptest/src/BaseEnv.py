@@ -60,7 +60,7 @@ class Component(object):
                 return self.status[2]
 
     def get_ssh_str(self, ip, cmd, uname="nvidia"):
-        return "ssh -o ConnectTimeout=1 " + uname + "@" + ip + " '" + cmd + "'"
+        return "ssh -o ConnectTimeout=1 " + uname + "@" + ip + " \"" + cmd + "\""
 
     def exec_cmd(self, cmd):
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -194,11 +194,11 @@ class Camera(Component):
 
     def get_from_log(self, **kwargs):
         if kwargs["value"] == "compression":
-            cmd = "cat /var/log/syslog | grep -a 'setting compression quality to' | tail -1"
+            kwargs["cmd"] = "cat /var/log/syslog | grep -a 'setting compression quality to' | tail -1"
         elif kwargs["value"] == "fps":
-            cmd = "cat /var/log/syslog | grep -a 'fps:' | tail -1"
+            kwargs["cmd"] = "cat /var/log/syslog | grep -a 'fps:' | tail -1"
 
-        ret = self.exec_cmd(cmd=cmd)
+        ret = self.exec_cmd(**kwargs)
 
         return ret
 
