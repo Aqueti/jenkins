@@ -68,9 +68,6 @@ if all(v is None for v in vars(args).values()):
     print("\nexample: ./install.py --cam 12 --acos master/109 --asis master --onvif master\n")
     exit(0)
 
-os_ver = "18.04" if "18.04" in platform.version() else "20.04" if "20.04" in platform.version() else "16.04"
-print("os:", os_ver)
-
 if args.onvif:
     if os_ver != "18.04":
         print("onvif is available for 18.04 only")
@@ -90,6 +87,13 @@ if args.cam:
         num_of_tegras = 9
     else:
         num_of_tegras = 10
+
+
+os_ver = "18.04" if "18.04" in platform.version() else "20.04" if "20.04" in platform.version() else "16.04"
+print("os:", os_ver)
+
+tegra_os_ver = "18.04" if "18.04" in exec_cmd("ssh nvidia@{}.{} 'lsb_release | grep Release'".format(cam_ip, 1)) else "16.04"
+print("tegra os:", tegra_os_ver)
 
 
 res = []
@@ -140,9 +144,13 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") else []) + (["onvif"]
     
     for e in tree.xpath('//a'):
         if ".deb" in e.text:
-            if all([v not in e.text for v in ("aarch64", "Onvif")]):
+            if "aarch64" in e.text:    
+                if tegra_os_ver not in e.text:
+                    continue
+            if all([v not in e.text for v in ("Onvif")]):
                 if os_ver not in e.text and any(v in e.text for v in ["16.04", "18.04", "20.04"]):
                     continue
+
             if "x86_64" in e.text:
                 if args.debug:
                     if 'debug' not in e.text:
