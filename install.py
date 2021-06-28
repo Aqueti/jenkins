@@ -147,8 +147,8 @@ for proj in (["acos"] + (["asis"] if getattr(args, "asis") else []) + (["onvif"]
             if "aarch64" in e.text:    
                 if tegra_os_ver not in e.text:
                     continue
-            if all([v not in e.text for v in ("Onvif")]):
-                if os_ver not in e.text and any(v in e.text for v in ["16.04", "18.04", "20.04"]):
+            if all([v not in e.text for v in ("Onvif",)]):
+                if os_ver not in e.text: # and any(v in e.text for v in ["16.04", "18.04", "20.04"]):
                     continue
 
             if "x86_64" in e.text:
