@@ -55,8 +55,8 @@ def custom_action(c_arg):
 parser = argparse.ArgumentParser()
 parser.add_argument("--cam",  help="camera id", required=False)
 parser.add_argument("--acos", help="branch_name/build_number", required=False, default="develop")
-parser.add_argument("--asis", help="branch_name/build_number", required=False, action=custom_action("master"))
-parser.add_argument("--onvif", help="branch_name/build_number", required=False, action=custom_action("dev"))
+parser.add_argument("--asis", help="branch_name/build_number", required=False, action=custom_action("develop"))
+parser.add_argument("--onvif", help="branch_name/build_number", required=False, action=custom_action("develop"))
 parser.add_argument("--debug", help="debug/release", required=False, action='store_true')
 parser.add_argument("--noinstall", help="just download", required=False, action='store_true')
 parser.add_argument("--norestart", help="no daemon restart on render/tegras", required=False, action='store_true')
@@ -65,7 +65,7 @@ args = parser.parse_args()
 
 if all(v is None for v in vars(args).values()):
     parser.print_help(sys.stdout)
-    print("\nexample: ./install.py --cam 12 --acos master/109 --asis master --onvif master\n")
+    print("\nexample: ./install.py --cam 12 --acos release_4.2.0 --asis develop/19 --onvif master\n")
     exit(0)
 
 if args.onvif:
@@ -92,8 +92,10 @@ if args.cam:
 os_ver = "18.04" if "18.04" in platform.version() else "20.04" if "20.04" in platform.version() else "16.04"
 print("os:", os_ver)
 
-tegra_os_ver = "18.04" if "18.04" in exec_cmd("ssh nvidia@{}.{} 'lsb_release | grep Release'".format(cam_ip, 1)) else "16.04"
-print("tegra os:", tegra_os_ver)
+tegra_os_ver = "16.04"
+if cam_ip:
+    tegra_os_ver = "18.04" if "18.04" in exec_cmd("ssh nvidia@{}.{} 'lsb_release | grep Release'".format(cam_ip, 1)) else "16.04"
+    print("tegra os:", tegra_os_ver)
 
 
 res = []
