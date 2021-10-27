@@ -175,22 +175,63 @@ s])
 
             rs = rt.decode("utf-8")
 
-            self.assertTrue(rs, msg="Some tegras cannot resolve server ip to hostname")      
+            self.assertTrue(rs, msg="Some tegras cannot resolve server ip to hostname")   
+            
+    # OS is correct
+    def test_110(self):
+        uname = platform.uname()
+        rs = uname.system == 'Linux' and uname.machine == 'x86_64' and re.findall('16?8?\.04\.\d+-Ubuntu', uname.version)
 
+        self.assertTrue(rs, msg="OS is not Ubuntu 16.04/18.04")
 
     # free disk space
-    def test_110(self):
+    def test_111(self):
         du = shutil.disk_usage("/")
         rs = (du.free / du.total) > 0.05
         
         self.assertTrue(rs, msg="Available disk space is less than 5%")
 
-    # OS is correct
-    def test_111(self):
-        uname = platform.uname()
-        rs = uname.system == 'Linux' and uname.machine == 'x86_64' and re.findall('16?8?\.04\.\d+-Ubuntu', uname.version)
+    # GPU is supported
+    def test_112(self):
+        cmd = "nvidia-smi -L"
+        rt = self.exec_cmd(cmd)
+        rs = re.findall('GTX 10\d0', rt)
+        
+        self.assertTrue(rs, msg="GPU is not in the supported GPU's list. Forced compatibility is required")
 
-        self.assertTrue(rs, msg="OS is not Ubuntu 16.04/18.04")
+    # Proper GPU driver is installed
+    def test_113(self):
+        cmd = "dpkg -l | grep -i 'NVIDIA binary driver'"
+        rt = self.exec_cmd(cmd)
+        rs = re.findall('nvidia-4[6-9][05]', rt)
+        
+        self.assertTrue(rs, msg="It is recommended to install nvidia driver >=460")
+
+    # OpenGL is ok
+    def test_114(self):
+        cmd = "glxinfo | grep 'server glx vendor'"
+        rt = self.exec_cmd(cmd)
+        rs = re.findall('NVIDIA', rt)
+                
+        self.assertTrue(rs, msg="There is issue on OpenGL side, check glew")
+
+    # FRST is ok
+    def test_115(self):
+        cmd = "Fovea_Rendering_Speed_test -iterations 1 -windows 0"
+        rt = self.exec_cmd(cmd)
+        rs = not re.findall('core dumped', rt)
+        
+        self.assertTrue(not rs, msg="There is issue on render side, check lightdm config")
+
+    # Limits are correct
+    def test_116(self):
+        cmd = "ulimit -n"
+        rt = self.exec_cmd(cmd)
+        rs = rt.trim() == "64000"
+        
+        self.assertTrue(rs, msg="Open files limit should be 64k, check /etc/security/limits.conf")
+
+    # Aqueti software is installed
 
 
 
