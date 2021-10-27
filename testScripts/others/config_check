@@ -215,7 +215,7 @@ s])
                 
         self.assertTrue(rs, msg="There is issue on OpenGL side, check glew")
 
-    # FRST is ok
+    # Render is ok
     def test_115(self):
         cmd = "Fovea_Rendering_Speed_test -iterations 1 -windows 0"
         rt = self.exec_cmd(cmd)
@@ -227,7 +227,7 @@ s])
     def test_116(self):
         cmd = "ulimit -n"
         rt = self.exec_cmd(cmd)
-        rs = rt.trim() == "64000"
+        rs = rt.strip() == "64000"
         
         self.assertTrue(rs, msg="Open files limit should be 64k, check /etc/security/limits.conf")
 
