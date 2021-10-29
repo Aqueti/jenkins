@@ -231,7 +231,59 @@ s])
         
         self.assertTrue(rs, msg="Open files limit should be 64k, check /etc/security/limits.conf")
 
+    # rmem_max is set
+    def test_117(self):
+        cmd = "sudo sysctl -p"
+        rt = self.exec_cmd(cmd)
+        text = 'net.core.rmem_max = 26214400\nnet.core.rmem_default = 26214400'
+        rs = text in rt
+        
+        self.assertTrue(rs, msg="rmem_max=26214400, video will be jerky if not set, check /etc/sysctl.conf")
+
     # Aqueti software is installed
+    def test_118(self):
+        cmd = "dpkg -l | grep -i aqueti | awk \'{print$2}\'"
+        rt = self.exec_cmd(cmd)
+        aqt_apps = {'aquetiapi', 'aqueticalibrationtools', 'aquetidaemon-application', 'aquetidaemon-daemon', 'asis'}
+        rs =  aqt_apps & set(rt.split())
+        rs = len(rs) == len(aqt_apps)
+        
+        self.assertTrue(rs, msg="Some software is not installed")
+
+    # Aqueti software dependencies are installed
+    def test_119(self):
+        cmd = "dpkg -l | grep -iE '(mongodb-org-server|docker-ce|hugin)'"
+        rt = self.exec_cmd(cmd)
+        aqt_apps = {'mongodb-org-server', 'docker-ce', 'hugin'}
+        rs =  aqt_apps & set(rt.split())
+        rs = len(rs) == len(aqt_apps)
+        
+        self.assertTrue(rs, msg="Some dependencies are not installed")
+
+    # Daemon config is ok
+    def test_120(self):
+        fpath = '/etc/aqueti/daemonConfiguration.json'
+        
+        with open(fpath, 'r') as f:
+            dconfig = json.load(f)
+
+        keys = {'directoryOfServices', 'globalDatabase', 'localDatabase', 'resource', 'submodule'}
+
+        rs = keys & set(dconfig.keys())
+        rs = len(rs) == len(keys)
+        
+        self.assertTrue(rs, msg="Daemon config has issues")
+
+    # System name is set
+    def test_121(self):
+        fpath = '/etc/aqueti/daemonConfiguration.json'
+        
+        with open(fpath, 'r') as f:
+            dconfig = json.load(f)
+
+        rs = dconfig['directoryOfServices']['system'] not in ('', 'Aqueti')
+        
+        self.assertTrue(rs, msg="System name is not set")
 
 
 
