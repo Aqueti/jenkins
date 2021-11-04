@@ -285,6 +285,54 @@ s])
         
         self.assertTrue(rs, msg="System name is not set")
 
+    # Mongod is running
+    def test_122(self):        
+        cmd = 'sudo service mongod status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="mongod service is not running")
+
+    # ADP is running
+    def test_123(self):        
+        cmd = 'sudo service Aqueti-Daemon status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="Aqueti-Daemon service is not running")
+
+    # ASIS is running
+    def test_124(self):        
+        cmd = 'sudo service asisd status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="asisd service is not running")
+
+    # All ASIS containers are running
+    def test_125(self):        
+        cmd = 'sudo docker ps -a | grep asis | grep Up | wc -l'
+        rt = self.exec_cmd(cmd)
+        rs = '7' in rt
+        
+        self.assertTrue(rs, msg="Some/All ASIS containers are not running")
+
+    # Avahi-daemon is available on port 5353
+    def test_126(self):
+        cmd = 'sudo lsof -i :5353'
+        rt = self.exec_cmd(cmd)
+        rs = 'avahi-dae' in rt
+
+        self.assertTrue(rs, msg="Avahi is not available")
+        
+    # Firewall is disabled
+    def test_127(self):
+        cmd = 'sudo ufw status'
+        rt = self.exec_cmd(cmd)
+        rs = 'inactive' in rt
+
+        self.assertTrue(rs, msg="Firewall is running. Make sure it's set up properly or disable it")
+        
 
 
 if __name__ == '__main__':
