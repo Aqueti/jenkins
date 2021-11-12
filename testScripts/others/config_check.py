@@ -252,9 +252,9 @@ s])
 
     # Aqueti software dependencies are installed
     def test_119(self):
-        cmd = "dpkg -l | grep -iE '(mongodb-org-server|docker-ce|hugin)'"
+        cmd = "dpkg -l | grep -iE '(mongodb-org-server|docker-ce|hugin|ntp|lightdm)'"
         rt = self.exec_cmd(cmd)
-        aqt_apps = {'mongodb-org-server', 'docker-ce', 'hugin'}
+        aqt_apps = {'mongodb-org-server', 'docker-ce', 'hugin', 'ntp', 'lightdm'}
         rs =  aqt_apps & set(rt.split())
         rs = len(rs) == len(aqt_apps)
         
@@ -284,6 +284,14 @@ s])
         rs = dconfig['directoryOfServices']['system'] not in ('', 'Aqueti')
         
         self.assertTrue(rs, msg="System name is not set")
+
+    # Lightdm is running
+    def test_121_1(self):
+        cmd = 'sudo service lightdm status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="lightdm service is not running")
 
     # Mongod is running
     def test_122(self):        
@@ -332,7 +340,38 @@ s])
         rs = 'inactive' in rt
 
         self.assertTrue(rs, msg="Firewall is running. Make sure it's set up properly or disable it")
+    
+    # ntp is running
+    def test_128(self):
+        cmd = 'sudo service asisd status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
         
+        self.assertTrue(rs, msg="ntp service is not running")
+
+    # ntp config is ok
+    def test_129(self):
+        cmd = 'cat /etc/ntp.conf | grep -v "#" | grep broadcast | wc -l'
+        rt = self.exec_cmd(cmd)
+        rs = ('2' == rt)
+
+        self.assertTrue(rs, msg="There is an issue with ntp.conf")
+
+    # ntp server is configured
+    def test_130(self):
+        cmd = 'ntpq -p'
+        rt = self.exec_cmd(cmd)
+        rs = 'remote' in rt
+
+        self.assertTrue(rs, msg="ntp server is not configured")
+    
+    # API and daemon versions match
+    def test_131(self):
+        cmd = 'AquetiDaemonProcess --version | tail -1; AquetiAPIVersion | tail -1'
+        rt = self.exec_cmd(cmd)
+        rs = rt[0] == rt[-1]
+
+        self.assertTrue(rs, msg="API and daemon versions mismatch")
 
 
 if __name__ == '__main__':
