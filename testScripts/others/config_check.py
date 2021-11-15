@@ -3,12 +3,15 @@
 import subprocess
 import re
 import os
+import grp
+import pwd        
 import sys
 import time
 import platform
 import queue
 import shutil
 import unittest
+import Path
 
 from ipaddress import ip_network
 
@@ -372,6 +375,49 @@ s])
         rs = rt[0] == rt[-1]
 
         self.assertTrue(rs, msg="API and daemon versions mismatch")
+
+    # Storage directory exists
+    def test_132(self):
+        fpath = '/etc/aqueti/daemonConfiguration.json'
+        
+        with open(fpath, 'r') as f:
+            dconfig = json.load(f)
+
+        spath = dconfig['submodule']['storageDirs'][-1]
+
+        rs = Path(spath).is_dir()
+        
+        self.assertTrue(rs, msg="Storage directory does not exist")
+
+    # Storage directory permissions are ok
+    def test_133(self):
+        fpath = '/etc/aqueti/daemonConfiguration.json'
+        
+        with open(fpath, 'r') as f:
+            dconfig = json.load(f)
+
+        spath = dconfig['submodule']['storageDirs'][-1]
+
+        stat_info = os.stat(spath)
+        uid, gid = stat_info.st_uid, stat_info.st_gid
+
+        user, group = pwd.getpwuid(uid)[0], grp.getgrgid(gid)[0]
+        rs = ('aqueti' == user) and ('aqueti' == group)
+        
+        self.assertTrue(rs, msg="There is an issue with storage directory permissions")
+
+    # AQT directories permissions are ok
+    def test_134(self):
+        folders = ['/etc/aqueti', '/var/tmp/aqueti', '/var/log/aqueti']
+
+        for spath in folders:
+            stat_info = os.stat(spath)
+            uid, gid = stat_info.st_uid, stat_info.st_gid
+
+            user, group = pwd.getpwuid(uid)[0], grp.getgrgid(gid)[0]
+            rs = ('aqueti' == user) and ('aqueti' == group)
+            
+            self.assertTrue(rs, msg="There is an issue with storage directory permissions")
 
 
 if __name__ == '__main__':
