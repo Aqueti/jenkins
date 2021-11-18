@@ -12,6 +12,7 @@ import queue
 import shutil
 import unittest
 import Path
+import pymongo
 
 from ipaddress import ip_network
 
@@ -178,64 +179,112 @@ s])
 
             rs = rt.decode("utf-8")
 
-            self.assertTrue(rs, msg="Some tegras cannot resolve server ip to hostname")   
-            
-    # OS is correct
+            self.assertTrue(rs, msg="Some tegras cannot resolve server ip to hostname")
+
+    def test_10(self):
+        """ip v6 is off"""
+        cmd = "cat /etc/avahi/avahi-daemon.conf | grep use-ipv6"
+        rt = self.exec_cmd(cmd)
+        rs = 'yes' in rt
+
+        self.assertTrue(rs, msg="ip v6 is enabled on tegras ")
+
+
+class TestServerConfig(unittest.TestCase):
+    daemon_config = None
+
+    @staticmethod
+    def exec_cmd(cmd):
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PI
+PE)
+
+        return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
+
+    def __init__(self, *args, **kwargs):
+        super(TestServerEnv, self).__init__(*args, **kwargs)
+
+        with open('/etc/aqueti/daemonConfiguration.json', 'r') as f:
+            self.daemon_config = json.load(f)
+    
     def test_110(self):
+        """
+        OS is correct
+        """
+
         uname = platform.uname()
         rs = uname.system == 'Linux' and uname.machine == 'x86_64' and re.findall('16?8?\.04\.\d+-Ubuntu', uname.version)
 
         self.assertTrue(rs, msg="OS is not Ubuntu 16.04/18.04")
 
-    # free disk space
     def test_111(self):
+        """
+        there is free disk space
+        """
+
         du = shutil.disk_usage("/")
         rs = (du.free / du.total) > 0.05
         
         self.assertTrue(rs, msg="Available disk space is less than 5%")
 
-    # GPU is supported
     def test_112(self):
+        """
+        GPU is supported
+        """
+
         cmd = "nvidia-smi -L"
         rt = self.exec_cmd(cmd)
         rs = re.findall('GTX 10\d0', rt)
         
         self.assertTrue(rs, msg="GPU is not in the supported GPU's list. Forced compatibility is required")
 
-    # Proper GPU driver is installed
     def test_113(self):
+        """
+        Proper GPU driver is installed
+        """
+
         cmd = "dpkg -l | grep -i 'NVIDIA binary driver'"
         rt = self.exec_cmd(cmd)
         rs = re.findall('nvidia-4[6-9][05]', rt)
         
         self.assertTrue(rs, msg="It is recommended to install nvidia driver >=460")
 
-    # OpenGL is ok
     def test_114(self):
+        """
+        OpenGL is ok
+        """
+
         cmd = "glxinfo | grep 'server glx vendor'"
         rt = self.exec_cmd(cmd)
         rs = re.findall('NVIDIA', rt)
                 
         self.assertTrue(rs, msg="There is issue on OpenGL side, check glew")
 
-    # Render is ok
     def test_115(self):
+        """
+        Render is ok
+        """
+
         cmd = "Fovea_Rendering_Speed_test -iterations 1 -windows 0"
         rt = self.exec_cmd(cmd)
         rs = not re.findall('core dumped', rt)
         
         self.assertTrue(not rs, msg="There is issue on render side, check lightdm config")
 
-    # Limits are correct
     def test_116(self):
+        """
+        Limits are correct
+        """
         cmd = "ulimit -n"
         rt = self.exec_cmd(cmd)
         rs = rt.strip() == "64000"
         
         self.assertTrue(rs, msg="Open files limit should be 64k, check /etc/security/limits.conf")
 
-    # rmem_max is set
     def test_117(self):
+        """
+        rmem_max is set
+        """
+
         cmd = "sudo sysctl -p"
         rt = self.exec_cmd(cmd)
         text = 'net.core.rmem_max = 26214400\nnet.core.rmem_default = 26214400'
@@ -243,8 +292,11 @@ s])
         
         self.assertTrue(rs, msg="rmem_max=26214400, video will be jerky if not set, check /etc/sysctl.conf")
 
-    # Aqueti software is installed
     def test_118(self):
+        """
+        Aqueti software is installed
+        """
+
         cmd = "dpkg -l | grep -i aqueti | awk \'{print$2}\'"
         rt = self.exec_cmd(cmd)
         aqt_apps = {'aquetiapi', 'aqueticalibrationtools', 'aquetidaemon-application', 'aquetidaemon-daemon', 'asis'}
@@ -253,8 +305,11 @@ s])
         
         self.assertTrue(rs, msg="Some software is not installed")
 
-    # Aqueti software dependencies are installed
     def test_119(self):
+        """
+        Aqueti software dependencies are installed
+        """
+
         cmd = "dpkg -l | grep -iE '(mongodb-org-server|docker-ce|hugin|ntp|lightdm)'"
         rt = self.exec_cmd(cmd)
         aqt_apps = {'mongodb-org-server', 'docker-ce', 'hugin', 'ntp', 'lightdm'}
@@ -263,140 +318,122 @@ s])
         
         self.assertTrue(rs, msg="Some dependencies are not installed")
 
-    # Daemon config is ok
     def test_120(self):
-        fpath = '/etc/aqueti/daemonConfiguration.json'
-        
-        with open(fpath, 'r') as f:
-            dconfig = json.load(f)
+        """
+        Daemon config is ok
+        """
 
         keys = {'directoryOfServices', 'globalDatabase', 'localDatabase', 'resource', 'submodule'}
 
-        rs = keys & set(dconfig.keys())
+        rs = keys & set(self.daemon_config.keys())
         rs = len(rs) == len(keys)
         
         self.assertTrue(rs, msg="Daemon config has issues")
 
-    # System name is set
-    def test_121(self):
-        fpath = '/etc/aqueti/daemonConfiguration.json'
-        
-        with open(fpath, 'r') as f:
-            dconfig = json.load(f)
+    def test_1201(self):
+        """
+        Daemon config submodules
+        """
 
-        rs = dconfig['directoryOfServices']['system'] not in ('', 'Aqueti')
+        keys = {'Coeus', 'ModelHandler', 'Mnemosyne', 'Hyperion', 'Cronus', 'SCOPController', 'ImportExportControl'}
+
+        rs = set([k['type'] for k in self.daemon_config['submodule']]) & set(self.daemon_config.keys())
+        rs = len(rs) == len(keys)
+        
+        self.assertTrue(rs, msg="Missing submodule")
+
+    def test_121(self):
+        """
+        System name is set
+        """
+
+        rs = self.daemon_config['directoryOfServices']['system'] not in ('', 'Aqueti')
         
         self.assertTrue(rs, msg="System name is not set")
 
-    # Lightdm is running
-    def test_121_1(self):
-        cmd = 'sudo service lightdm status | grep Active'
-        rt = self.exec_cmd(cmd)
-        rs = 'running' in rt
-        
-        self.assertTrue(rs, msg="lightdm service is not running")
-
-    # Mongod is running
-    def test_122(self):        
-        cmd = 'sudo service mongod status | grep Active'
-        rt = self.exec_cmd(cmd)
-        rs = 'running' in rt
-        
-        self.assertTrue(rs, msg="mongod service is not running")
-
-    # ADP is running
-    def test_123(self):        
-        cmd = 'sudo service Aqueti-Daemon status | grep Active'
-        rt = self.exec_cmd(cmd)
-        rs = 'running' in rt
-        
-        self.assertTrue(rs, msg="Aqueti-Daemon service is not running")
-
-    # ASIS is running
-    def test_124(self):        
-        cmd = 'sudo service asisd status | grep Active'
-        rt = self.exec_cmd(cmd)
-        rs = 'running' in rt
-        
-        self.assertTrue(rs, msg="asisd service is not running")
-
-    # All ASIS containers are running
-    def test_125(self):        
-        cmd = 'sudo docker ps -a | grep asis | grep Up | wc -l'
-        rt = self.exec_cmd(cmd)
-        rs = '7' in rt
-        
-        self.assertTrue(rs, msg="Some/All ASIS containers are not running")
-
-    # Avahi-daemon is available on port 5353
     def test_126(self):
+        """
+        Avahi-daemon is available on port 5353
+        """
+
         cmd = 'sudo lsof -i :5353'
         rt = self.exec_cmd(cmd)
         rs = 'avahi-dae' in rt
 
         self.assertTrue(rs, msg="Avahi is not available")
-        
-    # Firewall is disabled
+
     def test_127(self):
+        """
+        Firewall is disabled
+        """
+
         cmd = 'sudo ufw status'
         rt = self.exec_cmd(cmd)
         rs = 'inactive' in rt
 
         self.assertTrue(rs, msg="Firewall is running. Make sure it's set up properly or disable it")
-    
-    # ntp is running
+
     def test_128(self):
+        """
+        ntp is running
+        """
+
         cmd = 'sudo service asisd status | grep Active'
         rt = self.exec_cmd(cmd)
         rs = 'running' in rt
         
         self.assertTrue(rs, msg="ntp service is not running")
 
-    # ntp config is ok
     def test_129(self):
+        """
+        ntp config is ok
+        """
+
         cmd = 'cat /etc/ntp.conf | grep -v "#" | grep broadcast | wc -l'
         rt = self.exec_cmd(cmd)
         rs = ('2' == rt)
 
         self.assertTrue(rs, msg="There is an issue with ntp.conf")
 
-    # ntp server is configured
     def test_130(self):
+        """
+        ntp server is configured
+        """
+
         cmd = 'ntpq -p'
         rt = self.exec_cmd(cmd)
         rs = 'remote' in rt
 
         self.assertTrue(rs, msg="ntp server is not configured")
-    
-    # API and daemon versions match
+
     def test_131(self):
+        """
+        API and daemon versions match
+        """
+
         cmd = 'AquetiDaemonProcess --version | tail -1; AquetiAPIVersion | tail -1'
         rt = self.exec_cmd(cmd)
         rs = rt[0] == rt[-1]
 
         self.assertTrue(rs, msg="API and daemon versions mismatch")
 
-    # Storage directory exists
     def test_132(self):
-        fpath = '/etc/aqueti/daemonConfiguration.json'
-        
-        with open(fpath, 'r') as f:
-            dconfig = json.load(f)
+        """
+        Storage directory exists
+        """
 
-        spath = dconfig['submodule']['storageDirs'][-1]
+        spath = self.daemon_config['submodule']['storageDirs'][-1]
 
         rs = Path(spath).is_dir()
         
         self.assertTrue(rs, msg="Storage directory does not exist")
 
-    # Storage directory permissions are ok
-    def test_133(self):
-        fpath = '/etc/aqueti/daemonConfiguration.json'
-        
-        with open(fpath, 'r') as f:
-            dconfig = json.load(f)
+    def test_1321(self):
+        """
+        Storage directory permissions are ok
+        """
 
-        spath = dconfig['submodule']['storageDirs'][-1]
+        spath = self.daemon_config['submodule']['storageDirs'][-1]
 
         stat_info = os.stat(spath)
         uid, gid = stat_info.st_uid, stat_info.st_gid
@@ -406,8 +443,11 @@ s])
         
         self.assertTrue(rs, msg="There is an issue with storage directory permissions")
 
-    # AQT directories permissions are ok
     def test_134(self):
+        """
+        AQT directories permissions are ok
+        """
+
         folders = ['/etc/aqueti', '/var/tmp/aqueti', '/var/log/aqueti']
 
         for spath in folders:
@@ -418,6 +458,98 @@ s])
             rs = ('aqueti' == user) and ('aqueti' == group)
             
             self.assertTrue(rs, msg="There is an issue with storage directory permissions")
+
+    def test_121_1(self):
+        """
+        Lightdm is running
+        """
+
+        cmd = 'sudo service lightdm status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="lightdm service is not running")
+
+    def test_122(self):
+        """
+        Mongod is running
+        """
+
+        cmd = 'sudo service mongod status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="mongod service is not running")
+
+    def test_1221(self):
+        """
+        mongodb: acos database exists
+        """
+
+        db_name = self.daemon_config["self.daemon_config"]["name"]
+
+        mc = pymongo.MongoClient("mongodb://127.0.0.1:21017")
+        db_names = mc.list_database_names()
+        rs = db_name in db_names        
+        
+        self.assertTrue(rs, msg="acos db does not exist")
+
+    def test_1222(self):
+        """
+        mongodb: asis database exists
+        """
+
+        mc = pymongo.MongoClient("mongodb://127.0.0.1:21017")
+        db_names = mc.list_database_names()
+        rs = 'asis' in db_names        
+        
+        self.assertTrue(rs, msg="asis db does not exist")
+
+    def test_1223(self):
+        """
+        mongodb: models collection is not empty
+        """
+
+        db_name = self.daemon_config["self.daemon_config"]["name"]
+
+        mc = pymongo.MongoClient("mongodb://127.0.0.1:21017")
+        models_num = mc[db_name]['models'].count()
+        rs = models_num > 0
+        
+        self.assertTrue(rs, msg="models collection is empty)
+
+    def test_123(self): 
+        """
+        ADP is running
+        """
+
+        cmd = 'sudo service Aqueti-Daemon status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="Aqueti-Daemon service is not running")
+
+    def test_124(self):
+        """
+        ASIS is running
+        """
+
+        cmd = 'sudo service asisd status | grep Active'
+        rt = self.exec_cmd(cmd)
+        rs = 'running' in rt
+        
+        self.assertTrue(rs, msg="asisd service is not running")
+
+    def test_125(self):      
+        """
+        All ASIS containers are running
+        """
+         
+        cmd = 'sudo docker ps -a | grep asis | grep Up | wc -l'
+        rt = self.exec_cmd(cmd)
+        rs = '7' in rt
+        
+        self.assertTrue(rs, msg="Some/All ASIS containers are not running")
 
 
 if __name__ == '__main__':
