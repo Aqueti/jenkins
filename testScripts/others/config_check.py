@@ -13,6 +13,8 @@ import shutil
 import unittest
 import Path
 import pymongo
+import base64
+import paramiko
 
 from ipaddress import ip_network
 
@@ -180,14 +182,6 @@ s])
             rs = rt.decode("utf-8")
 
             self.assertTrue(rs, msg="Some tegras cannot resolve server ip to hostname")
-
-    def test_10(self):
-        """ip v6 is off"""
-        cmd = "cat /etc/avahi/avahi-daemon.conf | grep use-ipv6"
-        rt = self.exec_cmd(cmd)
-        rs = 'yes' in rt
-
-        self.assertTrue(rs, msg="ip v6 is enabled on tegras ")
 
 
 class TestServerConfig(unittest.TestCase):
@@ -516,7 +510,7 @@ PE)
         models_num = mc[db_name]['models'].count()
         rs = models_num > 0
         
-        self.assertTrue(rs, msg="models collection is empty)
+        self.assertTrue(rs, msg="models collection is empty")
 
     def test_123(self): 
         """
@@ -550,6 +544,99 @@ PE)
         rs = '7' in rt
         
         self.assertTrue(rs, msg="Some/All ASIS containers are not running")
+
+
+class TestTegraConfig(unittest.TestCase):
+    daemon_config = None
+
+    tegra_ips = ["10.1.7.{}".format(i) for i in range(10)]
+    ssh_clients = {tegra_ip: None for tegra_ip in tegra_ips}
+
+    @staticmethod
+    def exec_cmd(cmd):
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PI
+PE)
+
+        return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
+
+    def __init__(self, *args, **kwargs):
+        super(TestServerEnv, self).__init__(*args, **kwargs)
+
+        for tegra_ip in self.tegra_ips:
+            self.ssh_clients[tegra_ip] = paramiko.SSHClient()
+            self.ssh_clients[tegra_ip].set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.ssh_clients[tegra_ip].connect(tegra_ip, username='nvidia', password='nvidia')
+
+    def exec_cmd_on_tegras(self, cmd, ip=None):        
+        stdin, stdout, stderr = self.client.exec_command(cmd)
+
+        if ip:
+            tegra_ips = [ip]
+
+        out = {}
+        for tegra_ip in self.tegra_ips:
+            stdin, stdout, stderr = self.ssh_clients[tegra_ip].exec_command(cmd)
+            out[tegra_ip] = stdout
+
+        return out
+
+    def assertTrue_on_tegras(self, cmd, func, msg, ip=None):        
+        stdin, stdout, stderr = self.client.exec_command(cmd)
+
+        out = self.exec_cmd_on_tegras(cmd, ip)
+        for tegra_ip, stdout in out.items():
+            self.assertTrue(func(stdout), msg="{}: {}".format(tegra_ip, msg))
+    
+    def test_100(self):
+        """
+        Aqueti software is installed
+        """
+
+        cmd = "dpkg -l | grep -i aqueti | awk '{print$2}'"
+        func = lambda s: set(s.split()) == {'aqueti-kernel-updater', 'aqueti-tegra-config', 'aquetidaemon'} 
+
+        self.assertTrue_on_tegras(cmd, func, "Aqueti software is not installed")
+
+    def test_101(self):
+        """
+        Tegra config is ok
+        """
+
+        cmd = "python -m json.tool /etc/aqueti/daemonConfiguration.json"
+        func = lambda s: set(json.loads(s).keys()) == {'directoryOfServices', 'globalDatabase', 'localDatabase', 'resource', 'submodule'}
+
+        self.assertTrue_on_tegras(cmd, func, "There is an issue with tegra config")
+
+
+    def test_102(self):
+        """
+        Compression is correct
+        """
+
+        cmd = "python -m json.tool /etc/aqueti/daemonConfiguration.json"
+        func = lambda s: json.loads(s)["submodule"]["compression"] in {'JPEG', 'H264', 'H265'}
+
+        self.assertTrue_on_tegras(cmd, func, "There is an issue with compression type")
+
+    def test_103(self):
+        """
+        System name is not empty
+        """
+
+        cmd = "python -m json.tool /etc/aqueti/daemonConfiguration.json"
+        func = lambda s: json.loads(s)["directoryOfServices"]["system"] != ""
+
+        self.assertTrue_on_tegras(cmd, func, "There is an issue with system name")
+
+    def test_104(self):
+        """
+        ip v6 is off
+        """
+
+        cmd = "cat /etc/avahi/avahi-daemon.conf | grep -v '#' | grep 'use-ipv6'"
+        func = lambda s: 'yes' in s
+
+        self.assertTrue_on_tegras(cmd, func, "ip v6 is enabled on tegra")
 
 
 if __name__ == '__main__':
