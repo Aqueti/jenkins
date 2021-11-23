@@ -638,6 +638,43 @@ PE)
 
         self.assertTrue_on_tegras(cmd, func, "ip v6 is enabled on tegra")
 
+        
+    def test_105(self):
+        """
+        ntp is ok
+        """
+
+        cmd = "ntpq -p"
+        func = lambda s: 'remote' in s
+
+        self.assertTrue_on_tegras(cmd, func, "There is an issue with ntp config")
+
+    def test_106(self):
+        """
+        sensors are connected
+        """
+
+        cmd = "sudo i2cdetect -y -r 30 | tail -2"
+        func = lambda s: '60' in s
+
+        self.assertTrue_on_tegras(cmd, func, "There is an issue with sensors")
+
+        cmd = "sudo i2cdetect -y -r 31 | tail -2"
+        func = lambda s: '40' not in s
+
+        self.assertTrue_on_tegras(cmd, func, "There is an issue with sensors")
+
+
+    def test_107(self):
+        """
+        XX is not doubled in tegra config
+        """
+
+        cmd = "python -m json.tool /etc/aqueti/config.json"
+        func = lambda s: 'XXXX' not in s
+
+        self.assertTrue_on_tegras(cmd, func, "There is doubled XX in /etc/aqueti/config.json")
+
 
 if __name__ == '__main__':
     print("Config checker", end="\n")
