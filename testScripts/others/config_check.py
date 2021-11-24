@@ -664,7 +664,6 @@ PE)
 
         self.assertTrue_on_tegras(cmd, func, "There is an issue with sensors")
 
-
     def test_107(self):
         """
         XX is not doubled in tegra config
@@ -674,6 +673,36 @@ PE)
         func = lambda s: 'XXXX' not in s
 
         self.assertTrue_on_tegras(cmd, func, "There is doubled XX in /etc/aqueti/config.json")
+
+    def test_108(self):
+        """
+        There is available space on /dev/root
+        """
+
+        cmd = "df -h / | awk '{print$5}'"
+        func = lambda s: '100' not in s
+
+        self.assertTrue_on_tegras(cmd, func, "There is no available space on /dev/root")
+
+    def test_109(self):
+        """
+        there is available space on /var/log
+        """
+
+        cmd = "df -h /var/log | awk '{print$5}'"
+        func = lambda s: '100' not in s
+
+        self.assertTrue_on_tegras(cmd, func, "There is no available space on /var/log")
+
+    def test_110(self):
+        """
+        There are no sensors faults
+        """
+
+        cmd = "cat /etc/aqueti/state.json | grep sensor_faults"
+        func = lambda s: '0' in s
+
+        self.assertTrue_on_tegras(cmd, func, "There are sensors faults")
 
 
 if __name__ == '__main__':
