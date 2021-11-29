@@ -544,7 +544,29 @@ PE)
         rs = '7' in rt
         
         self.assertTrue(rs, msg="Some/All ASIS containers are not running")
+    
+    def test_1251(self):      
+        """
+        worker log_level is correct
+        """
+         
+        cmd = 'cat /etc/asis/config/worker/config.py | grep -v '#' | grep LOG_LEVEL'
+        rt = self.exec_cmd(cmd)
+        rs = 'WARNING' in rt
+        
+        self.assertTrue(rs, msg="worker LOG_LEVEL is incorrect")
 
+    def test_1252(self):      
+        """
+        asis log_level is correct
+        """
+         
+        cmd = 'cat /etc/asis/config/asis/config.py | grep -v '#' | grep LOG_LEVEL'
+        rt = self.exec_cmd(cmd)
+        rs = 'WARNING' in rt
+        
+        self.assertTrue(rs, msg="asis LOG_LEVEL is incorrect")
+        
 
 class TestTegraConfig(unittest.TestCase):
     daemon_config = None
@@ -627,14 +649,24 @@ PE)
         func = lambda s: json.loads(s)["directoryOfServices"]["system"] != ""
 
         self.assertTrue_on_tegras(cmd, func, "There is an issue with system name")
+    
+    def test_1041(self):
+        """
+        ip v4 is on
+        """
 
-    def test_104(self):
+        cmd = "cat /etc/avahi/avahi-daemon.conf | grep -v '#' | grep 'use-ipv4'"
+        func = lambda s: 'yes' in s
+
+        self.assertTrue_on_tegras(cmd, func, "ip v6 is enabled on tegra")
+        
+    def test_1042(self):
         """
         ip v6 is off
         """
 
         cmd = "cat /etc/avahi/avahi-daemon.conf | grep -v '#' | grep 'use-ipv6'"
-        func = lambda s: 'yes' in s
+        func = lambda s: 'no' in s
 
         self.assertTrue_on_tegras(cmd, func, "ip v6 is enabled on tegra")
 
