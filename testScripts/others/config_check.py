@@ -621,7 +621,7 @@ PE)
 
     def test_101(self):
         """
-        Tegra config is ok
+        Tegra daemon config is ok
         """
 
         cmd = "python -m json.tool /etc/aqueti/daemonConfiguration.json"
@@ -670,8 +670,17 @@ PE)
 
         self.assertTrue_on_tegras(cmd, func, "ip v6 is enabled on tegra")
 
+    def test_1052(self):
+        """
+        ntp is configured
+        """
+
+        cmd = "cat /etc/ntp.conf | grep -v '#'"
+        func = lambda s: 'broadcastclient' in s
+
+        self.assertTrue_on_tegras(cmd, func, "ntp is not configured")
         
-    def test_105(self):
+    def test_1052(self):
         """
         ntp is ok
         """
@@ -696,7 +705,17 @@ PE)
 
         self.assertTrue_on_tegras(cmd, func, "There is an issue with sensors")
 
-    def test_107(self):
+    def test_1071(self):
+        """
+        Factory model is copied to tegra config
+        """
+
+        cmd = "python -m json.tool /etc/aqueti/config.json | grep Slot | wc -l"
+        func = lambda s: int(s) > 12 
+
+        self.assertTrue_on_tegras(cmd, func, "Factory model is not copied to tegra config")
+
+    def test_1072(self):
         """
         XX is not doubled in tegra config
         """
@@ -735,6 +754,26 @@ PE)
         func = lambda s: '0' in s
 
         self.assertTrue_on_tegras(cmd, func, "There are sensors faults")
+
+    def test_111(self):
+        """
+        ADP is running
+        """
+
+        cmd = "sudo service Aqueti-Daemon status | grep Active"
+        func = lambda s: 'running' in s
+
+        self.assertTrue_on_tegras(cmd, func, "ADP is running")
+
+    def test_112(self):
+        """
+        Data connection with server daemon is established
+        """
+
+        cmd = "sudo netstat -np | grep acosd | grep -v unix | wc -l"
+        func = lambda s: int(s) >= 20
+
+        self.assertTrue_on_tegras(cmd, func, "Data connection with server daemon is not established")
 
 
 if __name__ == '__main__':
