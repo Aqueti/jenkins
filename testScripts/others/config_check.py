@@ -345,7 +345,7 @@ PE)
         
         self.assertTrue(rs, msg="System name is not set")
 
-    def test_126(self):
+    def test_1261(self):
         """
         Avahi-daemon is available on port 5353
         """
@@ -355,6 +355,28 @@ PE)
         rs = 'avahi-dae' in rt
 
         self.assertTrue(rs, msg="Avahi is not available")
+
+    def test_1262(self):
+        """
+        Avahi name->ip resolution works
+        """
+
+        cmd = 'avahi-resolve-host-name $(hostname).local'
+        rt = self.exec_cmd(cmd)
+        rs = '172.16.' in rt
+
+        self.assertTrue(rs, msg="There is an issue with avahi name resolution")
+
+    def test_1263(self):
+        """
+        Avahi ip->name resolution works
+        """
+
+        cmd = 'avahi-resolve-address 127.0.0.1 | grep $(hostname).local'
+        rt = self.exec_cmd(cmd)
+        rs = len(rt) > 0
+
+        self.assertTrue(rs, msg="There is an issue with avahi name resolution")
 
     def test_127(self):
         """
