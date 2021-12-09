@@ -797,6 +797,28 @@ PE)
 
         self.assertTrue_on_tegras(cmd, func, "Data connection with server daemon is not established")
 
+    def test_113(self):
+        """
+        avahi-free: /etc/hosts
+        """
+
+        server_hostname = ""
+        cmd = "cat /etc/hosts"
+        func = lambda s: f'{server_hostname}.local' in s
+
+        self.assertTrue_on_tegras(cmd, func, "avahi free: hosts file does not contain server hostname")
+
+    def test_114(self):
+        """
+        avahi-free: /etc/aqueti/daemonConfiguration.json
+        """
+
+        cmd = "cat /etc/aqueti/daemonConfiguration.json"
+        func = lambda s: 'serverPort' in s
+
+        self.assertTrue_on_tegras(cmd, func, "avahi-free: tegra daemon config does not contain server port")
+        
+    # add tests for ONVIF server config
 
 if __name__ == '__main__':
     print("Config checker", end="\n")
