@@ -106,7 +106,7 @@ s])
 
             self.assertTrue(all(rs), msg="Some hosts ports are not opened")
 
-    #@unittest.skip
+    @unittest.skip
     def test_6(self):
         """opened tergas ports"""
         ports = set((22, 5353))
@@ -128,6 +128,7 @@ s])
 
             self.assertTrue(all(rs), msg="Some hosts ports are not opened")
 
+    @unittest.skip
     def test_7(self):
         """multicast traffic is not filtered"""
         # iperf -s -u -B 224.0.0.22 -i 1
@@ -146,6 +147,7 @@ s])
 
         self.assertTrue(rs, msg="Multicast traffic is being filtered")
 
+    @unittest.skip
     def test_8(self):
         """name resolution on server"""
 
@@ -165,6 +167,7 @@ s])
 
             self.assertTrue(rs, msg="Some tegras ip's cannot be resolved to hostnames")      
 
+    @unittest.skip
     def test_9(self):
         """name resolution on tegras"""
         # keys should be copied first
