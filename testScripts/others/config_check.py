@@ -4,24 +4,25 @@ import subprocess
 import re
 import os
 import grp
-import pwd        
+import pwd
 import sys
 import time
+import json
 import platform
 import queue
 import shutil
 import unittest
-import Path
 import pymongo
 import base64
 import paramiko
 
+from pathlib import Path
 from ipaddress import ip_network
 
 
 class TestNWEnv(unittest.TestCase):
-    server = []
-    tegras = []
+    server = ['10.1.1.204']
+    tegras = ['10.1.7.{}'.format(i+1) for i in range(10)]
 
     hosts = tegras + server
 
@@ -593,7 +594,7 @@ PE)
 class TestTegraConfig(unittest.TestCase):
     daemon_config = None
 
-    tegra_ips = ["10.1.7.{}".format(i) for i in range(10)]
+    tegra_ips = ["10.1.7.{}".format(i+1) for i in range(10)]
     ssh_clients = {tegra_ip: None for tegra_ip in tegra_ips}
 
     @staticmethod
