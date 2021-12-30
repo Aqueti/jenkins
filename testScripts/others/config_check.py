@@ -15,6 +15,7 @@ import unittest
 import pymongo
 import base64
 import paramiko
+import numpy as np
 
 from pathlib import Path
 from ipaddress import ip_network
@@ -28,15 +29,13 @@ class TestNWEnv(unittest.TestCase):
 
     @staticmethod
     def exec_cmd(cmd):
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PI
-PE)
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
 
     @staticmethod
     def exec_cmd_async(cmd):
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=Tr
-ue)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
         return proc
 
@@ -63,7 +62,7 @@ ue)
 
         self.assertTrue(rt)
 
-
+   
     def test_2(self):
         """/etc/hosts file content"""
         cmd = "cat /etc/hosts | grep $(hostname).local"
@@ -87,13 +86,14 @@ ue)
 
             self.assertTrue(rt.decode("utf-8").strip(), msg="Some hosts are not reachable")  
 
+    @unittest.skip
     def test_4(self):
         """hosts are in the same subnet"""
-        subnets = set([ip_network(ip+"/23", strict=False).network_address for ip in self.host
-s])
+        subnets = set([ip_network(ip+"/23", strict=False).network_address for ip in self.hosts])
 
         self.assertTrue(len(subnets) == 1, msg="Some hosts are not in the same subnet")      
 
+    @unittest.skip
     def test_5(self):
         """opened server ports"""
         ports = set((22, 5353))
@@ -123,8 +123,7 @@ s])
                 continue
             rt, _ = e.communicate()
 
-            rs = [re.search(r"{}/(tcp|udp)\s+open".format(port), rt.decode("utf-8")) for port
- in ports]
+            rs = [re.search(r"{}/(tcp|udp)\s+open".format(port), rt.decode("utf-8")) for port in ports]
 
             self.assertTrue(all(rs), msg="Some hosts ports are not opened")
 
@@ -193,17 +192,16 @@ class TestServerConfig(unittest.TestCase):
 
     @staticmethod
     def exec_cmd(cmd):
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PI
-PE)
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
 
     def __init__(self, *args, **kwargs):
-        super(TestServerEnv, self).__init__(*args, **kwargs)
+        super(TestServerConfig, self).__init__(*args, **kwargs)
 
         with open('/etc/aqueti/daemonConfiguration.json', 'r') as f:
             self.daemon_config = json.load(f)
-    
+
     def test_110(self):
         """
         OS is correct
@@ -243,7 +241,7 @@ PE)
         cmd = "dpkg -l | grep -i 'NVIDIA binary driver'"
         rt = self.exec_cmd(cmd)
         rs = re.findall('nvidia-4[6-9][05]', rt)
-        
+
         self.assertTrue(rs, msg="It is recommended to install nvidia driver >=460")
 
     def test_114(self):
@@ -442,7 +440,8 @@ PE)
         Storage directory exists
         """
 
-        spath = self.daemon_config['submodule']['storageDirs'][-1]
+        ind = np.argmax(['storageDirs' in d for d in self.daemon_config['submodule']])
+        spath = self.daemon_config['submodule'][ind]['storageDirs'][-1]
 
         rs = Path(spath).is_dir()
         
@@ -453,7 +452,8 @@ PE)
         Storage directory permissions are ok
         """
 
-        spath = self.daemon_config['submodule']['storageDirs'][-1]
+        ind = np.argmax(['storageDirs' in d for d in self.daemon_config['submodule']])
+        spath = self.daemon_config['submodule'][ind]['storageDirs'][-1]
 
         stat_info = os.stat(spath)
         uid, gid = stat_info.st_uid, stat_info.st_gid
@@ -506,9 +506,9 @@ PE)
         mongodb: acos database exists
         """
 
-        db_name = self.daemon_config["self.daemon_config"]["name"]
+        db_name = self.daemon_config["globalDatabase"]["name"]
 
-        mc = pymongo.MongoClient("mongodb://127.0.0.1:21017")
+        mc = pymongo.MongoClient("mongodb://127.0.0.1:27017")
         db_names = mc.list_database_names()
         rs = db_name in db_names        
         
@@ -519,7 +519,7 @@ PE)
         mongodb: asis database exists
         """
 
-        mc = pymongo.MongoClient("mongodb://127.0.0.1:21017")
+        mc = pymongo.MongoClient("mongodb://127.0.0.1:27017")
         db_names = mc.list_database_names()
         rs = 'asis' in db_names        
         
@@ -530,9 +530,9 @@ PE)
         mongodb: models collection is not empty
         """
 
-        db_name = self.daemon_config["self.daemon_config"]["name"]
+        db_name = self.daemon_config["globalDatabase"]["name"]
 
-        mc = pymongo.MongoClient("mongodb://127.0.0.1:21017")
+        mc = pymongo.MongoClient("mongodb://127.0.0.1:27017")
         models_num = mc[db_name]['models'].count()
         rs = models_num > 0
         
@@ -602,34 +602,36 @@ class TestTegraConfig(unittest.TestCase):
 
     @staticmethod
     def exec_cmd(cmd):
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PI
-PE)
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         return result.stdout.decode('utf-8') + result.stderr.decode('utf-8')
 
     def __init__(self, *args, **kwargs):
-        super(TestServerEnv, self).__init__(*args, **kwargs)
+        super(TestTegraConfig, self).__init__(*args, **kwargs)
 
         for tegra_ip in self.tegra_ips:
+            print(tegra_ip)
             self.ssh_clients[tegra_ip] = paramiko.SSHClient()
             self.ssh_clients[tegra_ip].set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.ssh_clients[tegra_ip].connect(tegra_ip, username='nvidia', password='nvidia')
 
     def exec_cmd_on_tegras(self, cmd, ip=None):        
-        stdin, stdout, stderr = self.client.exec_command(cmd)
+        # stdin, stdout, stderr = self.client.exec_command(cmd)
 
         if ip:
             tegra_ips = [ip]
+        else:
+            tegra_ips = self.tegra_ips
 
         out = {}
-        for tegra_ip in self.tegra_ips:
+        for tegra_ip in tegra_ips:
             stdin, stdout, stderr = self.ssh_clients[tegra_ip].exec_command(cmd)
-            out[tegra_ip] = stdout
+            out[tegra_ip] = "".join(list(stdout.readlines()))
 
         return out
 
     def assertTrue_on_tegras(self, cmd, func, msg, ip=None):        
-        stdin, stdout, stderr = self.client.exec_command(cmd)
+        # stdin, stdout, stderr = self.client.exec_command(cmd)
 
         out = self.exec_cmd_on_tegras(cmd, ip)
         for tegra_ip, stdout in out.items():
@@ -641,7 +643,7 @@ PE)
         """
 
         cmd = "dpkg -l | grep -i aqueti | awk '{print$2}'"
-        func = lambda s: set(s.split()) == {'aqueti-kernel-updater', 'aqueti-tegra-config', 'aquetidaemon'} 
+        func = lambda s: set(s[:-1].split("\n")) == {'aqueti-kernel-updater', 'aqueti-tegra-config', 'aquetidaemon'}
 
         self.assertTrue_on_tegras(cmd, func, "Aqueti software is not installed")
 
@@ -662,7 +664,7 @@ PE)
         """
 
         cmd = "python -m json.tool /etc/aqueti/daemonConfiguration.json"
-        func = lambda s: json.loads(s)["submodule"]["compression"] in {'JPEG', 'H264', 'H265'}
+        func = lambda s: json.loads(s)["submodule"][0]["compression"] in {'JPEG', 'H264', 'H265'}
 
         self.assertTrue_on_tegras(cmd, func, "There is an issue with compression type")
 
@@ -705,8 +707,9 @@ PE)
         func = lambda s: 'broadcastclient' in s
 
         self.assertTrue_on_tegras(cmd, func, "ntp is not configured")
-        
-    def test_1052(self):
+
+    @unittest.skip("")
+    def test_1053(self):
         """
         ntp is ok
         """
@@ -808,7 +811,7 @@ PE)
 
         server_hostname = ""
         cmd = "cat /etc/hosts"
-        func = lambda s: f'{server_hostname}.local' in s
+        func = lambda s: '{}.local'.format(server_hostname) in s
 
         self.assertTrue_on_tegras(cmd, func, "avahi free: hosts file does not contain server hostname")
 
@@ -821,7 +824,7 @@ PE)
         func = lambda s: 'serverPort' in s
 
         self.assertTrue_on_tegras(cmd, func, "avahi-free: tegra daemon config does not contain server port")
-        
+
     # add tests for ONVIF server config
 
 if __name__ == '__main__':
@@ -829,3 +832,4 @@ if __name__ == '__main__':
 
     if platform.system() == 'Linux':
         unittest.main(verbosity=2)
+
